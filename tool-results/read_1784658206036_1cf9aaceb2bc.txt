@@ -1,0 +1,737 @@
+     1→'use client'
+     2→
+     3→import { useEffect, useRef, useState } from 'react'
+     4→import { motion, AnimatePresence } from 'framer-motion'
+     5→import ReactMarkdown from 'react-markdown'
+     6→import {
+     7→  Send,
+     8→  Plus,
+     9→  MessagesSquare,
+    10→  Trash2,
+    11→  Sparkles,
+    12→  Loader2,
+    13→  PanelLeft,
+    14→  BookOpen,
+    15→  Zap,
+    16→} from 'lucide-react'
+    17→import { toast } from 'sonner'
+    18→
+    19→import { useNav, useUser } from '@/lib/store'
+    20→import { SUBJECTS, getSubject } from '@/lib/subjects'
+    21→import {
+    22→  PageSection,
+    23→  SectionHeader,
+    24→  GlassCard,
+    25→  LoadingState,
+    26→  Pill,
+    27→} from '@/components/ui-blocks'
+    28→import {
+    29→  Select,
+    30→  SelectContent,
+    31→  SelectItem,
+    32→  SelectTrigger,
+    33→  SelectValue,
+    34→} from '@/components/ui/select'
+    35→import { ScrollArea } from '@/components/ui/scroll-area'
+    36→import {
+    37→  Sheet,
+    38→  SheetContent,
+    39→  SheetHeader,
+    40→  SheetTitle,
+    41→  SheetTrigger,
+    42→} from '@/components/ui/sheet'
+    43→import { Textarea } from '@/components/ui/textarea'
+    44→import { cn } from '@/lib/utils'
+    45→
+    46→// ---------- types ----------
+    47→interface ChatMessage {
+    48→  id: string
+    49→  role: 'user' | 'assistant'
+    50→  content: string
+    51→}
+    52→
+    53→interface ChatSessionMeta {
+    54→  id: string
+    55→  subject: string
+    56→  title: string
+    57→  updatedAt: string
+    58→  _count: { messages: number }
+    59→}
+    60→
+    61→interface ApiMessage {
+    62→  role: 'user' | 'assistant'
+    63→  content: string
+    64→}
+    65→
+    66→// ---------- suggestions ----------
+    67→const SUGGESTED_PROMPTS: { emoji: string; text: string; subject: string }[] = [
+    68→  { emoji: '⚛️', text: 'Объясни квантовую запутанность', subject: 'science' },
+    69→  { emoji: '🧩', text: 'Как работают замыкания в JS?', subject: 'programming' },
+    70→  { emoji: '🧠', text: 'Расскажи про стоицизм', subject: 'philosophy' },
+    71→  { emoji: '📈', text: 'Что такое производная?', subject: 'math' },
+    72→  { emoji: '🎨', text: 'В чём суть импрессионизма?', subject: 'art' },
+    73→  { emoji: '🏛️', text: 'Почему пал Рим?', subject: 'history' },
+    74→]
+    75→
+    76→const SESSION_KEY = 'lumina:tutor-session'
+    77→
+    78→// ---------- main view ----------
+    79→export function TutorView() {
+    80→  const { activeSubject } = useNav()
+    81→
+    82→  const [subject, setSubject] = useState<string>(activeSubject ?? 'general')
+    83→  const [sessions, setSessions] = useState<ChatSessionMeta[]>([])
+    84→  const [sessionId, setSessionId] = useState<string | null>(null)
+    85→  const [messages, setMessages] = useState<ChatMessage[]>([])
+    86→  const [input, setInput] = useState('')
+    87→  const [sending, setSending] = useState(false)
+    88→  const [loadingSessions, setLoadingSessions] = useState(true)
+    89→  const [loadingThread, setLoadingThread] = useState(false)
+    90→  const [listOpen, setListOpen] = useState(false) // mobile sheet
+    91→
+    92→  const bottomRef = useRef<HTMLDivElement>(null)
+    93→
+    94→  // On mount: load session list, restore current session
+    95→  useEffect(() => {
+    96→    const stored =
+    97→      typeof window !== 'undefined' ? sessionStorage.getItem(SESSION_KEY) : null
+    98→    if (stored) {
+    99→      void loadThread(stored)
+   100→    }
+   101→    void loadSessions()
+   102→  }, [])
+   103→
+   104→  // auto-scroll to bottom when messages change / typing
+   105→  useEffect(() => {
+   106→    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+   107→  }, [messages, sending])
+   108→
+   109→  // ---------- data fns ----------
+   110→  async function loadSessions() {
+   111→    setLoadingSessions(true)
+   112→    try {
+   113→      const res = await fetch('/api/chat', { cache: 'no-store' })
+   114→      const data = await res.json()
+   115→      if (res.ok && Array.isArray(data.sessions)) {
+   116→        setSessions(data.sessions as ChatSessionMeta[])
+   117→      }
+   118→    } catch {
+   119→      // silent — sidebar just shows empty
+   120→    } finally {
+   121→      setLoadingSessions(false)
+   122→    }
+   123→  }
+   124→
+   125→  async function loadThread(sid: string) {
+   126→    setLoadingThread(true)
+   127→    try {
+   128→      const res = await fetch(`/api/chat/${sid}`, { cache: 'no-store' })
+   129→      const data = await res.json()
+   130→      if (!res.ok) throw new Error(data?.error || 'Не удалось загрузить диалог')
+   131→      const apiMsgs = (data.session?.messages ?? []) as ApiMessage[]
+   132→      const msgs: ChatMessage[] = apiMsgs.map((m, i) => ({
+   133→        id: `${sid}-${i}`,
+   134→        role: m.role,
+   135→        content: m.content,
+   136→      }))
+   137→      setMessages(msgs)
+   138→      if (data.session?.subject && data.session.subject !== 'general') {
+   139→        setSubject(data.session.subject)
+   140→      }
+   141→      setSessionId(sid)
+   142→      sessionStorage.setItem(SESSION_KEY, sid)
+   143→    } catch (e) {
+   144→      const msg = e instanceof Error ? e.message : 'Не удалось загрузить диалог'
+   145→      toast.error(msg)
+   146→      setSessionId(null)
+   147→      sessionStorage.removeItem(SESSION_KEY)
+   148→    } finally {
+   149→      setLoadingThread(false)
+   150→      setListOpen(false)
+   151→    }
+   152→  }
+   153→
+   154→  async function deleteSession(sid: string, e?: React.MouseEvent) {
+   155→    e?.stopPropagation()
+   156→    try {
+   157→      const res = await fetch(`/api/chat/${sid}`, { method: 'DELETE' })
+   158→      if (!res.ok) throw new Error('Не удалось удалить')
+   159→      setSessions((s) => s.filter((x) => x.id !== sid))
+   160→      if (sessionId === sid) {
+   161→        setSessionId(null)
+   162→        setMessages([])
+   163→        sessionStorage.removeItem(SESSION_KEY)
+   164→      }
+   165→      toast.success('Диалог удалён')
+   166→    } catch {
+   167→      toast.error('Не удалось удалить диалог')
+   168→    }
+   169→  }
+   170→
+   171→  function startNewChat() {
+   172→    setSessionId(null)
+   173→    setMessages([])
+   174→    setInput('')
+   175→    sessionStorage.removeItem(SESSION_KEY)
+   176→    setListOpen(false)
+   177→  }
+   178→
+   179→  // ---------- send ----------
+   180→  async function send(text?: string, overrideSubject?: string) {
+   181→    const content = (text ?? input).trim()
+   182→    if (!content || sending) return
+   183→    setInput('')
+   184→
+   185→    const usedSubject = overrideSubject ?? subject
+   186→
+   187→    const userMsg: ChatMessage = {
+   188→      id: `u-${Date.now()}`,
+   189→      role: 'user',
+   190→      content,
+   191→    }
+   192→    const prevMessages = messages
+   193→    const nextMessages = [...prevMessages, userMsg]
+   194→    setMessages(nextMessages)
+   195→    setSending(true)
+   196→
+   197→    try {
+   198→      const history = prevMessages.map(
+   199→        (m): ApiMessage => ({ role: m.role, content: m.content })
+   200→      )
+   201→      const res = await fetch('/api/chat', {
+   202→        method: 'POST',
+   203→        headers: { 'Content-Type': 'application/json' },
+   204→        body: JSON.stringify({
+   205→          message: content,
+   206→          subject: usedSubject,
+   207→          sessionId,
+   208→          history,
+   209→        }),
+   210→      })
+   211→      const data = await res.json()
+   212→      if (!res.ok) throw new Error(data?.error || 'Не удалось получить ответ')
+   213→
+   214→      const aiMsg: ChatMessage = {
+   215→        id: `a-${Date.now()}`,
+   216→        role: 'assistant',
+   217→        content: data.reply as string,
+   218→      }
+   219→      setMessages((m) => [...m, aiMsg])
+   220→
+   221→      const newSid: string | undefined = data.sessionId
+   222→      if (newSid) {
+   223→        setSessionId(newSid)
+   224→        sessionStorage.setItem(SESSION_KEY, newSid)
+   225→      }
+   226→      if (typeof data.xp === 'number' && typeof data.level === 'number') {
+   227→        useUser.setState({ xp: data.xp, level: data.level })
+   228→      }
+   229→      void loadSessions()
+   230→    } catch (e) {
+   231→      const msg = e instanceof Error ? e.message : 'Не удалось получить ответ'
+   232→      toast.error(msg)
+   233→    } finally {
+   234→      setSending(false)
+   235→    }
+   236→  }
+   237→
+   238→  function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+   239→    if (e.key === 'Enter' && !e.shiftKey) {
+   240→      e.preventDefault()
+   241→      void send()
+   242→    }
+   243→  }
+   244→
+   245→  // ---------- derived ----------
+   246→  const activeSubjectObj =
+   247→    subject && subject !== 'general' ? getSubject(subject) : null
+   248→
+   249→  return (
+   250→    <PageSection className="relative py-6 sm:py-8">
+   251→      {/* ambient cosmic glow */}
+   252→      <div
+   253→        aria-hidden
+   254→        className="pointer-events-none absolute inset-x-0 -top-24 -z-10 h-72 opacity-70"
+   255→        style={{
+   256→          background:
+   257→            'radial-gradient(ellipse at center, oklch(0.7 0.25 315 / 0.18), transparent 70%)',
+   258→        }}
+   259→      />
+   260→
+   261→      <SectionHeader
+   262→        title="AI-наставник"
+   263→        subtitle="Спроси что угодно — объясню, разберу по шагам, подскажу дальше"
+   264→        icon={Sparkles}
+   265→        action={
+   266→          <div className="hidden items-center gap-2 sm:flex">
+   267→            {activeSubjectObj && (
+   268→              <Pill className="border-primary/30 bg-primary/10 text-primary">
+   269→                <span>{activeSubjectObj.emoji}</span>
+   270→                {activeSubjectObj.ru}
+   271→              </Pill>
+   272→            )}
+   273→          </div>
+   274→        }
+   275→      />
+   276→
+   277→      {/* mobile: open sessions sheet + new chat */}
+   278→      <div className="mb-3 flex items-center gap-2 lg:hidden">
+   279→        <Sheet open={listOpen} onOpenChange={setListOpen}>
+   280→          <SheetTrigger asChild>
+   281→            <button className="inline-flex items-center gap-2 rounded-xl border border-border/60 bg-card/60 px-3 py-2 text-sm font-medium backdrop-blur transition hover:bg-card">
+   282→              <PanelLeft className="h-4 w-4" />
+   283→              Диалоги
+   284→              {sessions.length > 0 && (
+   285→                <span className="rounded-full bg-primary/15 px-1.5 text-xs text-primary">
+   286→                  {sessions.length}
+   287→                </span>
+   288→              )}
+   289→            </button>
+   290→          </SheetTrigger>
+   291→          <SheetContent side="left" className="w-[85%] sm:max-w-sm">
+   292→            <SheetHeader>
+   293→              <SheetTitle className="flex items-center gap-2">
+   294→                <MessagesSquare className="h-4 w-4 text-primary" />
+   295→                Диалоги
+   296→              </SheetTitle>
+   297→            </SheetHeader>
+   298→            <div className="flex-1 overflow-y-auto px-4 pb-6">
+   299→              <SidebarContent
+   300→                sessions={sessions}
+   301→                loading={loadingSessions}
+   302→                currentId={sessionId}
+   303→                onSelect={(id) => void loadThread(id)}
+   304→                onDelete={(id, ev) => void deleteSession(id, ev)}
+   305→                onNew={startNewChat}
+   306→              />
+   307→            </div>
+   308→          </SheetContent>
+   309→        </Sheet>
+   310→
+   311→        <NewChatButton onClick={startNewChat} small />
+   312→      </div>
+   313→
+   314→      {/* main grid */}
+   315→      <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
+   316→        {/* left rail — desktop */}
+   317→        <GlassCard
+   318→          hover={false}
+   319→          className="hidden h-[72vh] min-h-[520px] flex-col overflow-hidden p-3 lg:flex lg:h-[calc(100vh-240px)]"
+   320→        >
+   321→          <SidebarContent
+   322→            sessions={sessions}
+   323→            loading={loadingSessions}
+   324→            currentId={sessionId}
+   325→            onSelect={(id) => void loadThread(id)}
+   326→            onDelete={(id, ev) => void deleteSession(id, ev)}
+   327→            onNew={startNewChat}
+   328→          />
+   329→        </GlassCard>
+   330→
+   331→        {/* right — chat thread + composer */}
+   332→        <GlassCard
+   333→          hover={false}
+   334→          gradient
+   335→          className="flex h-[72vh] min-h-[520px] flex-col overflow-hidden lg:h-[calc(100vh-240px)]"
+   336→        >
+   337→          {/* chat header */}
+   338→          <div className="flex items-center justify-between gap-3 border-b border-border/60 bg-gradient-to-r from-violet-500/5 via-fuchsia-500/5 to-pink-500/5 px-4 py-3">
+   339→            <div className="flex min-w-0 items-center gap-3">
+   340→              <div className="relative grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 text-white shadow-lg shadow-fuchsia-500/30">
+   341→                <Sparkles className="h-4 w-4" />
+   342→                <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-card" />
+   343→              </div>
+   344→              <div className="min-w-0">
+   345→                <p className="truncate text-sm font-semibold leading-tight">
+   346→                  {sessionId ? 'Активный диалог' : 'Новый диалог'}
+   347→                </p>
+   348→                <p className="truncate text-xs text-muted-foreground">
+   349→                  {sending ? 'Наставник печатает…' : 'Готов помочь'}
+   350→                </p>
+   351→              </div>
+   352→            </div>
+   353→
+   354→            <SubjectPicker value={subject} onChange={setSubject} />
+   355→          </div>
+   356→
+   357→          {/* messages area */}
+   358→          <div className="relative flex-1 overflow-hidden">
+   359→            <ScrollArea className="h-full">
+   360→              <div className="space-y-4 px-4 py-4 sm:px-6">
+   361→                {loadingThread ? (
+   362→                  <LoadingState label="Загружаю диалог…" />
+   363→                ) : messages.length === 0 ? (
+   364→                  <EmptyChat
+   365→                    onPick={(p, s) => {
+   366→                      if (s) setSubject(s)
+   367→                      void send(p, s)
+   368→                    }}
+   369→                  />
+   370→                ) : (
+   371→                  <AnimatePresence initial={false}>
+   372→                    {messages.map((m) => (
+   373→                      <MessageBubble key={m.id} message={m} />
+   374→                    ))}
+   375→                  </AnimatePresence>
+   376→                )}
+   377→
+   378→                {sending && <TypingBubble />}
+   379→
+   380→                <div ref={bottomRef} className="h-1" />
+   381→              </div>
+   382→            </ScrollArea>
+   383→          </div>
+   384→
+   385→          {/* composer */}
+   386→          <Composer
+   387→            value={input}
+   388→            onChange={setInput}
+   389→            onKeyDown={onKeyDown}
+   390→            onSend={() => void send()}
+   391→            disabled={sending}
+   392→          />
+   393→        </GlassCard>
+   394→      </div>
+   395→    </PageSection>
+   396→  )
+   397→}
+   398→
+   399→// ---------- sidebar content ----------
+   400→function SidebarContent({
+   401→  sessions,
+   402→  loading,
+   403→  currentId,
+   404→  onSelect,
+   405→  onDelete,
+   406→  onNew,
+   407→}: {
+   408→  sessions: ChatSessionMeta[]
+   409→  loading: boolean
+   410→  currentId: string | null
+   411→  onSelect: (id: string) => void
+   412→  onDelete: (id: string, e?: React.MouseEvent) => void
+   413→  onNew: () => void
+   414→}) {
+   415→  return (
+   416→    <div className="flex h-full flex-col gap-3">
+   417→      <NewChatButton onClick={onNew} />
+   418→
+   419→      <div className="flex items-center gap-2 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+   420→        <MessagesSquare className="h-3.5 w-3.5" />
+   421→        Недавние
+   422→      </div>
+   423→
+   424→      <div className="-mr-1 flex-1 overflow-y-auto pr-1">
+   425→        {loading ? (
+   426→          <div className="space-y-2">
+   427→            {Array.from({ length: 4 }).map((_, i) => (
+   428→              <div key={i} className="h-14 animate-pulse rounded-xl bg-muted/40" />
+   429→            ))}
+   430→          </div>
+   431→        ) : sessions.length === 0 ? (
+   432→          <div className="rounded-xl border border-dashed border-border/60 p-4 text-center text-xs text-muted-foreground">
+   433→            Пока нет диалогов
+   434→            <br />
+   435→            Задай первый вопрос 👇
+   436→          </div>
+   437→        ) : (
+   438→          <ul className="space-y-1.5">
+   439→            {sessions.map((s) => {
+   440→              const subj = getSubject(s.subject)
+   441→              const active = s.id === currentId
+   442→              return (
+   443→                <li key={s.id}>
+   444→                  <button
+   445→                    onClick={() => onSelect(s.id)}
+   446→                    className={cn(
+   447→                      'group relative flex w-full items-start gap-2.5 rounded-xl border p-2.5 text-left transition-all',
+   448→                      active
+   449→                        ? 'border-primary/40 bg-primary/10 glow-soft'
+   450→                        : 'border-border/50 bg-background/40 hover:border-border hover:bg-card'
+   451→                    )}
+   452→                  >
+   453→                    <div
+   454→                      className={cn(
+   455→                        'mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-gradient-to-br text-xs',
+   456→                        subj ? subj.gradient : 'from-violet-500 to-fuchsia-500'
+   457→                      )}
+   458→                    >
+   459→                      <span className="text-white">{subj?.emoji ?? '💬'}</span>
+   460→                    </div>
+   461→                    <div className="min-w-0 flex-1">
+   462→                      <p className="truncate text-sm font-medium leading-tight">
+   463→                        {s.title || 'Без названия'}
+   464→                      </p>
+   465→                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
+   466→                        {s._count?.messages ?? 0} сообщ. · {formatDate(s.updatedAt)}
+   467→                      </p>
+   468→                    </div>
+   469→                    <button
+   470→                      onClick={(e) => onDelete(s.id, e)}
+   471→                      className="absolute right-1.5 top-1.5 rounded-md p-1 text-muted-foreground opacity-0 transition-all hover:bg-destructive/15 hover:text-destructive group-hover:opacity-100"
+   472→                      aria-label="Удалить диалог"
+   473→                    >
+   474→                      <Trash2 className="h-3.5 w-3.5" />
+   475→                    </button>
+   476→                  </button>
+   477→                </li>
+   478→              )
+   479→            })}
+   480→          </ul>
+   481→        )}
+   482→      </div>
+   483→    </div>
+   484→  )
+   485→}
+   486→
+   487→function NewChatButton({
+   488→  onClick,
+   489→  small,
+   490→}: {
+   491→  onClick: () => void
+   492→  small?: boolean
+   493→}) {
+   494→  return (
+   495→    <button
+   496→      onClick={onClick}
+   497→      className={cn(
+   498→        'group relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 font-semibold text-white shadow-lg shadow-fuchsia-500/25 transition-all hover:shadow-xl hover:shadow-fuchsia-500/40',
+   499→        small ? 'px-3 py-2 text-sm' : 'px-4 py-2.5 text-sm'
+   500→      )}
+   501→    >
+   502→      <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+   503→      <span className="relative flex items-center gap-2">
+   504→        <Plus className="h-4 w-4" />
+   505→        Новый диалог
+   506→      </span>
+   507→    </button>
+   508→  )
+   509→}
+   510→
+   511→// ---------- subject picker ----------
+   512→function SubjectPicker({
+   513→  value,
+   514→  onChange,
+   515→}: {
+   516→  value: string
+   517→  onChange: (v: string) => void
+   518→}) {
+   519→  return (
+   520→    <div className="flex items-center gap-2">
+   521→      <BookOpen className="hidden h-4 w-4 text-muted-foreground sm:block" />
+   522→      <Select value={value} onValueChange={onChange}>
+   523→        <SelectTrigger
+   524→          className="h-9 w-[140px] border-border/60 bg-background/60 text-xs sm:w-[180px] sm:text-sm"
+   525→          size="sm"
+   526→        >
+   527→          <SelectValue placeholder="Предмет" />
+   528→        </SelectTrigger>
+   529→        <SelectContent>
+   530→          <SelectItem value="general">
+   531→            <span className="flex items-center gap-2">
+   532→              <span>✨</span> Общий
+   533→            </span>
+   534→          </SelectItem>
+   535→          {SUBJECTS.map((s) => (
+   536→            <SelectItem key={s.id} value={s.id}>
+   537→              <span className="flex items-center gap-2">
+   538→                <span>{s.emoji}</span>
+   539→                {s.ru}
+   540→              </span>
+   541→            </SelectItem>
+   542→          ))}
+   543→        </SelectContent>
+   544→      </Select>
+   545→    </div>
+   546→  )
+   547→}
+   548→
+   549→// ---------- message bubble ----------
+   550→function MessageBubble({ message }: { message: ChatMessage }) {
+   551→  const isUser = message.role === 'user'
+   552→  return (
+   553→    <motion.div
+   554→      layout
+   555→      initial={{ opacity: 0, y: 12 }}
+   556→      animate={{ opacity: 1, y: 0 }}
+   557→      transition={{ duration: 0.35, ease: 'easeOut' }}
+   558→      className={cn('flex gap-3', isUser ? 'flex-row-reverse' : 'flex-row')}
+   559→    >
+   560→      {/* avatar */}
+   561→      {isUser ? (
+   562→        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-border/60 bg-card/60 text-muted-foreground">
+   563→          <span className="text-xs font-bold">Я</span>
+   564→        </div>
+   565→      ) : (
+   566→        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 text-white shadow-md shadow-fuchsia-500/30">
+   567→          <Sparkles className="h-4 w-4" />
+   568→        </div>
+   569→      )}
+   570→
+   571→      {/* bubble */}
+   572→      <div
+   573→        className={cn(
+   574→          'max-w-[80%] rounded-2xl px-4 py-2.5 text-sm shadow-sm sm:max-w-[75%]',
+   575→          isUser
+   576→            ? 'bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 text-white shadow-fuchsia-500/20'
+   577→            : 'glass-strong border border-border/60 text-foreground'
+   578→        )}
+   579→      >
+   580→        {isUser ? (
+   581→          <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+   582→        ) : (
+   583→          <div className="prose-ai">
+   584→            <ReactMarkdown>{message.content}</ReactMarkdown>
+   585→          </div>
+   586→        )}
+   587→      </div>
+   588→    </motion.div>
+   589→  )
+   590→}
+   591→
+   592→// ---------- typing indicator ----------
+   593→function TypingBubble() {
+   594→  return (
+   595→    <motion.div
+   596→      initial={{ opacity: 0, y: 8 }}
+   597→      animate={{ opacity: 1, y: 0 }}
+   598→      exit={{ opacity: 0 }}
+   599→      className="flex gap-3"
+   600→    >
+   601→      <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 text-white shadow-md shadow-fuchsia-500/30">
+   602→        <Sparkles className="h-4 w-4" />
+   603→      </div>
+   604→      <div className="glass-strong flex items-center gap-1.5 rounded-2xl border border-border/60 px-4 py-3.5 text-primary">
+   605→        <div className="dot-typing flex items-center gap-1">
+   606→          <span />
+   607→          <span />
+   608→          <span />
+   609→        </div>
+   610→      </div>
+   611→    </motion.div>
+   612→  )
+   613→}
+   614→
+   615→// ---------- empty state ----------
+   616→function EmptyChat({
+   617→  onPick,
+   618→}: {
+   619→  onPick: (prompt: string, subject?: string) => void
+   620→}) {
+   621→  return (
+   622→    <motion.div
+   623→      initial={{ opacity: 0, y: 10 }}
+   624→      animate={{ opacity: 1, y: 0 }}
+   625→      className="flex flex-col items-center justify-center px-4 py-10 text-center sm:py-14"
+   626→    >
+   627→      <motion.div
+   628→        animate={{ y: [0, -8, 0] }}
+   629→        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+   630→        className="relative mb-5 grid h-20 w-20 place-items-center rounded-3xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 text-white shadow-xl shadow-fuchsia-500/30"
+   631→      >
+   632→        <Sparkles className="h-9 w-9" />
+   633→        <div className="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-violet-500 to-fuchsia-500 opacity-50 blur-xl" />
+   634→      </motion.div>
+   635→
+   636→      <h3 className="text-xl font-bold sm:text-2xl">
+   637→        Привет! Я твой <span className="text-gradient">AI-наставник</span>
+   638→      </h3>
+   639→      <p className="mt-2 max-w-md text-sm text-muted-foreground">
+   640→        Спроси что угодно — от квантовой физики до основ философии. Выбери идею
+   641→        ниже или напиши свой вопрос.
+   642→      </p>
+   643→
+   644→      <div className="mt-6 grid w-full max-w-2xl gap-2 sm:grid-cols-2">
+   645→        {SUGGESTED_PROMPTS.map((p) => (
+   646→          <motion.button
+   647→            key={p.text}
+   648→            whileHover={{ y: -2 }}
+   649→            whileTap={{ scale: 0.98 }}
+   650→            onClick={() => onPick(p.text, p.subject)}
+   651→            className="group flex items-center gap-3 rounded-xl border border-border/60 bg-background/40 p-3 text-left transition-all hover:border-primary/40 hover:bg-primary/5"
+   652→          >
+   653→            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-muted/60 text-lg">
+   654→              {p.emoji}
+   655→            </span>
+   656→            <span className="text-sm font-medium">{p.text}</span>
+   657→            <Zap className="ml-auto h-3.5 w-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-hover:text-primary" />
+   658→          </motion.button>
+   659→        ))}
+   660→      </div>
+   661→    </motion.div>
+   662→  )
+   663→}
+   664→
+   665→// ---------- composer ----------
+   666→function Composer({
+   667→  value,
+   668→  onChange,
+   669→  onKeyDown,
+   670→  onSend,
+   671→  disabled,
+   672→}: {
+   673→  value: string
+   674→  onChange: (v: string) => void
+   675→  onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void
+   676→  onSend: () => void
+   677→  disabled: boolean
+   678→}) {
+   679→  return (
+   680→    <div className="border-t border-border/60 bg-card/40 p-3 backdrop-blur sm:p-4">
+   681→      <div className="relative flex items-end gap-2">
+   682→        <div className="relative flex-1">
+   683→          <Textarea
+   684→            value={value}
+   685→            onChange={(e) => onChange(e.target.value)}
+   686→            onKeyDown={onKeyDown}
+   687→            placeholder="Напиши вопрос наставнику… (Enter — отправить, Shift+Enter — перенос)"
+   688→            rows={1}
+   689→            className="max-h-40 min-h-[48px] resize-none rounded-2xl border-border/60 bg-background/60 px-4 py-3 text-sm leading-relaxed ring-primary/20 focus-visible:ring-2"
+   690→          />
+   691→        </div>
+   692→
+   693→        <button
+   694→          onClick={onSend}
+   695→          disabled={disabled || !value.trim()}
+   696→          className={cn(
+   697→            'group relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-2xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 text-white shadow-lg shadow-fuchsia-500/25 transition-all',
+   698→            'hover:scale-105 hover:shadow-xl hover:shadow-fuchsia-500/40 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100'
+   699→          )}
+   700→          aria-label="Отправить сообщение"
+   701→        >
+   702→          <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+   703→          <span className="relative">
+   704→            {disabled ? (
+   705→              <Loader2 className="h-5 w-5 animate-spin" />
+   706→            ) : (
+   707→              <Send className="h-5 w-5" />
+   708→            )}
+   709→          </span>
+   710→        </button>
+   711→      </div>
+   712→      <p className="mt-1.5 hidden px-1 text-[11px] text-muted-foreground sm:block">
+   713→        Накапливай XP за каждый вопрос — развивайся вместе с Lumina
+   714→      </p>
+   715→    </div>
+   716→  )
+   717→}
+   718→
+   719→// ---------- utils ----------
+   720→function formatDate(iso: string): string {
+   721→  try {
+   722→    const d = new Date(iso)
+   723→    const now = new Date()
+   724→    const diffMs = now.getTime() - d.getTime()
+   725→    const diffMin = Math.floor(diffMs / 60000)
+   726→    if (diffMin < 1) return 'только что'
+   727→    if (diffMin < 60) return `${diffMin} мин назад`
+   728→    const diffH = Math.floor(diffMin / 60)
+   729→    if (diffH < 24) return `${diffH} ч назад`
+   730→    const diffD = Math.floor(diffH / 24)
+   731→    if (diffD < 7) return `${diffD} д назад`
+   732→    return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+   733→  } catch {
+   734→    return ''
+   735→  }
+   736→}
+   737→

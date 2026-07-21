@@ -1,0 +1,902 @@
+     1→     1→'use client'
+     2→     2→
+     3→     3→import { useState, useEffect, useRef, useCallback } from 'react'
+     4→     4→import { motion, AnimatePresence } from 'framer-motion'
+     5→     5→import ReactMarkdown from 'react-markdown'
+     6→     6→import { toast } from 'sonner'
+     7→     7→import {
+     8→     8→  BookOpen,
+     9→     9→  Sparkles,
+    10→    10→  Clock,
+    11→    11→  Gauge,
+    12→    12→  Lightbulb,
+    13→    13→  FlaskConical,
+    14→    14→  AlertCircle,
+    15→    15→  Quote,
+    16→    16→  ListOrdered,
+    17→    17→  Code2,
+    18→    18→  ArrowRight,
+    19→    19→  CheckCircle2,
+    20→    20→  RefreshCw,
+    21→    21→  Loader2,
+    22→    22→  ChevronRight,
+    23→    23→  Bookmark,
+    24→    24→} from 'lucide-react'
+    25→    25→import { useNav, useUser } from '@/lib/store'
+    26→    26→import { SUBJECTS, getSubject } from '@/lib/subjects'
+    27→    27→import {
+    28→    28→  PageSection,
+    29→    29→  SectionHeader,
+    30→    30→  GlassCard,
+    31→    31→  LoadingState,
+    32→    32→  EmptyState,
+    33→    33→  GradientButton,
+    34→    34→  Pill,
+    35→    35→  StaggerGroup,
+    36→    36→  StaggerItem,
+    37→    37→} from '@/components/ui-blocks'
+    38→    38→import { AudioNarration, LessonIllustration } from '@/components/media-tools'
+    39→    39→import { BookmarkButton } from '@/components/bookmark-button'
+    40→    40→
+    41→    41→/* ===================== Types ===================== */
+    42→    42→
+    43→    43→type LessonBlock =
+    44→    44→  | { type: 'heading'; text: string }
+    45→    45→  | { type: 'paragraph'; text: string }
+    46→    46→  | { type: 'analogy'; text: string }
+    47→    47→  | { type: 'example'; text: string }
+    48→    48→  | { type: 'callout'; text: string }
+    49→    49→  | { type: 'code'; code: string; lang?: string }
+    50→    50→  | { type: 'steps'; items: string[] }
+    51→    51→  | { type: 'quote'; text: string }
+    52→    52→
+    53→    53→interface Lesson {
+    54→    54→  title: string
+    55→    55→  emoji: string
+    56→    56→  summary: string
+    57→    57→  durationMin: number
+    58→    58→  difficulty: string
+    59→    59→  blocks: LessonBlock[]
+    60→    60→  keyTakeaways: string[]
+    61→    61→  nextTopic: string
+    62→    62→}
+    63→    63→
+    64→    64→/* ===================== Constants ===================== */
+    65→    65→
+    66→    66→const SUGGESTED_TOPICS = [
+    67→    67→  'Квантовая механика',
+    68→    68→  'Рекурсия в Python',
+    69→    69→  'Как работает ДНК',
+    70→    70→  'Теория относительности',
+    71→    71→  'Стоицизм',
+    72→    72→]
+    73→    73→
+    74→    74→const LEVELS = ['Новичок', 'Средний', 'Продвинутый'] as const
+    75→    75→
+    76→    76→/* ===================== Main view ===================== */
+    77→    77→
+    78→    78→export function LessonsView() {
+    79→    79→  const { activeSubject } = useNav()
+    80→    80→  const [topic, setTopic] = useState('')
+    81→    81→  const [subject, setSubject] = useState<string | null>(activeSubject)
+    82→    82→  const [level, setLevel] = useState<string>('Новичок')
+    83→    83→  const [lesson, setLesson] = useState<Lesson | null>(null)
+    84→    84→  const [loading, setLoading] = useState(false)
+    85→    85→  const [progress, setProgress] = useState(0)
+    86→    86→  const lessonRef = useRef<HTMLDivElement>(null)
+    87→    87→  const inputRef = useRef<HTMLTextAreaElement>(null)
+    88→    88→
+    89→    89→  // On mount: pick up handoff topic from sessionStorage (set by Paths view)
+    90→    90→  useEffect(() => {
+    91→    91→    if (typeof window === 'undefined') return
+    92→    92→    const stored = window.sessionStorage.getItem('lumina:lesson-topic')
+    93→    93→    if (stored) {
+    94→    94→      window.sessionStorage.removeItem('lumina:lesson-topic')
+    95→    95→      setTopic(stored)
+    96→    96→      // Fire generation on next tick so state settles
+    97→    97→      setTimeout(() => {
+    98→    98→        void generate(stored)
+    99→    99→      }, 60)
+   100→   100→    }
+   101→   101→    // Mount-only effect: picks up handoff topic from sessionStorage.
+   102→   102→  }, [])
+   103→   103→
+   104→   104→  // Sync subject from nav when it changes
+   105→   105→  useEffect(() => {
+   106→   106→    if (activeSubject) setSubject(activeSubject)
+   107→   107→  }, [activeSubject])
+   108→   108→
+   109→   109→  // Reading progress: track scroll position relative to lesson container
+   110→   110→  useEffect(() => {
+   111→   111→    if (!lesson) {
+   112→   112→      setProgress(0)
+   113→   113→      return
+   114→   114→    }
+   115→   115→    function onScroll() {
+   116→   116→      const el = lessonRef.current
+   117→   117→      if (!el) return
+   118→   118→      const rect = el.getBoundingClientRect()
+   119→   119→      const total = Math.max(el.offsetHeight - window.innerHeight, 1)
+   120→   120→      const scrolled = Math.max(-rect.top, 0)
+   121→   121→      const pct = Math.min(100, Math.max(0, (scrolled / total) * 100))
+   122→   122→      setProgress(pct)
+   123→   123→    }
+   124→   124→    window.addEventListener('scroll', onScroll, { passive: true })
+   125→   125→    window.addEventListener('resize', onScroll)
+   126→   126→    onScroll()
+   127→   127→    return () => {
+   128→   128→      window.removeEventListener('scroll', onScroll)
+   129→   129→      window.removeEventListener('resize', onScroll)
+   130→   130→    }
+   131→   131→  }, [lesson])
+   132→   132→
+   133→   133→  const generate = useCallback(
+   134→   134→    async (topicArg?: string) => {
+   135→   135→      const finalTopic = (topicArg ?? topic).trim()
+   136→   136→      if (!finalTopic) {
+   137→   137→        toast.error('Введи тему урока')
+   138→   138→        inputRef.current?.focus()
+   139→   139→        return
+   140→   140→      }
+   141→   141→      setTopic(finalTopic)
+   142→   142→      setLoading(true)
+   143→   143→      try {
+   144→   144→        const res = await fetch('/api/lesson', {
+   145→   145→          method: 'POST',
+   146→   146→          headers: { 'Content-Type': 'application/json' },
+   147→   147→          body: JSON.stringify({
+   148→   148→            topic: finalTopic,
+   149→   149→            subject: subject ?? 'general',
+   150→   150→            level,
+   151→   151→          }),
+   152→   152→        })
+   153→   153→        const data = await res.json()
+   154→   154→        if (!res.ok) {
+   155→   155→          throw new Error(data?.error || 'Не удалось создать урок')
+   156→   156→        }
+   157→   157→        setLesson(data.lesson as Lesson)
+   158→   158→        if (typeof data.xp === 'number') {
+   159→   159→          useUser.setState({ xp: data.xp, level: data.level })
+   160→   160→        }
+   161→   161→        toast.success('Урок готов! +25 XP')
+   162→   162→        // Scrolling is handled by the dedicated effect below (fires when lesson
+   163→   163→        // commits to the DOM, so the ref is reliably attached).
+   164→   164→      } catch (e) {
+   165→   165→        const msg = e instanceof Error ? e.message : 'Не удалось создать урок'
+   166→   166→        toast.error(msg)
+   167→   167→      } finally {
+   168→   168→        setLoading(false)
+   169→   169→      }
+   170→   170→    },
+   171→   171→    [topic, subject, level]
+   172→   172→  )
+   173→   173→
+   174→   174→  const resetToNew = useCallback(() => {
+   175→   175→    setLesson(null)
+   176→   176→    setTopic('')
+   177→   177→    setProgress(0)
+   178→   178→    setTimeout(() => inputRef.current?.focus(), 80)
+   179→   179→  }, [])
+   180→   180→
+   181→   181→  // Smooth-scroll to the lesson reader whenever a new lesson finishes loading.
+   182→   182→  // Using an effect (rather than a setTimeout inside generate) guarantees the
+   183→   183→  // ref is attached to the freshly-mounted DOM node.
+   184→   184→  useEffect(() => {
+   185→   185→    if (!lesson || loading) return
+   186→   186→    const t = window.setTimeout(() => {
+   187→   187→      lessonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+   188→   188→    }, 80)
+   189→   189→    return () => window.clearTimeout(t)
+   190→   190→  }, [lesson, loading])
+   191→   191→
+   192→   192→  const subjectObj = subject ? getSubject(subject) : undefined
+   193→   193→
+   194→   194→  return (
+   195→   195→    <PageSection className="py-8">
+   196→   196→      {/* Reading progress bar — fixed below the topbar */}
+   197→   197→      <AnimatePresence>
+   198→   198→        {lesson && (
+   199→   199→          <motion.div
+   200→   200→            key="progress-bar"
+   201→   201→            initial={{ opacity: 0 }}
+   202→   202→            animate={{ opacity: 1 }}
+   203→   203→            exit={{ opacity: 0 }}
+   204→   204→            className="fixed left-0 right-0 top-16 z-30 h-1"
+   205→   205→          >
+   206→   206→            <div
+   207→   207→              className="h-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 transition-[width] duration-150 ease-out"
+   208→   208→              style={{ width: `${progress}%` }}
+   209→   209→            />
+   210→   210→          </motion.div>
+   211→   211→        )}
+   212→   212→      </AnimatePresence>
+   213→   213→
+   214→   214→      <SectionHeader
+   215→   215→        title="Интерактивные уроки"
+   216→   216→        subtitle="Введи тему — AI создаст красивый урок за секунды"
+   217→   217→        icon={BookOpen}
+   218→   218→      />
+   219→   219→
+   220→   220→      {/* Input panel: full or compact */}
+   221→   221→      {/* Saved lessons */}
+   222→   222→      <SavedLessonsBar onOpen={(t, s) => { setTopic(t); setSubject(s); generate(t) }} />
+   223→   223→
+   224→   224→      <div className="mb-6">
+   225→   225→        <AnimatePresence mode="wait">
+   226→   226→          {lesson ? (
+   227→   227→            <motion.div
+   228→   228→              key="compact-bar"
+   229→   229→              initial={{ opacity: 0, y: -8 }}
+   230→   230→              animate={{ opacity: 1, y: 0 }}
+   231→   231→              exit={{ opacity: 0, y: -8 }}
+   232→   232→              transition={{ duration: 0.2 }}
+   233→   233→            >
+   234→   234→              <CompactBar
+   235→   235→                lesson={lesson}
+   236→   236→                onNew={resetToNew}
+   237→   237→                subjectLabel={subjectObj?.ru}
+   238→   238→                onScrollToLesson={() =>
+   239→   239→                  lessonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+   240→   240→                }
+   241→   241→              />
+   242→   242→            </motion.div>
+   243→   243→          ) : (
+   244→   244→            <motion.div
+   245→   245→              key="full-input"
+   246→   246→              initial={{ opacity: 0, y: -8 }}
+   247→   247→              animate={{ opacity: 1, y: 0 }}
+   248→   248→              exit={{ opacity: 0, y: -8 }}
+   249→   249→              transition={{ duration: 0.2 }}
+   250→   250→            >
+   251→   251→              <FullInputPanel
+   252→   252→                topic={topic}
+   253→   253→                setTopic={setTopic}
+   254→   254→                subject={subject}
+   255→   255→                setSubject={setSubject}
+   256→   256→                level={level}
+   257→   257→                setLevel={setLevel}
+   258→   258→                loading={loading}
+   259→   259→                onGenerate={generate}
+   260→   260→                inputRef={inputRef}
+   261→   261→              />
+   262→   262→            </motion.div>
+   263→   263→          )}
+   264→   264→        </AnimatePresence>
+   265→   265→      </div>
+   266→   266→
+   267→   267→      {/* Skeleton while generating */}
+   268→   268→      <AnimatePresence>
+   269→   269→        {loading && (
+   270→   270→          <motion.div
+   271→   271→            key="skeleton"
+   272→   272→            initial={{ opacity: 0, y: 8 }}
+   273→   273→            animate={{ opacity: 1, y: 0 }}
+   274→   274→            exit={{ opacity: 0 }}
+   275→   275→            transition={{ duration: 0.25 }}
+   276→   276→          >
+   277→   277→            <LessonSkeleton />
+   278→   278→          </motion.div>
+   279→   279→        )}
+   280→   280→      </AnimatePresence>
+   281→   281→
+   282→   282→      {/* Lesson reader — keyed by title so a new lesson re-mounts & replays
+   283→   283→          the reveal animation. No AnimatePresence here so the new node mounts
+   284→   284→          immediately (keeping the scroll-to-lesson ref reliable). */}
+   285→   285→      {lesson && !loading && (
+   286→   286→        <motion.div
+   287→   287→          key={`reader-${lesson.title}`}
+   288→   288→          ref={lessonRef}
+   289→   289→          initial={{ opacity: 0, y: 12 }}
+   290→   290→          animate={{ opacity: 1, y: 0 }}
+   291→   291→          transition={{ duration: 0.45, ease: 'easeOut' }}
+   292→   292→        >
+   293→   293→          <LessonReader
+   294→   294→            lesson={lesson}
+   295→   295→            subjectLabel={subjectObj?.ru}
+   296→   296→            onNext={(t) => generate(t)}
+   297→   297→          />
+   298→   298→        </motion.div>
+   299→   299→      )}
+   300→   300→
+   301→   301→      {/* Empty state with suggested topics */}
+   302→   302→      <AnimatePresence>
+   303→   303→        {!lesson && !loading && (
+   304→   304→          <motion.div
+   305→   305→            key="empty"
+   306→   306→            initial={{ opacity: 0 }}
+   307→   307→            animate={{ opacity: 1 }}
+   308→   308→            exit={{ opacity: 0 }}
+   309→   309→          >
+   310→   310→            <EmptyState
+   311→   311→              icon={Sparkles}
+   312→   312→              title="Идеи для изучения"
+   313→   313→              description="Введи свою тему выше или начни с одной из этих"
+   314→   314→              action={
+   315→   315→                <div className="mt-2 flex flex-wrap justify-center gap-2">
+   316→   316→                  {SUGGESTED_TOPICS.map((t) => (
+   317→   317→                    <button
+   318→   318→                      key={t}
+   319→   319→                      onClick={() => generate(t)}
+   320→   320→                      className="group inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/60 px-3.5 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:border-primary/40 hover:text-foreground"
+   321→   321→                    >
+   322→   322→                      {t}
+   323→   323→                      <ChevronRight className="h-3 w-3 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
+   324→   324→                    </button>
+   325→   325→                  ))}
+   326→   326→                </div>
+   327→   327→              }
+   328→   328→            />
+   329→   329→          </motion.div>
+   330→   330→        )}
+   331→   331→      </AnimatePresence>
+   332→   332→    </PageSection>
+   333→   333→  )
+   334→   334→}
+   335→   335→
+   336→   336→/* ===================== Full input panel ===================== */
+   337→   337→
+   338→   338→function FullInputPanel({
+   339→   339→  topic,
+   340→   340→  setTopic,
+   341→   341→  subject,
+   342→   342→  setSubject,
+   343→   343→  level,
+   344→   344→  setLevel,
+   345→   345→  loading,
+   346→   346→  onGenerate,
+   347→   347→  inputRef,
+   348→   348→}: {
+   349→   349→  topic: string
+   350→   350→  setTopic: (v: string) => void
+   351→   351→  subject: string | null
+   352→   352→  setSubject: (v: string | null) => void
+   353→   353→  level: string
+   354→   354→  setLevel: (v: string) => void
+   355→   355→  loading: boolean
+   356→   356→  onGenerate: (topic?: string) => void
+   357→   357→  inputRef: React.RefObject<HTMLTextAreaElement | null>
+   358→   358→}) {
+   359→   359→  return (
+   360→   360→    <GlassCard className="overflow-hidden" hover={false} gradient>
+   361→   361→      <div className="p-5 sm:p-6">
+   362→   362→        <label className="mb-2 block text-sm font-medium">Что хочешь изучить?</label>
+   363→   363→        <textarea
+   364→   364→          ref={inputRef}
+   365→   365→          value={topic}
+   366→   366→          onChange={(e) => setTopic(e.target.value)}
+   367→   367→          placeholder="Например: как работают нейронные сети"
+   368→   368→          rows={2}
+   369→   369→          onKeyDown={(e) => {
+   370→   370→            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+   371→   371→              e.preventDefault()
+   372→   372→              onGenerate()
+   373→   373→            }
+   374→   374→          }}
+   375→   375→          className="w-full resize-none rounded-xl border border-border bg-background/60 px-4 py-3 text-base outline-none ring-primary/20 transition placeholder:text-muted-foreground/60 focus:ring-2"
+   376→   376→        />
+   377→   377→
+   378→   378→        {/* Subject chips */}
+   379→   379→        <div className="mt-4">
+   380→   380→          <p className="mb-2 text-xs text-muted-foreground">Предмет:</p>
+   381→   381→          <div className="flex flex-wrap gap-2">
+   382→   382→            <SubjectChip
+   383→   383→              active={!subject}
+   384→   384→              emoji="✨"
+   385→   385→              label="Авто"
+   386→   386→              onClick={() => setSubject(null)}
+   387→   387→            />
+   388→   388→            {SUBJECTS.map((s) => (
+   389→   389→              <SubjectChip
+   390→   390→                key={s.id}
+   391→   391→                active={subject === s.id}
+   392→   392→                emoji={s.emoji}
+   393→   393→                label={s.ru}
+   394→   394→                onClick={() => setSubject(s.id)}
+   395→   395→              />
+   396→   396→            ))}
+   397→   397→          </div>
+   398→   398→        </div>
+   399→   399→
+   400→   400→        {/* Level + Generate */}
+   401→   401→        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+   402→   402→          <div>
+   403→   403→            <p className="mb-1.5 text-xs text-muted-foreground">Уровень:</p>
+   404→   404→            <div className="inline-flex items-center gap-1 rounded-lg border border-border/60 bg-muted/30 p-1">
+   405→   405→              {LEVELS.map((l) => (
+   406→   406→                <button
+   407→   407→                  key={l}
+   408→   408→                  onClick={() => setLevel(l)}
+   409→   409→                  className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+   410→   410→                    level === l
+   411→   411→                      ? 'bg-primary text-primary-foreground shadow-sm'
+   412→   412→                      : 'text-muted-foreground hover:text-foreground'
+   413→   413→                  }`}
+   414→   414→                >
+   415→   415→                  {l}
+   416→   416→                </button>
+   417→   417→              ))}
+   418→   418→            </div>
+   419→   419→          </div>
+   420→   420→          <GradientButton onClick={() => onGenerate()} disabled={loading} className="mt-5 sm:mt-0">
+   421→   421→            {loading ? (
+   422→   422→              <>
+   423→   423→                <Loader2 className="h-4 w-4 animate-spin" /> Создаю урок...
+   424→   424→              </>
+   425→   425→            ) : (
+   426→   426→              <>
+   427→   427→                <Sparkles className="h-4 w-4" /> Создать урок
+   428→   428→              </>
+   429→   429→            )}
+   430→   430→          </GradientButton>
+   431→   431→        </div>
+   432→   432→
+   433→   433→        <p className="mt-3 text-[11px] text-muted-foreground/70">
+   434→   434→          Подсказка: нажми <kbd className="rounded border border-border/60 bg-muted/40 px-1 py-0.5 font-mono text-[10px]">⌘/Ctrl + Enter</kbd> для быстрого запуска
+   435→   435→        </p>
+   436→   436→      </div>
+   437→   437→    </GlassCard>
+   438→   438→  )
+   439→   439→}
+   440→   440→
+   441→   441→function SubjectChip({
+   442→   442→  active,
+   443→   443→  emoji,
+   444→   444→  label,
+   445→   445→  onClick,
+   446→   446→}: {
+   447→   447→  active: boolean
+   448→   448→  emoji: string
+   449→   449→  label: string
+   450→   450→  onClick: () => void
+   451→   451→}) {
+   452→   452→  return (
+   453→   453→    <button
+   454→   454→      onClick={onClick}
+   455→   455→      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
+   456→   456→        active
+   457→   457→          ? 'border-primary/50 bg-primary/15 text-foreground shadow-sm'
+   458→   458→          : 'border-border/60 bg-background/50 text-muted-foreground hover:border-primary/30 hover:text-foreground'
+   459→   459→      }`}
+   460→   460→    >
+   461→   461→      <span className="text-sm leading-none">{emoji}</span>
+   462→   462→      {label}
+   463→   463→    </button>
+   464→   464→  )
+   465→   465→}
+   466→   466→
+   467→   467→/* ===================== Compact bar ===================== */
+   468→   468→
+   469→   469→function CompactBar({
+   470→   470→  lesson,
+   471→   471→  onNew,
+   472→   472→  onScrollToLesson,
+   473→   473→  subjectLabel,
+   474→   474→}: {
+   475→   475→  lesson: Lesson
+   476→   476→  onNew: () => void
+   477→   477→  onScrollToLesson: () => void
+   478→   478→  subjectLabel?: string
+   479→   479→}) {
+   480→   480→  return (
+   481→   481→    <GlassCard className="overflow-hidden" hover={false}>
+   482→   482→      <div className="flex flex-wrap items-center justify-between gap-3 p-3 sm:p-4">
+   483→   483→        <button
+   484→   484→          onClick={onScrollToLesson}
+   485→   485→          className="flex min-w-0 flex-1 items-center gap-3 text-left"
+   486→   486→        >
+   487→   487→          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 text-xl ring-1 ring-primary/20">
+   488→   488→            {lesson.emoji || '📖'}
+   489→   489→          </div>
+   490→   490→          <div className="min-w-0">
+   491→   491→            <p className="truncate text-sm font-semibold">{lesson.title}</p>
+   492→   492→            <p className="truncate text-xs text-muted-foreground">
+   493→   493→              {subjectLabel ? `${subjectLabel} · ` : ''}
+   494→   494→              {lesson.durationMin} мин · {lesson.difficulty}
+   495→   495→            </p>
+   496→   496→          </div>
+   497→   497→        </button>
+   498→   498→        <button
+   499→   499→          onClick={onNew}
+   500→   500→          className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-background/60 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5"
+   501→   501→        >
+   502→   502→          <RefreshCw className="h-3.5 w-3.5" /> Новый урок
+   503→   503→        </button>
+   504→   504→      </div>
+   505→   505→    </GlassCard>
+   506→   506→  )
+   507→   507→}
+   508→   508→
+   509→   509→/* ===================== Skeleton ===================== */
+   510→   510→
+   511→   511→function Shimmer({ className }: { className?: string }) {
+   512→   512→  return (
+   513→   513→    <div className={`relative overflow-hidden rounded bg-muted/60 ${className ?? ''}`}>
+   514→   514→      <div className="absolute inset-0 animate-shimmer" />
+   515→   515→    </div>
+   516→   516→  )
+   517→   517→}
+   518→   518→
+   519→   519→function LessonSkeleton() {
+   520→   520→  return (
+   521→   521→    <GlassCard className="overflow-hidden" hover={false}>
+   522→   522→      <LoadingState
+   523→   523→        label="Создаём твой урок..."
+   524→   524→        className="border-b border-border/60 py-4"
+   525→   525→      />
+   526→   526→      {/* Hero skeleton */}
+   527→   527→      <div className="border-b border-border/60 bg-muted/10 p-6 sm:p-8">
+   528→   528→        <div className="flex gap-4">
+   529→   529→          <Shimmer className="h-20 w-20 shrink-0 rounded-3xl" />
+   530→   530→          <div className="flex-1 space-y-3">
+   531→   531→            <Shimmer className="h-7 w-3/4" />
+   532→   532→            <Shimmer className="h-4 w-full" />
+   533→   533→            <Shimmer className="h-4 w-2/3" />
+   534→   534→            <div className="flex gap-2 pt-2">
+   535→   535→              <Shimmer className="h-5 w-16 rounded-full" />
+   536→   536→              <Shimmer className="h-5 w-20 rounded-full" />
+   537→   537→              <Shimmer className="h-5 w-24 rounded-full" />
+   538→   538→            </div>
+   539→   539→          </div>
+   540→   540→        </div>
+   541→   541→      </div>
+   542→   542→      {/* Blocks skeleton */}
+   543→   543→      <div className="space-y-5 p-5 sm:p-8">
+   544→   544→        <Shimmer className="h-6 w-1/3" />
+   545→   545→        <Shimmer className="h-3 w-full" />
+   546→   546→        <Shimmer className="h-3 w-5/6" />
+   547→   547→        <Shimmer className="h-3 w-4/5" />
+   548→   548→        <Shimmer className="h-20 w-full rounded-2xl" />
+   549→   549→        <Shimmer className="h-3 w-full" />
+   550→   550→        <Shimmer className="h-3 w-3/4" />
+   551→   551→        <Shimmer className="h-6 w-1/4" />
+   552→   552→        <Shimmer className="h-3 w-full" />
+   553→   553→        <Shimmer className="h-3 w-2/3" />
+   554→   554→      </div>
+   555→   555→    </GlassCard>
+   556→   556→  )
+   557→   557→}
+   558→   558→
+   559→   559→/* ===================== Lesson reader ===================== */
+   560→   560→
+   561→   561→function LessonReader({
+   562→   562→  lesson,
+   563→   563→  subjectLabel,
+   564→   564→  onNext,
+   565→   565→}: {
+   566→   566→  lesson: Lesson
+   567→   567→  subjectLabel?: string
+   568→   568→  onNext: (topic: string) => void
+   569→   569→}) {
+   570→   570→  const blocks = lesson.blocks ?? []
+   571→   571→  const takeaways = lesson.keyTakeaways ?? []
+   572→   572→
+   573→   573→  return (
+   574→   574→    <GlassCard className="overflow-hidden" hover={false}>
+   575→   575→      {/* Hero header */}
+   576→   576→      <div className="relative overflow-hidden border-b border-border/60">
+   577→   577→        <div className="absolute inset-0 bg-gradient-to-br from-violet-500/15 via-fuchsia-500/10 to-pink-500/15" />
+   578→   578→        <div className="absolute inset-0 bg-grid opacity-15" />
+   579→   579→        <div className="relative p-6 sm:p-8">
+   580→   580→          <div className="flex flex-wrap items-start gap-4 sm:gap-5">
+   581→   581→            <motion.div
+   582→   582→              initial={{ scale: 0.7, rotate: -10, opacity: 0 }}
+   583→   583→              animate={{ scale: 1, rotate: 0, opacity: 1 }}
+   584→   584→              transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
+   585→   585→              className="grid h-20 w-20 shrink-0 place-items-center rounded-3xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 text-5xl shadow-lg shadow-fuchsia-500/30"
+   586→   586→            >
+   587→   587→              {lesson.emoji || '📖'}
+   588→   588→            </motion.div>
+   589→   589→            <div className="min-w-0 flex-1">
+   590→   590→              <h1 className="text-balance text-2xl font-extrabold tracking-tight sm:text-3xl lg:text-4xl">
+   591→   591→                {lesson.title}
+   592→   592→              </h1>
+   593→   593→              <p className="mt-2 text-pretty text-sm text-muted-foreground sm:text-base">
+   594→   594→                {lesson.summary}
+   595→   595→              </p>
+   596→   596→              <div className="mt-3 flex flex-wrap gap-2">
+   597→   597→                <Pill>
+   598→   598→                  <Clock className="h-3 w-3" /> {lesson.durationMin} мин
+   599→   599→                </Pill>
+   600→   600→                <Pill>
+   601→   601→                  <Gauge className="h-3 w-3" /> {lesson.difficulty}
+   602→   602→                </Pill>
+   603→   603→                {subjectLabel && (
+   604→   604→                  <Pill>
+   605→   605→                    <BookOpen className="h-3 w-3" /> {subjectLabel}
+   606→   606→                  </Pill>
+   607→   607→                )}
+   608→   608→              </div>
+   609→   609→
+   610→   610→              {/* Media actions: audio narration + AI illustration + bookmark */}
+   611→   611→              <div className="mt-4 flex flex-wrap items-center gap-2">
+   612→   612→                <AudioNarration
+   613→   613→                  text={`${lesson.title}. ${lesson.summary}. ${takeaways.join(' ')}`}
+   614→   614→                  label="Слушать урок"
+   615→   615→                />
+   616→   616→                <LessonIllustration topic={lesson.title} summary={lesson.summary} />
+   617→   617→                <BookmarkButton topic={lesson.title} subject={subjectLabel ?? 'general'} lessonJson={JSON.stringify(lesson)} />
+   618→   618→              </div>
+   619→   619→            </div>
+   620→   620→          </div>
+   621→   621→        </div>
+   622→   622→      </div>
+   623→   623→
+   624→   624→      {/* Blocks */}
+   625→   625→      <div className="p-5 sm:p-8">
+   626→   626→        <StaggerGroup className="space-y-5">
+   627→   627→          {blocks.map((block, i) => (
+   628→   628→            <StaggerItem key={i}>
+   629→   629→              <BlockRenderer block={block} />
+   630→   630→            </StaggerItem>
+   631→   631→          ))}
+   632→   632→        </StaggerGroup>
+   633→   633→
+   634→   634→        {/* Key takeaways */}
+   635→   635→        {takeaways.length > 0 && (
+   636→   636→          <div className="mt-10">
+   637→   637→            <div className="mb-3 flex items-center gap-2.5">
+   638→   638→              <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 text-primary ring-1 ring-primary/20">
+   639→   639→                <CheckCircle2 className="h-4 w-4" />
+   640→   640→              </div>
+   641→   641→              <h3 className="text-lg font-bold tracking-tight">Ключевые выводы</h3>
+   642→   642→            </div>
+   643→   643→            <StaggerGroup className="grid gap-3 sm:grid-cols-2">
+   644→   644→              {takeaways.map((kt, i) => (
+   645→   645→                <StaggerItem key={i}>
+   646→   646→                  <div className="flex items-start gap-2.5 rounded-xl border border-border/60 bg-background/40 p-3 transition-colors hover:border-primary/30">
+   647→   647→                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+   648→   648→                    <span className="text-sm leading-relaxed text-muted-foreground">{kt}</span>
+   649→   649→                  </div>
+   650→   650→                </StaggerItem>
+   651→   651→              ))}
+   652→   652→            </StaggerGroup>
+   653→   653→          </div>
+   654→   654→        )}
+   655→   655→
+   656→   656→        {/* What's next */}
+   657→   657→        {lesson.nextTopic && (
+   658→   658→          <motion.div
+   659→   659→            initial={{ opacity: 0, y: 12 }}
+   660→   660→            whileInView={{ opacity: 1, y: 0 }}
+   661→   661→            viewport={{ once: true, margin: '-80px' }}
+   662→   662→            transition={{ duration: 0.4 }}
+   663→   663→            className="mt-10 overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-violet-500/10 via-fuchsia-500/10 to-pink-500/10 p-5"
+   664→   664→          >
+   665→   665→            <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-primary/80">
+   666→   666→              Что дальше
+   667→   667→            </p>
+   668→   668→            <div className="flex flex-wrap items-center justify-between gap-3">
+   669→   669→              <p className="text-base font-semibold sm:text-lg">{lesson.nextTopic}</p>
+   670→   670→              <GradientButton onClick={() => onNext(lesson.nextTopic)}>
+   671→   671→                Создать урок <ArrowRight className="h-4 w-4" />
+   672→   672→              </GradientButton>
+   673→   673→            </div>
+   674→   674→          </motion.div>
+   675→   675→        )}
+   676→   676→      </div>
+   677→   677→    </GlassCard>
+   678→   678→  )
+   679→   679→}
+   680→   680→
+   681→   681→/* ===================== Block renderer ===================== */
+   682→   682→
+   683→   683→function BlockRenderer({ block }: { block: LessonBlock }) {
+   684→   684→  switch (block.type) {
+   685→   685→    case 'heading':
+   686→   686→      return (
+   687→   687→        <div className="pt-2">
+   688→   688→          <h2 className="text-xl font-bold tracking-tight sm:text-2xl">{block.text}</h2>
+   689→   689→          <div className="mt-2 h-0.5 w-16 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500" />
+   690→   690→        </div>
+   691→   691→      )
+   692→   692→
+   693→   693→    case 'paragraph':
+   694→   694→      return (
+   695→   695→        <MarkdownText className="text-[15px] text-foreground/90">{block.text}</MarkdownText>
+   696→   696→      )
+   697→   697→
+   698→   698→    case 'analogy':
+   699→   699→      return (
+   700→   700→        <AccentCard
+   701→   701→          icon={Lightbulb}
+   702→   702→          label="Аналогия"
+   703→   703→          accent="amber"
+   704→   704→        >
+   705→   705→          <MarkdownText className="text-sm text-foreground/90">{block.text}</MarkdownText>
+   706→   706→        </AccentCard>
+   707→   707→      )
+   708→   708→
+   709→   709→    case 'example':
+   710→   710→      return (
+   711→   711→        <AccentCard
+   712→   712→          icon={FlaskConical}
+   713→   713→          label="Пример"
+   714→   714→          accent="emerald"
+   715→   715→        >
+   716→   716→          <MarkdownText className="text-sm text-foreground/90">{block.text}</MarkdownText>
+   717→   717→        </AccentCard>
+   718→   718→      )
+   719→   719→
+   720→   720→    case 'callout':
+   721→   721→      return (
+   722→   722→        <AccentCard
+   723→   723→          icon={AlertCircle}
+   724→   724→          label="Важно"
+   725→   725→          accent="rose"
+   726→   726→        >
+   727→   727→          <MarkdownText className="text-sm text-foreground/90">{block.text}</MarkdownText>
+   728→   728→        </AccentCard>
+   729→   729→      )
+   730→   730→
+   731→   731→    case 'code':
+   732→   732→      return (
+   733→   733→        <div className="overflow-hidden rounded-2xl border border-border/60 bg-zinc-950/90">
+   734→   734→          {block.lang && (
+   735→   735→            <div className="flex items-center gap-2 border-b border-white/5 bg-white/[0.03] px-4 py-2">
+   736→   736→              <Code2 className="h-3.5 w-3.5 text-muted-foreground" />
+   737→   737→              <span className="font-mono text-xs text-muted-foreground">{block.lang}</span>
+   738→   738→            </div>
+   739→   739→          )}
+   740→   740→          <pre className="overflow-x-auto p-4 text-sm leading-relaxed">
+   741→   741→            <code className="font-mono text-foreground/90">{block.code ?? ''}</code>
+   742→   742→          </pre>
+   743→   743→        </div>
+   744→   744→      )
+   745→   745→
+   746→   746→    case 'steps':
+   747→   747→      return (
+   748→   748→        <div className="rounded-2xl border border-border/60 bg-background/40 p-4 sm:p-5">
+   749→   749→          <div className="mb-3 flex items-center gap-2">
+   750→   750→            <ListOrdered className="h-4 w-4 text-primary" />
+   751→   751→            <p className="text-sm font-semibold">Шаги</p>
+   752→   752→          </div>
+   753→   753→          <ol className="relative space-y-3 before:absolute before:left-[15px] before:top-2 before:h-[calc(100%-1rem)] before:w-px before:bg-border">
+   754→   754→            {(block.items ?? []).map((item, i) => (
+   755→   755→              <li key={i} className="relative flex gap-3">
+   756→   756→                <div className="z-10 grid h-8 w-8 shrink-0 place-items-center rounded-full border-2 border-primary/40 bg-card text-xs font-bold text-primary">
+   757→   757→                  {i + 1}
+   758→   758→                </div>
+   759→   759→                <div className="flex-1 pt-1">
+   760→   760→                  <MarkdownText className="text-sm text-foreground/90">{item}</MarkdownText>
+   761→   761→                </div>
+   762→   762→              </li>
+   763→   763→            ))}
+   764→   764→          </ol>
+   765→   765→        </div>
+   766→   766→      )
+   767→   767→
+   768→   768→    case 'quote':
+   769→   769→      return (
+   770→   770→        <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-background/40 p-5 sm:p-6">
+   771→   771→          <Quote className="absolute right-4 top-3 h-10 w-10 text-primary/15" />
+   772→   772→          <blockquote className="relative text-base italic leading-relaxed text-foreground/90 sm:text-lg">
+   773→   773→            {block.text}
+   774→   774→          </blockquote>
+   775→   775→        </div>
+   776→   776→      )
+   777→   777→
+   778→   778→    default:
+   779→   779→      return null
+   780→   780→  }
+   781→   781→}
+   782→   782→
+   783→   783→/* ===================== Shared sub-components ===================== */
+   784→   784→
+   785→   785→function AccentCard({
+   786→   786→  icon: Icon,
+   787→   787→  label,
+   788→   788→  accent,
+   789→   789→  children,
+   790→   790→}: {
+   791→   791→  icon: React.ComponentType<{ className?: string }>
+   792→   792→  label: string
+   793→   793→  accent: 'amber' | 'emerald' | 'rose'
+   794→   794→  children: React.ReactNode
+   795→   795→}) {
+   796→   796→  const palette = {
+   797→   797→    amber: {
+   798→   798→      border: 'border-amber-500/30',
+   799→   799→      bg: 'bg-amber-500/[0.06]',
+   800→   800→      tile: 'bg-amber-500/15 text-amber-400 ring-amber-500/30',
+   801→   801→      label: 'text-amber-400/80',
+   802→   802→    },
+   803→   803→    emerald: {
+   804→   804→      border: 'border-emerald-500/30',
+   805→   805→      bg: 'bg-emerald-500/[0.06]',
+   806→   806→      tile: 'bg-emerald-500/15 text-emerald-400 ring-emerald-500/30',
+   807→   807→      label: 'text-emerald-400/80',
+   808→   808→    },
+   809→   809→    rose: {
+   810→   810→      border: 'border-rose-500/30',
+   811→   811→      bg: 'bg-rose-500/[0.06]',
+   812→   812→      tile: 'bg-rose-500/15 text-rose-400 ring-rose-500/30',
+   813→   813→      label: 'text-rose-400/80',
+   814→   814→    },
+   815→   815→  }[accent]
+   816→   816→
+   817→   817→  return (
+   818→   818→    <div className={`relative overflow-hidden rounded-2xl border ${palette.border} ${palette.bg} p-4 sm:p-5`}>
+   819→   819→      <div className="flex items-start gap-3">
+   820→   820→        <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ring-1 ${palette.tile}`}>
+   821→   821→          <Icon className="h-4 w-4" />
+   822→   822→        </div>
+   823→   823→        <div className="min-w-0 flex-1">
+   824→   824→          <p className={`mb-1 text-xs font-semibold uppercase tracking-wider ${palette.label}`}>
+   825→   825→            {label}
+   826→   826→          </p>
+   827→   827→          {children}
+   828→   828→        </div>
+   829→   829→      </div>
+   830→   830→    </div>
+   831→   831→  )
+   832→   832→}
+   833→   833→
+   834→   834→function MarkdownText({
+   835→   835→  children,
+   836→   836→  className,
+   837→   837→}: {
+   838→   838→  children: string
+   839→   839→  className?: string
+   840→   840→}) {
+   841→   841→  return (
+   842→   842→    <div
+   843→   843→      className={`[&>p]:my-0 [&>p+p]:mt-2.5 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-0.5 [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2 [&_strong]:font-semibold [&_strong]:text-foreground [&_code]:font-mono [&_code]:text-[0.85em] [&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 leading-relaxed ${className ?? ''}`}
+   844→   844→    >
+   845→   845→      <ReactMarkdown>{children}</ReactMarkdown>
+   846→   846→    </div>
+   847→   847→  )
+   848→   848→}
+   849→   849→
+   850→   850→/* ===================== Saved Lessons Bar ===================== */
+   851→   851→
+   852→   852→function SavedLessonsBar({ onOpen }: { onOpen: (topic: string, subject: string) => void }) {
+   853→   853→  const [bookmarks, setBookmarks] = useState<Array<{ id: string; topic: string; subject: string; createdAt: string }>>([])
+   854→   854→  const [open, setOpen] = useState(false)
+   855→   855→
+   856→   856→  useEffect(() => {
+   857→   857→    fetch('/api/bookmarks', { cache: 'no-store' })
+   858→   858→      .then((r) => r.json())
+   859→   859→      .then((data) => setBookmarks(data.bookmarks ?? []))
+   860→   860→      .catch(() => {})
+   861→   861→  }, [])
+   862→   862→
+   863→   863→  if (bookmarks.length === 0) return null
+   864→   864→
+   865→   865→  return (
+   866→   866→    <div className="mb-4">
+   867→   867→      <button
+   868→   868→        onClick={() => setOpen(!open)}
+   869→   869→        className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+   870→   870→      >
+   871→   871→        <Bookmark className="h-4 w-4 text-primary" />
+   872→   872→        Избранные уроки ({bookmarks.length})
+   873→   873→        {open ? <ChevronRight className="h-3.5 w-3.5 rotate-90" /> : <ChevronRight className="h-3.5 w-3.5" />}
+   874→   874→      </button>
+   875→   875→      <AnimatePresence>
+   876→   876→        {open && (
+   877→   877→          <motion.div
+   878→   878→            initial={{ height: 0, opacity: 0 }}
+   879→   879→            animate={{ height: 'auto', opacity: 1 }}
+   880→   880→            exit={{ height: 0, opacity: 0 }}
+   881→   881→            transition={{ duration: 0.25 }}
+   882→   882→            className="overflow-hidden"
+   883→   883→          >
+   884→   884→            <div className="mt-2 flex flex-wrap gap-2">
+   885→   885→              {bookmarks.map((b) => (
+   886→   886→                <button
+   887→   887→                  key={b.id}
+   888→   888→                  onClick={() => onOpen(b.topic, b.subject)}
+   889→   889→                  className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-card/60 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+   890→   890→                >
+   891→   891→                  <Bookmark className="h-3 w-3 fill-primary text-primary" />
+   892→   892→                  {b.topic}
+   893→   893→                </button>
+   894→   894→              ))}
+   895→   895→            </div>
+   896→   896→          </motion.div>
+   897→   897→        )}
+   898→   898→      </AnimatePresence>
+   899→   899→    </div>
+   900→   900→  )
+   901→   901→}
+   902→   902→

@@ -1,0 +1,129 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Local (anonymous) learner — no email/signup required, keeps platform free.
+model User {
+  id        String   @id @default(cuid())
+  name      String   @default("Странник")
+  avatar    String?
+  xp        Int      @default(0)
+  level     Int      @default(1)
+  streak    Int      @default(0)
+  lastActive DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  progress     Progress[]
+  achievements Achievement[]
+  chatSessions ChatSession[]
+  flashcards   Flashcard[]
+  lessons      LessonView[]
+  bookmarks    Bookmark[]
+}
+
+model Progress {
+  id         String   @id @default(cuid())
+  userId     String
+  subject    String
+  topic      String
+  score      Int      @default(0)
+  total      Int      @default(0)
+  completedAt DateTime @default(now())
+  kind       String   @default("quiz") // quiz | lesson | flashcard | chat
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, subject])
+  @@index([userId, kind])
+}
+
+model Achievement {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  meta      String?
+  unlockedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type])
+}
+
+model ChatSession {
+  id        String   @id @default(cuid())
+  userId    String
+  subject   String   @default("general")
+  title     String   @default("Новый диалог")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages ChatMessage[]
+
+  @@index([userId])
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  sessionId String
+  role      String // user | assistant
+  content   String
+  createdAt DateTime @default(now())
+
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+}
+
+model Flashcard {
+  id           String   @id @default(cuid())
+  userId       String
+  subject      String
+  front        String
+  back         String
+  easeFactor   Float    @default(2.5)
+  interval     Int      @default(1)
+  repetitions  Int      @default(0)
+  dueAt        DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, dueAt])
+  @@index([userId, subject])
+}
+
+model LessonView {
+  id        String   @id @default(cuid())
+  userId    String
+  subject   String
+  topic     String
+  viewedAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, subject])
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  topic     String
+  subject   String   @default("general")
+  lessonJson String  // stored JSON of the lesson object for quick re-display
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, topic])
+  @@index([userId])
+}
