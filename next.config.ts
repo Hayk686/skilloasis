@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // output: "standalone", // disabled: breaks `next start` — use only for Docker
   /* config options here */
   typescript: {
     ignoreBuildErrors: true,

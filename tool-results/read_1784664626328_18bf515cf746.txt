@@ -1,0 +1,1464 @@
+     1→'use client'
+     2→
+     3→import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+     4→import { motion, AnimatePresence } from 'framer-motion'
+     5→import {
+     6→  BarChart,
+     7→  Bar,
+     8→  Cell,
+     9→  XAxis,
+    10→  ResponsiveContainer,
+    11→  Tooltip,
+    12→  type TooltipProps,
+    13→} from 'recharts'
+    14→import { formatDistanceToNow } from 'date-fns'
+    15→import { ru } from 'date-fns/locale'
+    16→import {
+    17→  LayoutDashboard,
+    18→  Flame,
+    19→  Zap,
+    20→  Sparkles,
+    21→  Trophy,
+    22→  BookOpen,
+    23→  Layers,
+    24→  MessagesSquare,
+    25→  Award,
+    26→  Target,
+    27→  Clock,
+    28→  TrendingUp,
+    29→  Pencil,
+    30→  Check,
+    31→  Loader2,
+    32→  ChevronRight,
+    33→  Calendar,
+    34→  Star,
+    35→  ChevronDown,
+    36→  ArrowRight,
+    37→  Brain,
+    38→  Rocket,
+    39→  Gem,
+    40→  Globe,
+    41→  Lock,
+    42→  Share2,
+    43→  Volume2,
+    44→  Network,
+    45→  Code2,
+    46→} from 'lucide-react'
+    47→import { toast } from 'sonner'
+    48→import { useNav, useUser } from '@/lib/store'
+    49→import { ShareCard } from '@/components/share-card'
+    50→import { SUBJECTS, getSubject } from '@/lib/subjects'
+    51→import { levelProgress, ACHIEVEMENTS } from '@/lib/gamify-client'
+    52→import {
+    53→  PageSection,
+    54→  GlassCard,
+    55→  LoadingState,
+    56→  EmptyState,
+    57→  GradientButton,
+    58→  Pill,
+    59→  StaggerGroup,
+    60→  StaggerItem,
+    61→} from '@/components/ui-blocks'
+    62→
+    63→/* ============================================================ *
+    64→ * Types
+    65→ * ============================================================ */
+    66→
+    67→interface UserCounts {
+    68→  progress: number
+    69→  flashcards: number
+    70→  chatSessions: number
+    71→  lessons: number
+    72→}
+    73→
+    74→interface UserAchievement {
+    75→  type: string
+    76→  unlockedAt: string
+    77→}
+    78→
+    79→interface UserData {
+    80→  id: string
+    81→  name: string
+    82→  xp: number
+    83→  level: number
+    84→  streak: number
+    85→  achievements: UserAchievement[]
+    86→  counts: UserCounts
+    87→  computedLevel: number
+    88→}
+    89→
+    90→interface ProgressEntry {
+    91→  id: string
+    92→  subject: string
+    93→  topic: string
+    94→  score: number
+    95→  total: number
+    96→  kind: string
+    97→  completedAt: string
+    98→}
+    99→
+   100→interface SubjectAgg {
+   101→  count: number
+   102→  correct: number
+   103→  total: number
+   104→}
+   105→
+   106→interface ProgressData {
+   107→  progress: ProgressEntry[]
+   108→  achievements: UserAchievement[]
+   109→  bySubject: Record<string, SubjectAgg>
+   110→  byKind: Record<string, number>
+   111→  byDay: Record<string, number>
+   112→}
+   113→
+   114→interface DailyChallenge {
+   115→  date: string
+   116→  subject: string
+   117→  emoji: string
+   118→  title: string
+   119→  prompt: string
+   120→  hint: string
+   121→  xpReward: number
+   122→}
+   123→
+   124→/* ============================================================ *
+   125→ * Helpers
+   126→ * ============================================================ */
+   127→
+   128→function timeAgo(dateStr: string): string {
+   129→  try {
+   130→    return formatDistanceToNow(new Date(dateStr), {
+   131→      locale: ru,
+   132→      addSuffix: true,
+   133→    })
+   134→  } catch {
+   135→    return 'недавно'
+   136→  }
+   137→}
+   138→
+   139→function subjectLabel(id: string): string {
+   140→  if (!id || id === 'general') return 'Общее'
+   141→  const s = getSubject(id)
+   142→  return s ? s.ru : 'Общее'
+   143→}
+   144→
+   145→function subjectGradient(id: string): string {
+   146→  const s = getSubject(id)
+   147→  return s ? s.gradient : 'from-violet-500 via-fuchsia-500 to-pink-500'
+   148→}
+   149→
+   150→const KIND_META: Record<
+   151→  string,
+   152→  { icon: typeof Trophy; label: string; tone: string; ring: string }
+   153→> = {
+   154→  quiz: {
+   155→    icon: Trophy,
+   156→    label: 'Квиз',
+   157→    tone: 'text-amber-400',
+   158→    ring: 'bg-amber-500/15 ring-amber-500/30 text-amber-400',
+   159→  },
+   160→  lesson: {
+   161→    icon: BookOpen,
+   162→    label: 'Урок',
+   163→    tone: 'text-emerald-400',
+   164→    ring: 'bg-emerald-500/15 ring-emerald-500/30 text-emerald-400',
+   165→  },
+   166→  flashcard: {
+   167→    icon: Layers,
+   168→    label: 'Флешкарты',
+   169→    tone: 'text-cyan-400',
+   170→    ring: 'bg-cyan-500/15 ring-cyan-500/30 text-cyan-400',
+   171→  },
+   172→  chat: {
+   173→    icon: MessagesSquare,
+   174→    label: 'Чат',
+   175→    tone: 'text-fuchsia-400',
+   176→    ring: 'bg-fuchsia-500/15 ring-fuchsia-500/30 text-fuchsia-400',
+   177→  },
+   178→}
+   179→
+   180→function getKindMeta(kind: string) {
+   181→  return (
+   182→    KIND_META[kind] || {
+   183→      icon: Sparkles,
+   184→      label: kind || 'Активность',
+   185→      tone: 'text-primary',
+   186→      ring: 'bg-primary/15 ring-primary/30 text-primary',
+   187→    }
+   188→  )
+   189→}
+   190→
+   191→interface DaySeriesItem {
+   192→  key: string
+   193→  label: string
+   194→  count: number
+   195→  isToday: boolean
+   196→}
+   197→
+   198→function build7DaySeries(byDay: Record<string, number>): DaySeriesItem[] {
+   199→  const days: DaySeriesItem[] = []
+   200→  const today = new Date()
+   201→  for (let i = 6; i >= 0; i--) {
+   202→    const d = new Date(today)
+   203→    d.setDate(today.getDate() - i)
+   204→    const key = d.toISOString().slice(0, 10)
+   205→    const weekday = d.toLocaleDateString('ru-RU', { weekday: 'short' })
+   206→    const isToday = i === 0
+   207→    days.push({
+   208→      key,
+   209→      label: weekday.charAt(0).toUpperCase() + weekday.slice(1),
+   210→      count: byDay[key] || 0,
+   211→      isToday,
+   212→    })
+   213→  }
+   214→  return days
+   215→}
+   216→
+   217→function dailyDoneKey(date: string) {
+   218→  return `lumina:daily-done-${date}`
+   219→}
+   220→
+   221→function isDailyDone(date: string): boolean {
+   222→  if (typeof window === 'undefined') return false
+   223→  try {
+   224→    return window.localStorage.getItem(dailyDoneKey(date)) === '1'
+   225→  } catch {
+   226→    return false
+   227→  }
+   228→}
+   229→
+   230→function markDailyDone(date: string) {
+   231→  if (typeof window === 'undefined') return
+   232→  try {
+   233→    window.localStorage.setItem(dailyDoneKey(date), '1')
+   234→  } catch {
+   235→    // ignore
+   236→  }
+   237→}
+   238→
+   239→const ACHIEVEMENT_ICONS: Record<
+   240→  string,
+   241→  React.ComponentType<{ className?: string }>
+   242→> = {
+   243→  first_lesson: BookOpen,
+   244→  first_quiz: Trophy,
+   245→  first_chat: MessagesSquare,
+   246→  first_flashcard: Layers,
+   247→  first_audio: Volume2,
+   248→  first_mindmap: Network,
+   249→  first_code: Code2,
+   250→  first_share: Share2,
+   251→  streak_3: Flame,
+   252→  streak_7: Zap,
+   253→  level_5: Rocket,
+   254→  xp_1000: Gem,
+   255→  polyglot: Globe,
+   256→  quiz_perfect: Award,
+   257→}
+   258→
+   259→/* ============================================================ *
+   260→ * XP Progress Ring
+   261→ * ============================================================ */
+   262→
+   263→function XpRing({
+   264→  pct,
+   265→  level,
+   266→}: {
+   267→  pct: number
+   268→  level: number
+   269→}) {
+   270→  const r = 54
+   271→  const c = 2 * Math.PI * r
+   272→  const dash = (Math.max(0, Math.min(100, pct)) / 100) * c
+   273→  return (
+   274→    <div className="relative h-32 w-32 shrink-0">
+   275→      <svg className="h-full w-full -rotate-90" viewBox="0 0 128 128">
+   276→        <defs>
+   277→          <linearGradient id="xpRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+   278→            <stop offset="0%" stopColor="oklch(0.7 0.25 315)" />
+   279→            <stop offset="55%" stopColor="oklch(0.72 0.25 350)" />
+   280→            <stop offset="100%" stopColor="oklch(0.78 0.22 55)" />
+   281→          </linearGradient>
+   282→        </defs>
+   283→        <circle
+   284→          cx="64"
+   285→          cy="64"
+   286→          r={r}
+   287→          fill="none"
+   288→          stroke="currentColor"
+   289→          strokeWidth="9"
+   290→          className="text-muted/40"
+   291→        />
+   292→        <motion.circle
+   293→          cx="64"
+   294→          cy="64"
+   295→          r={r}
+   296→          fill="none"
+   297→          stroke="url(#xpRingGrad)"
+   298→          strokeWidth="9"
+   299→          strokeLinecap="round"
+   300→          strokeDasharray={`${dash} ${c - dash}`}
+   301→          initial={{ strokeDasharray: `0 ${c}` }}
+   302→          animate={{ strokeDasharray: `${dash} ${c - dash}` }}
+   303→          transition={{ duration: 1.1, ease: 'easeOut' }}
+   304→          style={{ filter: 'drop-shadow(0 0 8px oklch(0.7 0.25 315 / 0.55))' }}
+   305→        />
+   306→      </svg>
+   307→      <div className="absolute inset-0 flex flex-col items-center justify-center">
+   308→        <span className="text-3xl font-extrabold leading-none text-gradient">
+   309→          {level}
+   310→        </span>
+   311→        <span className="mt-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+   312→          уровень
+   313→        </span>
+   314→      </div>
+   315→    </div>
+   316→  )
+   317→}
+   318→
+   319→/* ============================================================ *
+   320→ * Confetti burst
+   321→ * ============================================================ */
+   322→
+   323→function ConfettiBurst({ burst }: { burst: number }) {
+   324→  const particles = useMemo(() => {
+   325→    if (burst === 0) return []
+   326→    return Array.from({ length: 28 }, (_, i) => {
+   327→      const angle = (i / 28) * Math.PI * 2 + Math.random() * 0.4
+   328→      const distance = 90 + Math.random() * 110
+   329→      return {
+   330→        id: `${burst}-${i}`,
+   331→        x: Math.cos(angle) * distance,
+   332→        y: Math.sin(angle) * distance,
+   333→        delay: Math.random() * 0.12,
+   334→        emoji: ['🎉', '✨', '⭐', '🔥', '💫', '🌟'][i % 6],
+   335→        rotate: (Math.random() - 0.5) * 540,
+   336→      }
+   337→    })
+   338→  }, [burst])
+   339→
+   340→  return (
+   341→    <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-visible">
+   342→      <AnimatePresence>
+   343→        {particles.map((p) => (
+   344→          <motion.div
+   345→            key={p.id}
+   346→            className="absolute text-lg"
+   347→            initial={{ x: 0, y: 0, opacity: 1, scale: 0, rotate: 0 }}
+   348→            animate={{
+   349→              x: p.x,
+   350→              y: p.y,
+   351→              opacity: 0,
+   352→              scale: 1.1,
+   353→              rotate: p.rotate,
+   354→            }}
+   355→            transition={{ duration: 1.5, delay: p.delay, ease: 'easeOut' }}
+   356→          >
+   357→            {p.emoji}
+   358→          </motion.div>
+   359→        ))}
+   360→      </AnimatePresence>
+   361→    </div>
+   362→  )
+   363→}
+   364→
+   365→/* ============================================================ *
+   366→ * Stat tile
+   367→ * ============================================================ */
+   368→
+   369→function StatTile({
+   370→  icon: Icon,
+   371→  label,
+   372→  value,
+   373→  gradient,
+   374→  delay = 0,
+   375→}: {
+   376→  icon: React.ComponentType<{ className?: string }>
+   377→  label: string
+   378→  value: string | number
+   379→  gradient: string
+   380→  delay?: number
+   381→}) {
+   382→  return (
+   383→    <motion.div
+   384→      initial={{ opacity: 0, y: 14 }}
+   385→      animate={{ opacity: 1, y: 0 }}
+   386→      transition={{ duration: 0.35, delay }}
+   387→    >
+   388→      <GlassCard className="h-full p-3.5 sm:p-4">
+   389→        <div className="flex items-center gap-3">
+   390→          <div
+   391→            className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${gradient} text-white shadow-lg`}
+   392→          >
+   393→            <Icon className="h-5 w-5" />
+   394→          </div>
+   395→          <div className="min-w-0">
+   396→            <div className="truncate text-xl font-bold leading-tight sm:text-2xl">
+   397→              {value}
+   398→            </div>
+   399→            <div className="truncate text-[10px] font-medium uppercase tracking-wider text-muted-foreground sm:text-[11px]">
+   400→              {label}
+   401→            </div>
+   402→          </div>
+   403→        </div>
+   404→      </GlassCard>
+   405→    </motion.div>
+   406→  )
+   407→}
+   408→
+   409→/* ============================================================ *
+   410→ * Quick action
+   411→ * ============================================================ */
+   412→
+   413→const QUICK_ACTIONS: {
+   414→  id: Parameters<ReturnType<typeof useNav.getState>['setView']>[0]
+   415→  title: string
+   416→  desc: string
+   417→  icon: typeof Sparkles
+   418→  gradient: string
+   419→}[] = [
+   420→  {
+   421→    id: 'tutor',
+   422→    title: 'Наставник',
+   423→    desc: 'Спроси AI',
+   424→    icon: MessagesSquare,
+   425→    gradient: 'from-violet-500 to-fuchsia-500',
+   426→  },
+   427→  {
+   428→    id: 'lessons',
+   429→    title: 'Урок',
+   430→    desc: 'Новая тема',
+   431→    icon: BookOpen,
+   432→    gradient: 'from-emerald-500 to-teal-500',
+   433→  },
+   434→  {
+   435→    id: 'quiz',
+   436→    title: 'Квиз',
+   437→    desc: 'Проверь себя',
+   438→    icon: Trophy,
+   439→    gradient: 'from-amber-500 to-orange-500',
+   440→  },
+   441→  {
+   442→    id: 'flashcards',
+   443→    title: 'Флешкарты',
+   444→    desc: 'Запомни',
+   445→    icon: Layers,
+   446→    gradient: 'from-pink-500 to-rose-500',
+   447→  },
+   448→]
+   449→
+   450→/* ============================================================ *
+   451→ * Chart tooltip
+   452→ * ============================================================ */
+   453→
+   454→function ChartTooltip({ active, payload, label }: TooltipProps<number, string>) {
+   455→  if (!active || !payload || payload.length === 0) return null
+   456→  const v = Number(payload[0]?.value ?? 0)
+   457→  return (
+   458→    <div className="rounded-xl border border-border/70 bg-card/95 px-3 py-2 text-xs shadow-xl backdrop-blur-md">
+   459→      <div className="font-semibold text-foreground">{label}</div>
+   460→      <div className="mt-0.5 text-muted-foreground">
+   461→        {v === 0 ? 'нет активности' : `${v} ${pluralActivity(v)}`}
+   462→      </div>
+   463→    </div>
+   464→  )
+   465→}
+   466→
+   467→function pluralActivity(n: number) {
+   468→  const mod10 = n % 10
+   469→  const mod100 = n % 100
+   470→  if (mod10 === 1 && mod100 !== 11) return 'действие'
+   471→  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20))
+   472→    return 'действия'
+   473→  return 'действий'
+   474→}
+   475→
+   476→/* ============================================================ *
+   477→ * Main view
+   478→ * ============================================================ */
+   479→
+   480→export function DashboardView() {
+   481→  const { setView } = useNav()
+   482→  const userStore = useUser()
+   483→  const { xp, level, streak, name } = userStore
+   484→
+   485→  const [userData, setUserData] = useState<UserData | null>(null)
+   486→  const [progressData, setProgressData] = useState<ProgressData | null>(null)
+   487→  const [challenge, setChallenge] = useState<DailyChallenge | null>(null)
+   488→  const [loading, setLoading] = useState(true)
+   489→  const [mounted, setMounted] = useState(false)
+   490→
+   491→  useEffect(() => { setMounted(true) }, [])
+   492→
+   493→  // editable name
+   494→  const [editingName, setEditingName] = useState(false)
+   495→  const [nameDraft, setNameDraft] = useState(name)
+   496→  const [savingName, setSavingName] = useState(false)
+   497→  const nameInputRef = useRef<HTMLInputElement | null>(null)
+   498→
+   499→  // daily challenge
+   500→  const [dailyDone, setDailyDone] = useState(false)
+   501→  const [submittingDaily, setSubmittingDaily] = useState(false)
+   502→  const [hintOpen, setHintOpen] = useState(false)
+   503→  const [confettiBurst, setConfettiBurst] = useState(0)
+   504→  const [shareOpen, setShareOpen] = useState(false)
+   505→
+   506→  /* ---------- fetch all in parallel ---------- */
+   507→  useEffect(() => {
+   508→    let cancelled = false
+   509→    async function load() {
+   510→      setLoading(true)
+   511→      try {
+   512→        const [uRes, pRes, dRes] = await Promise.all([
+   513→          fetch('/api/user', { cache: 'no-store' }),
+   514→          fetch('/api/progress', { cache: 'no-store' }),
+   515→          fetch('/api/daily', { cache: 'no-store' }),
+   516→        ])
+   517→        const [uJson, pJson, dJson] = await Promise.all([
+   518→          uRes.ok ? uRes.json() : null,
+   519→          pRes.ok ? pRes.json() : null,
+   520→          dRes.ok ? dRes.json() : null,
+   521→        ])
+   522→        if (cancelled) return
+   523→        if (uJson?.user) {
+   524→          setUserData(uJson.user)
+   525→          // sync store with freshest data
+   526→          useUser.setState({
+   527→            userId: uJson.user.id,
+   528→            name: uJson.user.name,
+   529→            xp: uJson.user.xp,
+   530→            level: uJson.user.computedLevel ?? uJson.user.level,
+   531→            streak: uJson.user.streak,
+   532→          })
+   533→        }
+   534→        if (pJson) setProgressData(pJson)
+   535→        if (dJson?.challenge) {
+   536→          setChallenge(dJson.challenge)
+   537→          setDailyDone(isDailyDone(dJson.challenge.date))
+   538→        }
+   539→      } catch {
+   540→        // ignore
+   541→      } finally {
+   542→        if (!cancelled) setLoading(false)
+   543→      }
+   544→    }
+   545→    load()
+   546→    return () => {
+   547→      cancelled = true
+   548→    }
+   549→  }, [])
+   550→
+   551→  /* ---------- editable name ---------- */
+   552→  useEffect(() => {
+   553→    if (editingName) {
+   554→      nameInputRef.current?.focus()
+   555→      nameInputRef.current?.select()
+   556→    }
+   557→  }, [editingName])
+   558→
+   559→  const saveName = useCallback(async () => {
+   560→    const trimmed = nameDraft.trim()
+   561→    if (!trimmed || trimmed === name) {
+   562→      setEditingName(false)
+   563→      setNameDraft(name)
+   564→      return
+   565→    }
+   566→    setSavingName(true)
+   567→    try {
+   568→      const res = await fetch('/api/user', {
+   569→        method: 'PATCH',
+   570→        headers: { 'Content-Type': 'application/json' },
+   571→        body: JSON.stringify({ name: trimmed }),
+   572→      })
+   573→      if (!res.ok) throw new Error('fail')
+   574→      const data = await res.json()
+   575→      if (data.user) {
+   576→        useUser.setState({ name: data.user.name })
+   577→        setUserData((prev) =>
+   578→          prev ? { ...prev, name: data.user.name } : prev
+   579→        )
+   580→        toast.success('Имя обновлено ✨')
+   581→      }
+   582→    } catch {
+   583→      toast.error('Не удалось сохранить имя')
+   584→      setNameDraft(name)
+   585→    } finally {
+   586→      setSavingName(false)
+   587→      setEditingName(false)
+   588→    }
+   589→  }, [nameDraft, name])
+   590→
+   591→  /* ---------- daily challenge submit ---------- */
+   592→  const submitDaily = useCallback(async () => {
+   593→    if (!challenge || dailyDone || submittingDaily) return
+   594→    setSubmittingDaily(true)
+   595→    try {
+   596→      const res = await fetch('/api/daily', {
+   597→        method: 'POST',
+   598→        headers: { 'Content-Type': 'application/json' },
+   599→        body: JSON.stringify({ xpReward: challenge.xpReward }),
+   600→      })
+   601→      if (!res.ok) throw new Error('fail')
+   602→      const data = await res.json()
+   603→      // update store + local
+   604→      useUser.setState({
+   605→        xp: data.xp,
+   606→        level: data.level,
+   607→      })
+   608→      setUserData((prev) =>
+   609→        prev ? { ...prev, xp: data.xp, level: data.level } : prev
+   610→      )
+   611→      setDailyDone(true)
+   612→      markDailyDone(challenge.date)
+   613→      setConfettiBurst((b) => b + 1)
+   614→      toast.success(`+${data.xpGain} XP за вызов!`, {
+   615→        description: 'Так держать — каждый шаг приближает к мечте 🚀',
+   616→      })
+   617→      setTimeout(() => setConfettiBurst(0), 1800)
+   618→    } catch {
+   619→      toast.error('Не удалось засчитать вызов')
+   620→    } finally {
+   621→      setSubmittingDaily(false)
+   622→    }
+   623→  }, [challenge, dailyDone, submittingDaily])
+   624→
+   625→  /* ---------- derived ---------- */
+   626→  const lp = useMemo(() => levelProgress(xp), [xp])
+   627→  const xpInto = lp.into
+   628→  const xpSpan = lp.span
+   629→  const xpPct = lp.pct
+   630→  const xpToNext = Math.max(0, lp.next - xp)
+   631→
+   632→  const daySeries = useMemo(
+   633→    () => (progressData ? build7DaySeries(progressData.byDay) : []),
+   634→    [progressData]
+   635→  )
+   636→  const weekTotal = useMemo(
+   637→    () => daySeries.reduce((s, d) => s + d.count, 0),
+   638→    [daySeries]
+   639→  )
+   640→  const allWeekZero = weekTotal === 0
+   641→
+   642→  const subjectRows = useMemo(() => {
+   643→    if (!progressData) return []
+   644→    const entries = Object.entries(progressData.bySubject)
+   645→      .map(([id, agg]) => ({
+   646→        id,
+   647→        label: subjectLabel(id),
+   648→        gradient: subjectGradient(id),
+   649→        ...agg,
+   650→        accuracy: agg.total > 0 ? Math.round((agg.correct / agg.total) * 100) : null,
+   651→      }))
+   652→      .sort((a, b) => b.count - a.count)
+   653→    return entries
+   654→  }, [progressData])
+   655→
+   656→  const subjectMax = useMemo(
+   657→    () => subjectRows.reduce((m, s) => Math.max(m, s.count), 0) || 1,
+   658→    [subjectRows]
+   659→  )
+   660→
+   661→  const recentFeed = useMemo(() => {
+   662→    if (!progressData) return []
+   663→    return progressData.progress.slice(0, 7)
+   664→  }, [progressData])
+   665→
+   666→  const unlockedAchievements = useMemo(() => {
+   667→    if (!progressData) return []
+   668→    return progressData.achievements
+   669→  }, [progressData])
+   670→
+   671→  const quizCount = useMemo(
+   672→    () => (progressData?.byKind?.quiz ?? 0) as number,
+   673→    [progressData]
+   674→  )
+   675→
+   676→  /* ---------- skeleton ---------- */
+   677→  if (loading) {
+   678→    return (
+   679→      <PageSection className="py-8">
+   680→        <div className="mb-6 flex items-center gap-3">
+   681→          <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 text-primary ring-1 ring-primary/20">
+   682→            <LayoutDashboard className="h-5 w-5" />
+   683→          </div>
+   684→          <div>
+   685→            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+   686→              Кабинет прогресса
+   687→            </h1>
+   688→            <p className="text-sm text-muted-foreground">
+   689→              Твой личный космический капсульный пульт
+   690→            </p>
+   691→          </div>
+   692→        </div>
+   693→        <div className="grid gap-4 lg:grid-cols-3">
+   694→          <GlassCard className="lg:col-span-2 p-6" hover={false}>
+   695→            <div className="h-44 animate-pulse rounded-xl bg-muted/40" />
+   696→          </GlassCard>
+   697→          <GlassCard className="p-6" hover={false}>
+   698→            <div className="h-44 animate-pulse rounded-xl bg-muted/40" />
+   699→          </GlassCard>
+   700→        </div>
+   701→        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+   702→          {Array.from({ length: 4 }).map((_, i) => (
+   703→            <div key={i} className="h-20 animate-pulse rounded-2xl bg-muted/40" />
+   704→          ))}
+   705→        </div>
+   706→        <div className="mt-4 grid gap-4 lg:grid-cols-3">
+   707→          <GlassCard className="lg:col-span-2 p-6" hover={false}>
+   708→            <div className="h-56 animate-pulse rounded-xl bg-muted/40" />
+   709→          </GlassCard>
+   710→          <GlassCard className="p-6" hover={false}>
+   711→            <div className="h-56 animate-pulse rounded-xl bg-muted/40" />
+   712→          </GlassCard>
+   713→        </div>
+   714→        <LoadingState label="Собираем звёзды в созвездия..." className="mt-4" />
+   715→      </PageSection>
+   716→    )
+   717→  }
+   718→
+   719→  /* ---------- greeting ---------- */
+   720→  const hour = new Date().getHours()
+   721→  const greetingWord =
+   722→    hour < 6
+   723→      ? 'Доброй ночи'
+   724→      : hour < 12
+   725→        ? 'Доброе утро'
+   726→        : hour < 18
+   727→          ? 'Привет'
+   728→          : 'Добрый вечер'
+   729→
+   730→  const streakHint =
+   731→    streak >= 7
+   732→      ? 'Ты в потоке недели! 🔥'
+   733→      : streak >= 3
+   734→        ? 'Держишь ритм — продолжай!'
+   735→        : streak >= 1
+   736→          ? 'Заходи завтра, чтобы поднять серию'
+   737→          : 'Сделай первый шаг сегодня'
+   738→
+   739→  return (
+   740→    <PageSection className="py-8">
+   741→      {/* Header */}
+   742→      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+   743→        <div className="flex items-start gap-3">
+   744→          <div className="mt-0.5 grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 text-primary ring-1 ring-primary/20">
+   745→            <LayoutDashboard className="h-5 w-5" />
+   746→          </div>
+   747→          <div>
+   748→            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+   749→              Кабинет прогресса
+   750→            </h1>
+   751→            <p className="text-sm text-muted-foreground sm:text-base">
+   752→              Твой личный космический пульт роста
+   753→            </p>
+   754→          </div>
+   755→        </div>
+   756→        <div className="flex items-center gap-2">
+   757→          <Pill className="border-primary/30 bg-primary/10 text-primary">
+   758→            <Calendar className="h-3 w-3" />
+   759→            {new Date().toLocaleDateString('ru-RU', {
+   760→              day: 'numeric',
+   761→              month: 'long',
+   762→            })}
+   763→          </Pill>
+   764→          <button
+   765→            onClick={() => setShareOpen(true)}
+   766→            className="group inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/60 px-3 py-1.5 text-xs font-medium text-foreground transition-all hover:border-primary/40 hover:bg-primary/10 hover:shadow-md hover:shadow-primary/10"
+   767→          >
+   768→            <Share2 className="h-3.5 w-3.5 text-primary transition-transform group-hover:scale-110" />
+   769→            <span className="hidden sm:inline">Поделиться</span>
+   770→          </button>
+   771→        </div>
+   772→      </div>
+   773→
+   774→      {/* Row 1: Hero + Daily challenge */}
+   775→      <div className="grid gap-4 lg:grid-cols-3">
+   776→        {/* HERO */}
+   777→        <StaggerGroup className="lg:col-span-2">
+   778→          <StaggerItem>
+   779→            <GlassCard gradient className="relative overflow-hidden p-6 sm:p-8">
+   780→              {/* ambient glow */}
+   781→              <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-gradient-to-br from-violet-500/30 to-fuchsia-500/20 blur-3xl" />
+   782→              <div className="pointer-events-none absolute -bottom-20 left-10 h-48 w-48 rounded-full bg-gradient-to-tr from-pink-500/20 to-amber-500/10 blur-3xl" />
+   783→
+   784→              <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center">
+   785→                {/* left: greeting + name + streak */}
+   786→                <div className="flex-1">
+   787→                  <div className="mb-2 flex items-center gap-2">
+   788→                    <Pill className="border-primary/30 bg-primary/10 text-primary">
+   789→                      <Sparkles className="h-3 w-3" />
+   790→                      {greetingWord}
+   791→                    </Pill>
+   792→                  </div>
+   793→
+   794→                  {/* editable name */}
+   795→                  <div className="flex items-center gap-2">
+   796→                    {editingName ? (
+   797→                      <div className="flex items-center gap-2">
+   798→                        <input
+   799→                          ref={nameInputRef}
+   800→                          value={nameDraft}
+   801→                          onChange={(e) => setNameDraft(e.target.value)}
+   802→                          onKeyDown={(e) => {
+   803→                            if (e.key === 'Enter') {
+   804→                              e.preventDefault()
+   805→                              saveName()
+   806→                            } else if (e.key === 'Escape') {
+   807→                              setNameDraft(name)
+   808→                              setEditingName(false)
+   809→                            }
+   810→                          }}
+   811→                          onBlur={saveName}
+   812→                          maxLength={32}
+   813→                          className="w-44 rounded-lg border border-primary/40 bg-background/80 px-3 py-1.5 text-2xl font-bold tracking-tight outline-none focus:ring-2 focus:ring-primary/30 sm:text-3xl"
+   814→                          placeholder="Имя"
+   815→                        />
+   816→                        {savingName && (
+   817→                          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+   818→                        )}
+   819→                      </div>
+   820→                    ) : (
+   821→                      <button
+   822→                        onClick={() => {
+   823→                          setNameDraft(name)
+   824→                          setEditingName(true)
+   825→                        }}
+   826→                        className="group inline-flex items-center gap-2 rounded-lg px-1 py-0.5 transition-colors hover:bg-muted/40"
+   827→                        title="Изменить имя"
+   828→                      >
+   829→                        <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+   830→                          {name}
+   831→                        </h2>
+   832→                        <Pencil className="h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+   833→                      </button>
+   834→                    )}
+   835→                  </div>
+   836→
+   837→                  {/* streak */}
+   838→                  <div className="mt-4 flex items-center gap-3">
+   839→                    <div
+   840→                      className={`grid h-11 w-11 place-items-center rounded-xl ring-1 ${
+   841→                        streak > 0
+   842→                          ? 'bg-gradient-to-br from-orange-500/30 to-amber-500/20 text-orange-400 ring-orange-500/30'
+   843→                          : 'bg-muted/60 text-muted-foreground ring-border/60'
+   844→                      }`}
+   845→                    >
+   846→                      <Flame
+   847→                        className={`h-5 w-5 ${streak > 0 ? 'animate-pulse-glow' : ''}`}
+   848→                      />
+   849→                    </div>
+   850→                    <div>
+   851→                      <div className="flex items-baseline gap-1.5">
+   852→                        <span className="text-2xl font-bold leading-none">
+   853→                          {streak}
+   854→                        </span>
+   855→                        <span className="text-xs uppercase tracking-wider text-muted-foreground">
+   856→                          {pluralDays(streak)} подряд
+   857→                        </span>
+   858→                      </div>
+   859→                      <p className="mt-0.5 text-xs text-muted-foreground">
+   860→                        {streakHint}
+   861→                      </p>
+   862→                    </div>
+   863→                  </div>
+   864→
+   865→                  {/* xp bar (mobile fallback / additional info) */}
+   866→                  <div className="mt-5">
+   867→                    <div className="mb-1.5 flex items-center justify-between text-xs text-muted-foreground">
+   868→                      <span>
+   869→                        {xpInto.toLocaleString('ru-RU')} / {xpSpan.toLocaleString('ru-RU')} XP
+   870→                      </span>
+   871→                      <span>
+   872→                        до {lp.level + 1} ур. ещё{' '}
+   873→                        <span className="font-semibold text-primary">
+   874→                          {xpToNext.toLocaleString('ru-RU')} XP
+   875→                        </span>
+   876→                      </span>
+   877→                    </div>
+   878→                    <div className="h-2.5 overflow-hidden rounded-full bg-muted/70">
+   879→                      <motion.div
+   880→                        className="h-full rounded-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500"
+   881→                        initial={{ width: 0 }}
+   882→                        animate={{ width: `${xpPct}%` }}
+   883→                        transition={{ duration: 1.1, ease: 'easeOut' }}
+   884→                      />
+   885→                    </div>
+   886→                  </div>
+   887→                </div>
+   888→
+   889→                {/* right: XP ring */}
+   890→                <div className="flex shrink-0 flex-col items-center justify-center">
+   891→                  <XpRing pct={xpPct} level={level} />
+   892→                  <div className="mt-2 text-center">
+   893→                    <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+   894→                      всего XP
+   895→                    </div>
+   896→                    <div className="text-xl font-bold text-gradient">
+   897→                      {xp.toLocaleString('ru-RU')}
+   898→                    </div>
+   899→                  </div>
+   900→                </div>
+   901→              </div>
+   902→            </GlassCard>
+   903→          </StaggerItem>
+   904→        </StaggerGroup>
+   905→
+   906→        {/* DAILY CHALLENGE */}
+   907→        <StaggerGroup>
+   908→          <StaggerItem>
+   909→            <GlassCard
+   910→              gradient
+   911→              className="relative h-full overflow-hidden p-6"
+   912→            >
+   913→              <ConfettiBurst burst={confettiBurst} />
+   914→              <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-gradient-to-br from-fuchsia-500/30 to-pink-500/20 blur-3xl" />
+   915→
+   916→              <div className="relative">
+   917→                <div className="mb-3 flex items-center justify-between">
+   918→                  <Pill className="border-fuchsia-500/40 bg-fuchsia-500/10 text-fuchsia-300">
+   919→                    <Target className="h-3 w-3" />
+   920→                    Вызов дня
+   921→                  </Pill>
+   922→                  <span className="text-xs text-muted-foreground">
+   923→                    {challenge
+   924→                      ? new Date(challenge.date).toLocaleDateString('ru-RU', {
+   925→                          day: 'numeric',
+   926→                          month: 'short',
+   927→                        })
+   928→                      : '—'}
+   929→                  </span>
+   930→                </div>
+   931→
+   932→                {challenge ? (
+   933→                  <>
+   934→                    <div className="mb-3 flex items-start gap-3">
+   935→                      <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-violet-500/30 to-fuchsia-500/20 text-2xl ring-1 ring-fuchsia-500/20">
+   936→                        {challenge.emoji}
+   937→                      </div>
+   938→                      <div className="min-w-0">
+   939→                        <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+   940→                          {subjectLabel(challenge.subject)}
+   941→                        </div>
+   942→                        <h3 className="font-semibold leading-tight">
+   943→                          {challenge.title}
+   944→                        </h3>
+   945→                      </div>
+   946→                    </div>
+   947→
+   948→                    <p className="text-sm leading-relaxed text-muted-foreground">
+   949→                      {challenge.prompt}
+   950→                    </p>
+   951→
+   952→                    {/* hint */}
+   953→                    <button
+   954→                      onClick={() => setHintOpen((v) => !v)}
+   955→                      className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+   956→                    >
+   957→                      <ChevronDown
+   958→                        className={`h-3 w-3 transition-transform ${hintOpen ? 'rotate-180' : ''}`}
+   959→                      />
+   960→                      {hintOpen ? 'Скрыть подсказку' : 'Показать подсказку'}
+   961→                    </button>
+   962→                    <AnimatePresence>
+   963→                      {hintOpen && (
+   964→                        <motion.div
+   965→                          initial={{ height: 0, opacity: 0 }}
+   966→                          animate={{ height: 'auto', opacity: 1 }}
+   967→                          exit={{ height: 0, opacity: 0 }}
+   968→                          transition={{ duration: 0.25 }}
+   969→                          className="overflow-hidden"
+   970→                        >
+   971→                          <p className="mt-2 rounded-lg border border-border/60 bg-muted/40 p-3 text-xs italic text-muted-foreground">
+   972→                            💡 {challenge.hint}
+   973→                          </p>
+   974→                        </motion.div>
+   975→                      )}
+   976→                    </AnimatePresence>
+   977→
+   978→                    {/* reward + action */}
+   979→                    <div className="mt-5 flex items-center justify-between gap-3">
+   980→                      <Pill className="border-amber-500/40 bg-amber-500/10 text-amber-300">
+   981→                        <Zap className="h-3 w-3" />+{challenge.xpReward} XP
+   982→                      </Pill>
+   983→                      {dailyDone ? (
+   984→                        <div className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/15 px-4 py-2 text-sm font-semibold text-emerald-300">
+   985→                          <Check className="h-4 w-4" />
+   986→                          Выполнено
+   987→                        </div>
+   988→                      ) : (
+   989→                        <GradientButton
+   990→                          onClick={submitDaily}
+   991→                          disabled={submittingDaily}
+   992→                          className="px-4 py-2 text-sm"
+   993→                        >
+   994→                          {submittingDaily ? (
+   995→                            <>
+   996→                              <Loader2 className="h-4 w-4 animate-spin" />
+   997→                              Засчитываем...
+   998→                            </>
+   999→                          ) : (
+  1000→                            <>
+  1001→                              Выполнить
+  1002→                              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+  1003→                            </>
+  1004→                          )}
+  1005→                        </GradientButton>
+  1006→                      )}
+  1007→                    </div>
+  1008→                  </>
+  1009→                ) : (
+  1010→                  <EmptyState
+  1011→                    icon={Target}
+  1012→                    title="Вызов скоро появится"
+  1013→                    description="Не удалось загрузить вызов дня. Загляни позже."
+  1014→                  />
+  1015→                )}
+  1016→              </div>
+  1017→            </GlassCard>
+  1018→          </StaggerItem>
+  1019→        </StaggerGroup>
+  1020→      </div>
+  1021→
+  1022→      {/* Row 2: Quick actions */}
+  1023→      <div className="mt-6">
+  1024→        <StaggerGroup className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+  1025→          {QUICK_ACTIONS.map((a) => {
+  1026→            const Icon = a.icon
+  1027→            return (
+  1028→              <StaggerItem key={a.id}>
+  1029→                <button
+  1030→                  onClick={() => setView(a.id)}
+  1031→                  className="group relative h-full w-full overflow-hidden rounded-2xl border border-border/60 bg-card/60 p-4 text-left backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-border hover:shadow-lg hover:shadow-primary/10"
+  1032→                >
+  1033→                  <div
+  1034→                    className={`mb-3 inline-grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br ${a.gradient} text-white shadow-md`}
+  1035→                  >
+  1036→                    <Icon className="h-5 w-5" />
+  1037→                  </div>
+  1038→                  <div className="flex items-center justify-between">
+  1039→                    <div>
+  1040→                      <p className="font-semibold leading-tight">{a.title}</p>
+  1041→                      <p className="text-xs text-muted-foreground">{a.desc}</p>
+  1042→                    </div>
+  1043→                    <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
+  1044→                  </div>
+  1045→                </button>
+  1046→              </StaggerItem>
+  1047→            )
+  1048→          })}
+  1049→        </StaggerGroup>
+  1050→      </div>
+  1051→
+  1052→      {/* Row 3: Stat tiles */}
+  1053→      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+  1054→        <StatTile
+  1055→          icon={Zap}
+  1056→          label="Всего XP"
+  1057→          value={xp.toLocaleString('ru-RU')}
+  1058→          gradient="from-violet-500 to-fuchsia-500"
+  1059→          delay={0}
+  1060→        />
+  1061→        <StatTile
+  1062→          icon={Star}
+  1063→          label="Уровень"
+  1064→          value={level}
+  1065→          gradient="from-fuchsia-500 to-pink-500"
+  1066→          delay={0.04}
+  1067→        />
+  1068→        <StatTile
+  1069→          icon={Flame}
+  1070→          label="Серия дней"
+  1071→          value={streak}
+  1072→          gradient="from-orange-500 to-amber-500"
+  1073→          delay={0.08}
+  1074→        />
+  1075→        <StatTile
+  1076→          icon={BookOpen}
+  1077→          label="Уроки"
+  1078→          value={userData?.counts?.lessons ?? 0}
+  1079→          gradient="from-emerald-500 to-teal-500"
+  1080→          delay={0.12}
+  1081→        />
+  1082→        <StatTile
+  1083→          icon={Trophy}
+  1084→          label="Квизы"
+  1085→          value={quizCount}
+  1086→          gradient="from-amber-500 to-orange-500"
+  1087→          delay={0.16}
+  1088→        />
+  1089→        <StatTile
+  1090→          icon={Layers}
+  1091→          label="Флешкарты"
+  1092→          value={userData?.counts?.flashcards ?? 0}
+  1093→          gradient="from-pink-500 to-rose-500"
+  1094→          delay={0.2}
+  1095→        />
+  1096→        <StatTile
+  1097→          icon={MessagesSquare}
+  1098→          label="Чаты"
+  1099→          value={userData?.counts?.chatSessions ?? 0}
+  1100→          gradient="from-fuchsia-500 to-violet-500"
+  1101→          delay={0.24}
+  1102→        />
+  1103→      </div>
+  1104→
+  1105→      {/* Row 4: chart + subjects */}
+  1106→      <div className="mt-6 grid gap-4 lg:grid-cols-3">
+  1107→        {/* 7-day chart */}
+  1108→        <GlassCard className="lg:col-span-2 p-5 sm:p-6" hover={false}>
+  1109→          <div className="mb-4 flex items-center justify-between">
+  1110→            <div className="flex items-center gap-2">
+  1111→              <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20">
+  1112→                <TrendingUp className="h-4 w-4" />
+  1113→              </div>
+  1114→              <div>
+  1115→                <h3 className="font-semibold">Активность за 7 дней</h3>
+  1116→                <p className="text-xs text-muted-foreground">
+  1117→                  Каждый шаг — это рост
+  1118→                </p>
+  1119→              </div>
+  1120→            </div>
+  1121→            <Pill className="border-primary/30 bg-primary/10 text-primary">
+  1122→              <Sparkles className="h-3 w-3" />
+  1123→              {weekTotal} {pluralActivity(weekTotal)}
+  1124→            </Pill>
+  1125→          </div>
+  1126→
+  1127→          {allWeekZero ? (
+  1128→            <EmptyState
+  1129→              icon={Calendar}
+  1130→              title="Пока тихо в космосе"
+  1131→              description="Сделай первый шаг — сгенерируй урок или пройди квиз, и здесь зажгутся звёзды активности."
+  1132→              action={
+  1133→                <GradientButton
+  1134→                  onClick={() => setView('lessons')}
+  1135→                  className="px-4 py-2 text-sm"
+  1136→                >
+  1137→                  Начать урок
+  1138→                  <ArrowRight className="h-4 w-4" />
+  1139→                </GradientButton>
+  1140→              }
+  1141→            />
+  1142→          ) : mounted ? (
+  1143→            <div className="h-[220px] w-full">
+  1144→              <ResponsiveContainer width="100%" height="100%">
+  1145→                <BarChart
+  1146→                  data={daySeries}
+  1147→                  margin={{ top: 12, right: 6, left: 6, bottom: 0 }}
+  1148→                >
+  1149→                  <defs>
+  1150→                    <linearGradient
+  1151→                      id="barGrad"
+  1152→                      x1="0"
+  1153→                      y1="0"
+  1154→                      x2="0"
+  1155→                      y2="1"
+  1156→                    >
+  1157→                      <stop offset="0%" stopColor="oklch(0.72 0.25 350)" />
+  1158→                      <stop offset="100%" stopColor="oklch(0.7 0.25 315)" />
+  1159→                    </linearGradient>
+  1160→                    <linearGradient
+  1161→                      id="barGradToday"
+  1162→                      x1="0"
+  1163→                      y1="0"
+  1164→                      x2="0"
+  1165→                      y2="1"
+  1166→                    >
+  1167→                      <stop offset="0%" stopColor="oklch(0.78 0.22 55)" />
+  1168→                      <stop offset="100%" stopColor="oklch(0.72 0.25 350)" />
+  1169→                    </linearGradient>
+  1170→                  </defs>
+  1171→                  <XAxis
+  1172→                    dataKey="label"
+  1173→                    tickLine={false}
+  1174→                    axisLine={false}
+  1175→                    tick={{
+  1176→                      fill: 'oklch(0.68 0.02 285)',
+  1177→                      fontSize: 11,
+  1178→                    }}
+  1179→                  />
+  1180→                  <Tooltip
+  1181→                    cursor={{ fill: 'rgba(255,255,255,0.04)' }}
+  1182→                    content={<ChartTooltip />}
+  1183→                  />
+  1184→                  <Bar
+  1185→                    dataKey="count"
+  1186→                    radius={[7, 7, 2, 2]}
+  1187→                    maxBarSize={40}
+  1188→                  >
+  1189→                    {daySeries.map((d) => (
+  1190→                      <Cell
+  1191→                        key={d.key}
+  1192→                        fill={
+  1193→                          d.isToday
+  1194→                            ? 'url(#barGradToday)'
+  1195→                            : d.count > 0
+  1196→                              ? 'url(#barGrad)'
+  1197→                              : 'oklch(0.32 0.02 285 / 0.4)'
+  1198→                        }
+  1199→                      />
+  1200→                    ))}
+  1201→                  </Bar>
+  1202→                </BarChart>
+  1203→              </ResponsiveContainer>
+  1204→            </div>
+  1205→          ) : (
+  1206→            <div className="flex h-[220px] items-center justify-center">
+  1207→              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+  1208→            </div>
+  1209→          )}
+  1210→        </GlassCard>
+  1211→
+  1212→        {/* Subjects breakdown */}
+  1213→        <GlassCard className="p-5 sm:p-6" hover={false}>
+  1214→          <div className="mb-4 flex items-center gap-2">
+  1215→            <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20">
+  1216→              <Brain className="h-4 w-4" />
+  1217→            </div>
+  1218→            <div>
+  1219→              <h3 className="font-semibold">По предметам</h3>
+  1220→              <p className="text-xs text-muted-foreground">
+  1221→                Где ты активнее всего
+  1222→              </p>
+  1223→            </div>
+  1224→          </div>
+  1225→
+  1226→          {subjectRows.length === 0 ? (
+  1227→            <EmptyState
+  1228→              icon={Sparkles}
+  1229→              title="Карта знаний пуста"
+  1230→              description="Выбери предмет и сделай первую запись в прогресс."
+  1231→              action={
+  1232→                <button
+  1233→                  onClick={() => setView('subjects')}
+  1234→                  className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+  1235→                >
+  1236→                  К предметам <ChevronRight className="h-3.5 w-3.5" />
+  1237→                </button>
+  1238→              }
+  1239→            />
+  1240→          ) : (
+  1241→            <div className="space-y-3.5">
+  1242→              {subjectRows.slice(0, 6).map((s) => {
+  1243→                const pct = Math.round((s.count / subjectMax) * 100)
+  1244→                return (
+  1245→                  <div key={s.id}>
+  1246→                    <div className="mb-1 flex items-center justify-between text-xs">
+  1247→                      <span className="font-medium text-foreground">
+  1248→                        {s.label}
+  1249→                      </span>
+  1250→                      <span className="text-muted-foreground">
+  1251→                        {s.count}{' '}
+  1252→                        {s.accuracy !== null && `· ${s.accuracy}%`}
+  1253→                      </span>
+  1254→                    </div>
+  1255→                    <div className="h-2 overflow-hidden rounded-full bg-muted/70">
+  1256→                      <motion.div
+  1257→                        className={`h-full rounded-full bg-gradient-to-r ${s.gradient}`}
+  1258→                        initial={{ width: 0 }}
+  1259→                        animate={{ width: `${pct}%` }}
+  1260→                        transition={{ duration: 0.8, ease: 'easeOut' }}
+  1261→                      />
+  1262→                    </div>
+  1263→                  </div>
+  1264→                )
+  1265→              })}
+  1266→            </div>
+  1267→          )}
+  1268→        </GlassCard>
+  1269→      </div>
+  1270→
+  1271→      {/* Row 5: recent activity + achievements */}
+  1272→      <div className="mt-6 grid gap-4 lg:grid-cols-3">
+  1273→        {/* recent feed */}
+  1274→        <GlassCard className="lg:col-span-2 p-5 sm:p-6" hover={false}>
+  1275→          <div className="mb-4 flex items-center justify-between">
+  1276→            <div className="flex items-center gap-2">
+  1277→              <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20">
+  1278→                <Clock className="h-4 w-4" />
+  1279→              </div>
+  1280→              <div>
+  1281→                <h3 className="font-semibold">Недавняя активность</h3>
+  1282→                <p className="text-xs text-muted-foreground">
+  1283→                  Хроника твоих шагов
+  1284→                </p>
+  1285→              </div>
+  1286→            </div>
+  1287→          </div>
+  1288→
+  1289→          {recentFeed.length === 0 ? (
+  1290→            <EmptyState
+  1291→              icon={Sparkles}
+  1292→              title="История пуста"
+  1293→              description="Твои достижения и активности появятся здесь. Начни с первого урока или квиза."
+  1294→              action={
+  1295→                <GradientButton
+  1296→                  onClick={() => setView('tutor')}
+  1297→                  className="px-4 py-2 text-sm"
+  1298→                >
+  1299→                  Спросить наставника
+  1300→                  <ArrowRight className="h-4 w-4" />
+  1301→                </GradientButton>
+  1302→              }
+  1303→            />
+  1304→          ) : (
+  1305→            <ul className="space-y-2">
+  1306→              {recentFeed.map((p, i) => {
+  1307→                const meta = getKindMeta(p.kind)
+  1308→                const Icon = meta.icon
+  1309→                const hasScore = p.total > 0
+  1310→                return (
+  1311→                  <motion.li
+  1312→                    key={p.id}
+  1313→                    initial={{ opacity: 0, x: -8 }}
+  1314→                    animate={{ opacity: 1, x: 0 }}
+  1315→                    transition={{ duration: 0.3, delay: i * 0.04 }}
+  1316→                    className="flex items-center gap-3 rounded-xl border border-border/40 bg-card/40 p-3 transition-colors hover:border-border/70 hover:bg-card/70"
+  1317→                  >
+  1318→                    <div
+  1319→                      className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ring-1 ${meta.ring}`}
+  1320→                    >
+  1321→                      <Icon className="h-4 w-4" />
+  1322→                    </div>
+  1323→                    <div className="min-w-0 flex-1">
+  1324→                      <div className="flex items-center gap-2">
+  1325→                        <span className="truncate text-sm font-medium">
+  1326→                          {p.topic || meta.label}
+  1327→                        </span>
+  1328→                      </div>
+  1329→                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+  1330→                        <span>{subjectLabel(p.subject)}</span>
+  1331→                        <span>·</span>
+  1332→                        <span>{meta.label}</span>
+  1333→                      </div>
+  1334→                    </div>
+  1335→                    <div className="flex flex-col items-end gap-0.5 text-right">
+  1336→                      {hasScore ? (
+  1337→                        <span className="text-sm font-semibold">
+  1338→                          {p.score}/{p.total}
+  1339→                        </span>
+  1340→                      ) : (
+  1341→                        <span className="text-sm font-semibold text-primary">
+  1342→                          ✓
+  1343→                        </span>
+  1344→                      )}
+  1345→                      <span className="text-[11px] text-muted-foreground">
+  1346→                        {timeAgo(p.completedAt)}
+  1347→                      </span>
+  1348→                    </div>
+  1349→                  </motion.li>
+  1350→                )
+  1351→              })}
+  1352→            </ul>
+  1353→          )}
+  1354→        </GlassCard>
+  1355→
+  1356→        {/* achievements preview */}
+  1357→        <GlassCard className="p-5 sm:p-6" hover={false}>
+  1358→          <div className="mb-4 flex items-center justify-between">
+  1359→            <div className="flex items-center gap-2">
+  1360→              <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20">
+  1361→                <Award className="h-4 w-4" />
+  1362→              </div>
+  1363→              <div>
+  1364→                <h3 className="font-semibold">Достижения</h3>
+  1365→                <p className="text-xs text-muted-foreground">
+  1366→                  Открыто {unlockedAchievements.length} из {ACHIEVEMENTS.length}
+  1367→                </p>
+  1368→              </div>
+  1369→            </div>
+  1370→          </div>
+  1371→
+  1372→          {unlockedAchievements.length === 0 ? (
+  1373→            <EmptyState
+  1374→              icon={Lock}
+  1375→              title="Сундук закрыт"
+  1376→              description="Первые награды уже ждут — сделай любой урок или квиз."
+  1377→              action={
+  1378→                <button
+  1379→                  onClick={() => setView('achievements')}
+  1380→                  className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+  1381→                >
+  1382→                  Все достижения <ChevronRight className="h-3.5 w-3.5" />
+  1383→                </button>
+  1384→              }
+  1385→            />
+  1386→          ) : (
+  1387→            <>
+  1388→              <div className="grid grid-cols-3 gap-2.5">
+  1389→                {unlockedAchievements.slice(0, 6).map((a, i) => {
+  1390→                  const def = ACHIEVEMENTS.find(
+  1391→                    (x) => x.type === a.type
+  1392→                  )
+  1393→                  const Icon = ACHIEVEMENT_ICONS[a.type] || Sparkles
+  1394→                  return (
+  1395→                    <motion.div
+  1396→                      key={a.type}
+  1397→                      initial={{ opacity: 0, scale: 0.85 }}
+  1398→                      animate={{ opacity: 1, scale: 1 }}
+  1399→                      transition={{ duration: 0.3, delay: i * 0.05 }}
+  1400→                      className="group relative flex flex-col items-center gap-1 rounded-xl border border-primary/30 bg-gradient-to-br from-primary/10 to-fuchsia-500/5 p-3 text-center"
+  1401→                      title={def?.desc}
+  1402→                    >
+  1403→                      <div className="absolute -right-5 -top-5 h-12 w-12 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 opacity-30 blur-xl transition-opacity group-hover:opacity-50" />
+  1404→                      <div className="relative text-2xl">{def?.emoji || '🏆'}</div>
+  1405→                      <div className="relative text-[10px] font-medium leading-tight text-foreground">
+  1406→                        {def?.title || a.type}
+  1407→                      </div>
+  1408→                      <Icon className="relative h-3 w-3 text-primary/70" />
+  1409→                    </motion.div>
+  1410→                  )
+  1411→                })}
+  1412→
+  1413→                {/* placeholder for remaining locked slots */}
+  1414→                {Array.from({
+  1415→                  length: Math.max(0, 6 - unlockedAchievements.length),
+  1416→                }).map((_, i) => (
+  1417→                  <div
+  1418→                    key={`locked-${i}`}
+  1419→                    className="flex flex-col items-center gap-1 rounded-xl border border-dashed border-border/50 bg-muted/20 p-3 text-center"
+  1420→                  >
+  1421→                    <div className="grid h-8 w-8 place-items-center text-muted-foreground/60">
+  1422→                      <Lock className="h-4 w-4" />
+  1423→                    </div>
+  1424→                    <div className="text-[10px] text-muted-foreground/70">
+  1425→                      закрыто
+  1426→                    </div>
+  1427→                  </div>
+  1428→                ))}
+  1429→              </div>
+  1430→
+  1431→              <button
+  1432→                onClick={() => setView('achievements')}
+  1433→                className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl border border-border/60 bg-card/60 px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-accent"
+  1434→              >
+  1435→                Все достижения
+  1436→                <ChevronRight className="h-4 w-4" />
+  1437→              </button>
+  1438→            </>
+  1439→          )}
+  1440→        </GlassCard>
+  1441→      </div>
+  1442→
+  1443→      {/* Share card modal */}
+  1444→      <ShareCard
+  1445→        open={shareOpen}
+  1446→        onOpenChange={setShareOpen}
+  1447→        achievements={progressData?.achievements ?? []}
+  1448→      />
+  1449→    </PageSection>
+  1450→  )
+  1451→}
+  1452→
+  1453→/* ============================================================ *
+  1454→ * Helpers: pluralization
+  1455→ * ============================================================ */
+  1456→
+  1457→function pluralDays(n: number) {
+  1458→  const mod10 = n % 10
+  1459→  const mod100 = n % 100
+  1460→  if (mod10 === 1 && mod100 !== 11) return 'день'
+  1461→  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return 'дня'
+  1462→  return 'дней'
+  1463→}
+  1464→

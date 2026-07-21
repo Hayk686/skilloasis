@@ -26,7 +26,7 @@ export async function complete(
   try {
     const completion = await zai.chat.completions.create({
       messages: [
-        { role: 'assistant' as const, content: system },
+        { role: 'system', content: system },
         ...messages.map((m) => ({ role: m.role, content: m.content })),
       ],
       thinking: { type: 'disabled' },
