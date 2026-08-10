@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getOrCreateUser, setUserIdCookie, grantXp, unlockAchievement, recordProgress } from '@/lib/gamify'
-import { generateLesson } from '@/lib/ai'
+import { AIServiceError, generateLesson } from '@/lib/ai'
 import { parseJsonBody, shortText } from '@/lib/request'
 import { z } from 'zod'
 
@@ -40,7 +40,10 @@ export async function POST(req: Request) {
   } catch (err) {
     console.error('[api/lesson] error', err)
     return NextResponse.json(
-      { error: 'Не удалось создать урок. Попробуйте ещё раз.' },
+      {
+        error: 'Не удалось создать урок. Попробуйте ещё раз.',
+        code: err instanceof AIServiceError ? err.code : 'LESSON_ERROR',
+      },
       { status: 500 }
     )
   }

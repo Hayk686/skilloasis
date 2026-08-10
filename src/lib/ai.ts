@@ -1,7 +1,23 @@
 import { getLanguageInstruction } from '@/lib/locale-server'
 
 const NVIDIA_BASE_URL = 'https://integrate.api.nvidia.com/v1'
-const NVIDIA_DEFAULT_MODEL = 'nvidia/nemotron-3-super-120b-a12b'
+const NVIDIA_MODEL = 'nvidia/nemotron-3-super-120b-a12b'
+
+export type AIErrorCode =
+  | 'AI_KEY_MISSING'
+  | 'AI_UNAUTHORIZED'
+  | 'AI_RATE_LIMITED'
+  | 'AI_REQUEST_INVALID'
+  | 'AI_TIMEOUT'
+  | 'AI_PROVIDER_ERROR'
+  | 'AI_EMPTY_RESPONSE'
+
+export class AIServiceError extends Error {
+  constructor(public readonly code: AIErrorCode, message: string) {
+    super(message)
+    this.name = 'AIServiceError'
+  }
+}
 
 export interface ChatTurn {
   role: 'user' | 'assistant'
@@ -16,39 +32,54 @@ interface CompletionMessage {
 async function nvidiaCompletion(messages: CompletionMessage[]): Promise<string> {
   const baseUrl = (process.env.NVIDIA_BASE_URL || NVIDIA_BASE_URL).replace(/\/$/, '')
   const apiKey = process.env.NVIDIA_API_KEY
-  const model = process.env.NVIDIA_MODEL || NVIDIA_DEFAULT_MODEL
   if (!apiKey) {
-    throw new Error('NVIDIA_API_KEY is required')
+    throw new AIServiceError('AI_KEY_MISSING', 'NVIDIA_API_KEY is required')
   }
-  const response = await fetch(`${baseUrl}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model,
-      messages,
-      temperature: 1,
-      top_p: 0.95,
-      max_tokens: 8192,
-      chat_template_kwargs: {
-        enable_thinking: false,
+  let response: Response
+  try {
+    response = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
       },
-      stream: false,
-    }),
-    signal: AbortSignal.timeout(90_000),
-  })
+      body: JSON.stringify({
+        model: NVIDIA_MODEL,
+        messages,
+        temperature: 1,
+        top_p: 0.95,
+        max_tokens: 8192,
+        chat_template_kwargs: {
+          enable_thinking: false,
+        },
+        stream: false,
+      }),
+      signal: AbortSignal.timeout(90_000),
+    })
+  } catch (error) {
+    if (error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError')) {
+      throw new AIServiceError('AI_TIMEOUT', 'NVIDIA API request timed out')
+    }
+    throw new AIServiceError('AI_PROVIDER_ERROR', 'Could not reach NVIDIA API')
+  }
   if (!response.ok) {
     const details = (await response.text()).slice(0, 500)
-    throw new Error(`NVIDIA API returned ${response.status}: ${details}`)
+    const code: AIErrorCode =
+      response.status === 401 || response.status === 403
+        ? 'AI_UNAUTHORIZED'
+        : response.status === 429
+          ? 'AI_RATE_LIMITED'
+          : response.status === 400 || response.status === 404 || response.status === 422
+            ? 'AI_REQUEST_INVALID'
+            : 'AI_PROVIDER_ERROR'
+    throw new AIServiceError(code, `NVIDIA API returned ${response.status}: ${details}`)
   }
   const payload = await response.json() as {
     choices?: Array<{ message?: { content?: string } }>
   }
   const content = payload.choices?.[0]?.message?.content?.trim()
-  if (!content) throw new Error('NVIDIA API returned an empty response')
+  if (!content) throw new AIServiceError('AI_EMPTY_RESPONSE', 'NVIDIA API returned an empty response')
   return content
 }
 

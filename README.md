@@ -40,11 +40,11 @@ Lumina uses NVIDIA's hosted OpenAI-compatible endpoint. Configure:
 ```dotenv
 NVIDIA_API_KEY="nvapi-..."
 NVIDIA_BASE_URL="https://integrate.api.nvidia.com/v1"
-NVIDIA_MODEL="nvidia/nemotron-3-super-120b-a12b"
 ```
 
-`NVIDIA_BASE_URL` and `NVIDIA_MODEL` are optional overrides. Lesson narration
-uses the browser's built-in speech synthesis and does not require an API call.
+`NVIDIA_BASE_URL` is an optional override. The application uses
+`nvidia/nemotron-3-super-120b-a12b`. Lesson narration uses the browser's built-in
+speech synthesis and does not require an API call.
 
 ## Quality checks
 
