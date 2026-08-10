@@ -166,11 +166,10 @@ Return only the final user-facing answer. Do not expose analysis, hidden reasoni
           model: translatorModel,
           temperature: 1,
           maxTokens: 4096,
-          timeoutMs: remainingTimeout(150_000),
+          timeoutMs: remainingTimeout(100_000),
         })
       } catch (error) {
         if (!(error instanceof AIServiceError)) throw error
-        if (error.code === 'AI_TIMEOUT') throw error
         console.warn(
           `[ai.complete] GPT-OSS Armenian translator unavailable (${error.code}); using Nemotron fallback`
         )
@@ -187,7 +186,7 @@ Return only the final user-facing answer. Do not expose analysis, hidden reasoni
       const translatedInvalidJson = Boolean(opts.json) && tryJsonParse(content) === null
       const translatedLanguageLeak = hasArmenianLanguageLeak(content, Boolean(opts.json))
       const remaining = completionDeadline - Date.now()
-      if (remaining >= 20_000) {
+      if (translatorModel === ARMENIAN_TRANSLATOR_MODEL && remaining >= 20_000) {
         try {
           let editedContent = await nvidiaCompletion([
             {
