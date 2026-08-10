@@ -23,6 +23,9 @@ export function useUserSync() {
           useUser.setState({
             userId: u.id,
             name: u.name,
+            email: u.email ?? null,
+            avatar: u.avatar ?? null,
+            authenticated: Boolean(u.authenticated),
             xp: u.xp,
             level: u.computedLevel ?? u.level,
             streak: u.streak,

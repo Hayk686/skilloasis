@@ -2,6 +2,8 @@ import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { levelFromXp } from '@/lib/gamify-client'
 import { createHmac, timingSafeEqual } from 'node:crypto'
+import { getSupabasePublicConfig } from '@/lib/supabase/config'
+import { createClient as createSupabaseClient } from '@/lib/supabase/server'
 
 export { xpForLevel, levelFromXp, levelProgress, ACHIEVEMENTS, type AchievementType } from '@/lib/gamify-client'
 
@@ -33,21 +35,105 @@ function readSignedUserId(value?: string): string | undefined {
   return timingSafeEqual(receivedBuffer, expectedBuffer) ? userId : undefined
 }
 
-/** Get or create an anonymous user identified by a signed cookie. */
+interface AuthIdentity {
+  id: string
+  email: string | null
+  name: string | null
+  avatar: string | null
+}
+
+function metadataText(metadata: unknown, key: string): string | null {
+  if (!metadata || typeof metadata !== 'object' || !(key in metadata)) return null
+  const value = (metadata as Record<string, unknown>)[key]
+  return typeof value === 'string' && value.trim() ? value.trim() : null
+}
+
+async function getAuthenticatedIdentity(): Promise<AuthIdentity | null> {
+  if (!getSupabasePublicConfig()) return null
+  try {
+    const supabase = await createSupabaseClient()
+    const { data, error } = await supabase.auth.getClaims()
+    if (error || !data?.claims?.sub) return null
+    const claims = data.claims
+    const name =
+      metadataText(claims.user_metadata, 'full_name') ??
+      metadataText(claims.user_metadata, 'name') ??
+      claims.email?.split('@')[0] ??
+      null
+    return {
+      id: claims.sub,
+      email: claims.email ?? null,
+      name,
+      avatar:
+        metadataText(claims.user_metadata, 'avatar_url') ??
+        metadataText(claims.user_metadata, 'picture'),
+    }
+  } catch (error) {
+    console.warn('[auth] Could not verify Supabase session', error)
+    return null
+  }
+}
+
+function isUniqueConstraintError(error: unknown): boolean {
+  return Boolean(
+    error && typeof error === 'object' && 'code' in error && error.code === 'P2002'
+  )
+}
+
+/** Get the signed-in account, or create/restore an anonymous cookie user. */
 export async function getOrCreateUser() {
   const cookieStore = await cookies()
-  let userId = readSignedUserId(cookieStore.get(COOKIE_NAME)?.value)
-  if (!userId) {
-    const user = await db.user.create({ data: {} })
-    userId = user.id
+  const cookieUserId = readSignedUserId(cookieStore.get(COOKIE_NAME)?.value)
+  const cookieUser = cookieUserId
+    ? await db.user.findUnique({ where: { id: cookieUserId } })
+    : null
+  const identity = await getAuthenticatedIdentity()
+
+  if (identity) {
+    const accountUser = await db.user.findUnique({ where: { authId: identity.id } })
+    if (accountUser) return accountUser
+
+    if (cookieUser) {
+      try {
+        return await db.user.update({
+          where: { id: cookieUser.id },
+          data: {
+            authId: identity.id,
+            email: identity.email,
+            ...(
+              cookieUser.name === 'Странник' && identity.name
+                ? { name: identity.name }
+                : {}
+            ),
+            ...(!cookieUser.avatar && identity.avatar ? { avatar: identity.avatar } : {}),
+          },
+        })
+      } catch (error) {
+        if (!isUniqueConstraintError(error)) throw error
+        const concurrentAccount = await db.user.findUnique({ where: { authId: identity.id } })
+        if (concurrentAccount) return concurrentAccount
+        throw error
+      }
+    }
+
+    try {
+      return await db.user.create({
+        data: {
+          authId: identity.id,
+          email: identity.email,
+          name: identity.name ?? 'Странник',
+          avatar: identity.avatar,
+        },
+      })
+    } catch (error) {
+      if (!isUniqueConstraintError(error)) throw error
+      const concurrentAccount = await db.user.findUnique({ where: { authId: identity.id } })
+      if (concurrentAccount) return concurrentAccount
+      throw error
+    }
   }
-  const user = await db.user.findUnique({ where: { id: userId } })
-  if (!user) {
-    const created = await db.user.create({ data: {} })
-    userId = created.id
-    return created
-  }
-  return user
+
+  return cookieUser ?? db.user.create({ data: {} })
 }
 
 /** Sets cookie in a response (called from API routes via NextResponse). */
@@ -56,6 +142,15 @@ export function setUserIdCookie(res: Response, userId: string) {
   res.headers.append(
     'Set-Cookie',
     `${COOKIE_NAME}=${value}; Path=/; Max-Age=31536000; HttpOnly; SameSite=Lax${
+      process.env.NODE_ENV === 'production' ? '; Secure' : ''
+    }`
+  )
+}
+
+export function clearUserIdCookie(res: Response) {
+  res.headers.append(
+    'Set-Cookie',
+    `${COOKIE_NAME}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax${
       process.env.NODE_ENV === 'production' ? '; Secure' : ''
     }`
   )

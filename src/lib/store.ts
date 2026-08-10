@@ -19,6 +19,9 @@ export type ViewId =
 interface UserState {
   userId: string | null
   name: string
+  email: string | null
+  avatar: string | null
+  authenticated: boolean
   xp: number
   level: number
   streak: number
@@ -47,6 +50,9 @@ export const useUser = create<UserState>()(
     (set) => ({
       userId: null,
       name: 'Странник',
+      email: null,
+      avatar: null,
+      authenticated: false,
       xp: 0,
       level: 1,
       streak: 0,

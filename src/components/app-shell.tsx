@@ -30,6 +30,7 @@ import { AuroraBackground } from '@/components/aurora'
 import { Footer } from '@/components/footer'
 import { CommandPalette, CommandTrigger } from '@/components/command-palette'
 import { useLocaleSync, useTranslations, type TranslationKey } from '@/lib/i18n-client'
+import { AuthDialog } from '@/components/auth-dialog'
 
 const NAV_ITEMS: { id: ViewId; label: TranslationKey; icon: typeof Home; desc: TranslationKey }[] = [
   { id: 'home', label: 'navHome', icon: Home, desc: 'navHomeDesc' },
@@ -82,7 +83,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { locale, locales, languageNames, setLocale, t } = useTranslations()
   const { view, setView } = useNav()
   const { sidebarOpen, setSidebar, setCommandOpen } = useUI()
-  const { xp, level, streak, name } = useUser()
+  const { xp, level, streak, name, authenticated } = useUser()
+  const [authOpen, setAuthOpen] = useState(false)
 
   return (
     <div className="relative flex min-h-screen flex-col">
@@ -144,12 +146,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 ))}
               </select>
             </label>
-            <div className="hidden h-9 items-center gap-2 rounded-full border border-border/60 bg-card/60 px-2 pr-3 sm:flex">
+            <button
+              type="button"
+              onClick={() => setAuthOpen(true)}
+              aria-label={authenticated ? name : t('account')}
+              className="flex h-9 items-center gap-2 rounded-full border border-border/60 bg-card/60 px-2 transition-colors hover:border-primary/40 hover:bg-card"
+            >
               <div className="grid h-6 w-6 place-items-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-[10px] font-bold text-white">
                 {name.charAt(0).toUpperCase()}
               </div>
-              <span className="text-xs font-medium">{name}</span>
-            </div>
+              <span className="hidden max-w-24 truncate text-xs font-medium sm:inline">{name}</span>
+            </button>
           </div>
         </div>
       </header>
@@ -211,6 +218,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Global command palette + floating trigger */}
       <CommandPalette />
       <CommandTrigger />
+      <AuthDialog open={authOpen} onOpenChange={setAuthOpen} />
     </div>
   )
 }

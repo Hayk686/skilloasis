@@ -48,6 +48,9 @@ export async function GET() {
         ? {
             id: full.id,
             name: full.name,
+            email: full.email,
+            avatar: full.avatar,
+            authenticated: Boolean(full.authId),
             xp: full.xp,
             level: full.level,
             streak: full.streak,

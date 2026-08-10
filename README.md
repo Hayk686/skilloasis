@@ -18,10 +18,12 @@ progress.
 3. Create a Supabase project and copy its connection strings into:
    - `DATABASE_URL`: pooled runtime connection.
    - `DIRECT_URL`: direct migration connection.
-4. Set a random `LUMINA_SESSION_SECRET` with at least 32 characters.
-5. Create a free key at [build.nvidia.com](https://build.nvidia.com/) and set
+4. Copy the Supabase Project URL and publishable key into
+   `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+5. Set a random `LUMINA_SESSION_SECRET` with at least 32 characters.
+6. Create a free key at [build.nvidia.com](https://build.nvidia.com/) and set
    `NVIDIA_API_KEY`.
-6. Run:
+7. Run:
 
 ```powershell
 bun install
@@ -33,6 +35,23 @@ bun run dev
 The initial migration creates all application tables. The old local SQLite
 database was development-only and is not part of the Supabase migration.
 Vercel builds automatically run `prisma migrate deploy` before compiling the app.
+
+## Accounts and Google sign-in
+
+Lumina uses Supabase Auth for email/password and Google OAuth. Guest progress is
+linked to the same application user when the learner creates an account.
+
+1. In Supabase Authentication > URL Configuration, set the production Site URL
+   and allow `https://YOUR_DOMAIN/auth/callback` plus
+   `http://localhost:3000/auth/callback` for local development.
+2. In Google Auth Platform, create a Web application OAuth client. Add the app
+   domains as Authorized JavaScript origins and add
+   `https://PROJECT_REF.supabase.co/auth/v1/callback` as the Authorized redirect
+   URI.
+3. In Supabase Authentication > Providers > Google, enable Google and paste the
+   Google Client ID and Client Secret.
+4. Add the two `NEXT_PUBLIC_SUPABASE_*` variables to Vercel for Production and
+   Preview, then redeploy.
 
 ## NVIDIA AI
 
@@ -66,5 +85,6 @@ Production uses Next.js standalone output. The build script copies `public` and
 ## Anonymous users
 
 Learners do not need an account. Their generated user ID is stored in a signed,
-HTTP-only cookie. Set a stable production session secret; changing it creates a
-new anonymous identity for returning learners.
+HTTP-only cookie. Registering links the verified Supabase identity to that user
+row, preserving progress. Set a stable production session secret; changing it
+creates a new anonymous identity for returning learners.
