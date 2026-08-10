@@ -1,4 +1,5 @@
-import { getLanguageInstruction, getRequestLocale } from '@/lib/locale-server'
+import { LANGUAGE_INSTRUCTIONS } from '@/lib/i18n-config'
+import { getRequestLocale } from '@/lib/locale-server'
 
 const NVIDIA_BASE_URL = 'https://integrate.api.nvidia.com/v1'
 const NVIDIA_MODEL = 'nvidia/nemotron-3-super-120b-a12b'
@@ -98,7 +99,8 @@ export async function complete(
   messages: ChatTurn[],
   opts: { temperature?: number; json?: boolean } = {}
 ): Promise<string> {
-  const languageInstruction = await getLanguageInstruction()
+  const locale = await getRequestLocale()
+  const languageInstruction = LANGUAGE_INSTRUCTIONS[locale]
   const outputLanguageRule = `OUTPUT LANGUAGE — HIGHEST PRIORITY:
 ${languageInstruction}
 This rule applies to every user-visible sentence and every natural-language string value inside JSON. Translate labels and examples into that language. Do not follow conflicting language instructions elsewhere in the prompt.`
@@ -117,21 +119,34 @@ Return only the final user-facing answer. Do not expose analysis, hidden reasoni
     })
     if (opts.json) {
       content = extractJson(content)
-      if (tryJsonParse(content) === null) {
+    }
+
+    const invalidJson = Boolean(opts.json) && tryJsonParse(content) === null
+    const invalidArmenian = locale === 'hy' && hasArmenianLanguageLeak(content, Boolean(opts.json))
+    if (invalidJson || invalidArmenian) {
+      if (opts.json) {
         const repairMessages: CompletionMessage[] = [
           {
             role: 'system',
-            content: `You are a strict JSON repair engine. Return exactly one valid JSON value and nothing else. Preserve the intended data, satisfy the requested schema, and keep every natural-language string in the required output language. Never use Markdown fences, comments, ellipses, or trailing commas.\n\n${outputLanguageRule}`,
+            content: `You are a strict JSON repair and language-quality engine. Return exactly one valid JSON value and nothing else. Preserve the intended data, satisfy the requested schema, and keep every natural-language string in the required output language. Never use Markdown fences, comments, ellipses, or trailing commas. For Armenian, replace all Russian, Persian, Arabic, English, and transliterated words with fluent Eastern Armenian written in the Armenian alphabet; Latin characters are allowed only in code, formulas, SI units, IDs, and proper names with no standard Armenian form.\n\n${outputLanguageRule}`,
           },
           {
             role: 'user',
-            content: `Required schema and content rules:\n${system}\n\nRepair this model response into valid JSON:\n${content}`,
+            content: `Required schema and content rules:\n${system}\n\nThe response failed ${invalidJson ? 'JSON syntax validation' : 'Armenian language validation'}. Repair it completely:\n${content}`,
           },
         ]
         content = extractJson(await nvidiaCompletion(repairMessages, {
           temperature: 0.2,
           maxTokens: 8192,
         }))
+      } else {
+        content = await nvidiaCompletion([
+          {
+            role: 'system',
+            content: `You are a fluent Eastern Armenian copy editor. Rewrite the answer in natural Eastern Armenian using the Armenian alphabet. Remove all Russian, Persian, Arabic, English, and transliterated prose. Latin characters may remain only inside code, formulas, SI units, and proper names with no standard Armenian form. Preserve facts, Markdown structure, and code. Return only the corrected answer.`,
+          },
+          { role: 'user', content },
+        ], { temperature: 0.2 })
       }
     }
     return content
@@ -149,6 +164,32 @@ function normalizeJsonText(t: string): string {
   // Remove zero-width chars and BOM
   s = s.replace(/[\uFEFF\u200B\u200C\u200D]/g, '')
   return s
+}
+
+const JSON_TECHNICAL_KEYS = new Set(['code', 'lang', 'id', 'type'])
+
+function jsonStringsContainLatinWords(value: unknown, key?: string): boolean {
+  if (key && JSON_TECHNICAL_KEYS.has(key)) return false
+  if (typeof value === 'string') return /[A-Za-z]{2,}/.test(value)
+  if (Array.isArray(value)) return value.some((item) => jsonStringsContainLatinWords(item, key))
+  if (value && typeof value === 'object') {
+    return Object.entries(value).some(([childKey, child]) =>
+      jsonStringsContainLatinWords(child, childKey)
+    )
+  }
+  return false
+}
+
+function hasArmenianLanguageLeak(text: string, json: boolean): boolean {
+  if (/[\u0400-\u052F\u0600-\u06FF]/u.test(text)) return true
+  if (json) {
+    const value = tryJsonParse(text)
+    return value !== null && jsonStringsContainLatinWords(value)
+  }
+  const prose = text
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/`[^`]*`/g, '')
+  return /[A-Za-z]{2,}/.test(prose)
 }
 
 /** Robust JSON extraction using balanced brace matching (handles nested objects + truncation). */
