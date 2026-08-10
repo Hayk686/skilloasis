@@ -5,6 +5,7 @@ import { parseJsonBody, shortText } from '@/lib/request'
 import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
+export const maxDuration = 120
 
 const mindMapSchema = z.object({ topic: shortText(200) })
 

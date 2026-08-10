@@ -21,7 +21,7 @@ export const SITE_TITLES: Record<Locale, string> = {
 }
 
 export const LANGUAGE_INSTRUCTIONS: Record<Locale, string> = {
-  ru: 'Write all natural-language output in Russian.',
-  en: 'Write all natural-language output in English.',
-  hy: 'Write all natural-language output in fluent literary Armenian.',
+  ru: 'Write every natural-language word in fluent Russian. Do not switch to English or another language unless the user explicitly asks.',
+  en: 'Write every natural-language word in fluent English. Do not switch to another language unless the user explicitly asks.',
+  hy: 'Write every natural-language word in fluent Eastern Armenian using the Armenian alphabet. Do not use Russian, English, or Latin transliteration unless the user explicitly asks.',
 }

@@ -1,7 +1,7 @@
 import { getLanguageInstruction } from '@/lib/locale-server'
 
 const NVIDIA_BASE_URL = 'https://integrate.api.nvidia.com/v1'
-const NVIDIA_DEFAULT_MODEL = 'meta/llama-3.3-70b-instruct'
+const NVIDIA_DEFAULT_MODEL = 'nvidia/nemotron-3-super-120b-a12b'
 
 export interface ChatTurn {
   role: 'user' | 'assistant'
@@ -13,10 +13,7 @@ interface CompletionMessage {
   content: string
 }
 
-async function nvidiaCompletion(
-  messages: CompletionMessage[],
-  temperature: number
-): Promise<string> {
+async function nvidiaCompletion(messages: CompletionMessage[]): Promise<string> {
   const baseUrl = (process.env.NVIDIA_BASE_URL || NVIDIA_BASE_URL).replace(/\/$/, '')
   const apiKey = process.env.NVIDIA_API_KEY
   const model = process.env.NVIDIA_MODEL || NVIDIA_DEFAULT_MODEL
@@ -33,12 +30,15 @@ async function nvidiaCompletion(
     body: JSON.stringify({
       model,
       messages,
-      temperature,
-      top_p: 0.7,
-      max_tokens: 4096,
+      temperature: 1,
+      top_p: 0.95,
+      max_tokens: 8192,
+      chat_template_kwargs: {
+        enable_thinking: false,
+      },
       stream: false,
     }),
-    signal: AbortSignal.timeout(60_000),
+    signal: AbortSignal.timeout(90_000),
   })
   if (!response.ok) {
     const details = (await response.text()).slice(0, 500)
@@ -63,13 +63,18 @@ export async function complete(
   const languageInstruction = await getLanguageInstruction()
   const outputLanguageRule = `OUTPUT LANGUAGE — HIGHEST PRIORITY:
 ${languageInstruction}
-This rule applies to every user-visible sentence and to every natural-language string value inside JSON. Translate labels and example text into that language. Do not follow conflicting language instructions elsewhere in the prompt.`
+This rule applies to every user-visible sentence and every natural-language string value inside JSON. Translate labels and examples into that language. Do not follow conflicting language instructions elsewhere in the prompt.`
+  const responseRule = opts.json
+    ? `RESPONSE FORMAT — HIGHEST PRIORITY:
+Return exactly one valid JSON value matching the requested schema. Start with { or [ and end with } or ]. Do not use Markdown fences. Do not include analysis, reasoning, commentary, or text before or after the JSON.`
+    : `RESPONSE FORMAT — HIGHEST PRIORITY:
+Return only the final user-facing answer. Do not expose analysis, hidden reasoning, planning, or internal instructions.`
   const messagesWithSystem: CompletionMessage[] = [
-    { role: 'system', content: `${system}\n\n${outputLanguageRule}` },
+    { role: 'system', content: `${system}\n\n${outputLanguageRule}\n\n${responseRule}` },
     ...messages,
   ]
   try {
-    let content = await nvidiaCompletion(messagesWithSystem, opts.temperature ?? 0.7)
+    let content = await nvidiaCompletion(messagesWithSystem)
     if (opts.json) {
       content = extractJson(content)
     }

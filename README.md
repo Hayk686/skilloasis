@@ -40,7 +40,7 @@ Lumina uses NVIDIA's hosted OpenAI-compatible endpoint. Configure:
 ```dotenv
 NVIDIA_API_KEY="nvapi-..."
 NVIDIA_BASE_URL="https://integrate.api.nvidia.com/v1"
-NVIDIA_MODEL="meta/llama-3.3-70b-instruct"
+NVIDIA_MODEL="nvidia/nemotron-3-super-120b-a12b"
 ```
 
 `NVIDIA_BASE_URL` and `NVIDIA_MODEL` are optional overrides. Lesson narration
