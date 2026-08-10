@@ -50,10 +50,10 @@ draft while preserving structured JSON, Markdown, formulas, and code. Both
 models use `NVIDIA_API_KEY` by default. Lesson narration uses the browser's
 built-in speech synthesis and does not require an API call.
 
-NVIDIA currently marks Qwen's free hosted endpoint as deprecated. To use its
-partner endpoint, set `NVIDIA_QWEN_BASE_URL` and `NVIDIA_QWEN_API_KEY`. If that
-endpoint is unavailable, Armenian generation safely falls back to Nemotron
-instead of failing the request.
+NVIDIA currently marks Qwen's free hosted endpoint as deprecated. Qwen is used
+only when both `NVIDIA_QWEN_BASE_URL` and `NVIDIA_QWEN_API_KEY` are set from its
+partner provider. Without them, Armenian generation immediately uses Nemotron
+instead of spending the request timeout on an unavailable endpoint.
 
 ## Quality checks
 

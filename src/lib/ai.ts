@@ -168,7 +168,12 @@ Return only the final user-facing answer. Do not expose analysis, hidden reasoni
           content: `${opts.json ? `Required JSON schema and content rules:\n${system}\n\n` : ''}Translate this complete Nemotron source into Armenian${invalidJson ? ' and repair its JSON syntax' : ''}:\n${content}`,
         },
       ]
-      let translatorModel = ARMENIAN_TRANSLATOR_MODEL
+      const qwenPartnerConfigured = Boolean(
+        process.env.NVIDIA_QWEN_BASE_URL && process.env.NVIDIA_QWEN_API_KEY
+      )
+      let translatorModel = qwenPartnerConfigured
+        ? ARMENIAN_TRANSLATOR_MODEL
+        : NEMOTRON_MODEL
       try {
         content = await nvidiaCompletion(translationMessages, {
           model: translatorModel,
@@ -177,7 +182,9 @@ Return only the final user-facing answer. Do not expose analysis, hidden reasoni
           timeoutMs: remainingTimeout(42_000),
         })
       } catch (error) {
-        if (!(error instanceof AIServiceError)) throw error
+        if (!(error instanceof AIServiceError) || translatorModel !== ARMENIAN_TRANSLATOR_MODEL) {
+          throw error
+        }
         console.warn(
           `[ai.complete] Qwen Armenian translator unavailable (${error.code}); using Nemotron fallback`
         )
