@@ -2,6 +2,7 @@
 
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { DEFAULT_GUEST_NAME } from '@/lib/i18n-config'
 
 export type ViewId =
   | 'home'
@@ -49,7 +50,7 @@ export const useUser = create<UserState>()(
   persist(
     (set) => ({
       userId: null,
-      name: 'Странник',
+      name: DEFAULT_GUEST_NAME,
       email: null,
       avatar: null,
       authenticated: false,

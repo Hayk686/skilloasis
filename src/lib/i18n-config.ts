@@ -4,8 +4,20 @@ export type Locale = (typeof SUPPORTED_LOCALES)[number]
 
 export const DEFAULT_LOCALE: Locale = 'ru'
 
+export const DEFAULT_GUEST_NAME = 'Странник'
+
+const GUEST_NAMES: Record<Locale, string> = {
+  ru: 'Странник',
+  en: 'Explorer',
+  hy: 'Հետազոտող',
+}
+
 export function isLocale(value: unknown): value is Locale {
   return typeof value === 'string' && SUPPORTED_LOCALES.includes(value as Locale)
+}
+
+export function localizeUserName(name: string, locale: Locale): string {
+  return name === DEFAULT_GUEST_NAME ? GUEST_NAMES[locale] : name
 }
 
 export const LANGUAGE_NAMES: Record<Locale, string> = {

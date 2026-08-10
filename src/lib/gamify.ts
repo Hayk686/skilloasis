@@ -4,6 +4,7 @@ import { levelFromXp } from '@/lib/gamify-client'
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import { getSupabasePublicConfig } from '@/lib/supabase/config'
 import { createClient as createSupabaseClient } from '@/lib/supabase/server'
+import { DEFAULT_GUEST_NAME } from '@/lib/i18n-config'
 
 export { xpForLevel, levelFromXp, levelProgress, ACHIEVEMENTS, type AchievementType } from '@/lib/gamify-client'
 
@@ -104,7 +105,7 @@ export async function getOrCreateUser() {
             authId: identity.id,
             email: identity.email,
             ...(
-              cookieUser.name === 'Странник' && identity.name
+              cookieUser.name === DEFAULT_GUEST_NAME && identity.name
                 ? { name: identity.name }
                 : {}
             ),
@@ -124,7 +125,7 @@ export async function getOrCreateUser() {
         data: {
           authId: identity.id,
           email: identity.email,
-          name: identity.name ?? 'Странник',
+          name: identity.name ?? DEFAULT_GUEST_NAME,
           avatar: identity.avatar,
         },
       })

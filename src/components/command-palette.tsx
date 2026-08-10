@@ -394,7 +394,7 @@ export function CommandPalette() {
   )
 }
 
-/** Floating trigger button (bottom-right) for users who don't know ⌘K. */
+/** Compact floating trigger button for the command palette. */
 export function CommandTrigger() {
   const { setCommandOpen } = useUI()
   const { tr } = useTranslations()
@@ -402,15 +402,11 @@ export function CommandTrigger() {
     <button
       onClick={() => setCommandOpen(true)}
       aria-label={tr('Командная палитра', 'Command palette', 'Հրամանների վահանակ')}
-      className="group fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-full border border-border/60 bg-card/80 px-4 py-2.5 text-sm font-medium shadow-xl backdrop-blur-xl transition-all hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/20"
+      className="group fixed bottom-5 right-5 z-50 grid h-11 w-11 place-items-center rounded-full border border-border/60 bg-card/80 shadow-xl backdrop-blur-xl transition-all hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/20"
     >
-      <div className="grid h-6 w-6 place-items-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white">
-        <Sparkles className="h-3.5 w-3.5" />
+      <div className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white">
+        <Sparkles className="h-4 w-4" />
       </div>
-      <span className="hidden sm:inline">{tr('Быстрый поиск', 'Quick search', 'Արագ որոնում')}</span>
-      <kbd className="hidden rounded border border-border/60 bg-muted/40 px-1.5 py-0.5 text-[10px] text-muted-foreground sm:block">
-        ⌘K
-      </kbd>
     </button>
   )
 }

@@ -13,6 +13,7 @@ import { toast } from 'sonner'
 import { useUser } from '@/lib/store'
 import { ACHIEVEMENTS, levelProgress } from '@/lib/gamify-client'
 import { useTranslations } from '@/lib/i18n-client'
+import { localizeUserName } from '@/lib/i18n-config'
 
 interface ShareCardProps {
   open: boolean
@@ -25,7 +26,8 @@ const CANVAS_H = 630
 
 export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) {
   const { name, xp, level, streak } = useUser()
-  const { dateLocale, tr } = useTranslations()
+  const { locale, dateLocale, tr } = useTranslations()
+  const displayName = localizeUserName(name, locale)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const unlockedCount = achievements.length
@@ -140,8 +142,8 @@ export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) 
     // Name + tagline (center-left)
     ctx.fillStyle = '#fff'
     ctx.font = 'bold 56px ui-sans-serif, system-ui, sans-serif'
-    const displayName = name.length > 18 ? name.slice(0, 18) + '…' : name
-    ctx.fillText(displayName, 60, 230)
+    const cardName = displayName.length > 18 ? displayName.slice(0, 18) + '…' : displayName
+    ctx.fillText(cardName, 60, 230)
 
     ctx.fillStyle = 'rgba(217, 70, 239, 1)'
     ctx.font = '600 22px ui-sans-serif, system-ui, sans-serif'
@@ -210,7 +212,7 @@ export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) 
     ctx.textAlign = 'right'
     ctx.fillText(tr('SkillOasis · AI-обучающая платформа', 'SkillOasis · AI learning platform', 'SkillOasis · AI ուսուցման հարթակ'), CANVAS_W - 60, CANVAS_H - 40)
     ctx.textAlign = 'left'
-  }, [name, xp, level, streak, unlockedCount, totalAchievements, lp.pct, dateLocale, tr])
+  }, [displayName, xp, level, streak, unlockedCount, totalAchievements, lp.pct, dateLocale, tr])
 
   useEffect(() => {
     if (open) draw()
@@ -224,12 +226,12 @@ export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) 
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `skilloasis-${name}-${level}.png`
+      a.download = `skilloasis-${displayName}-${level}.png`
       a.click()
       URL.revokeObjectURL(url)
       toast.success(tr('Карточка сохранена', 'Card saved', 'Քարտը պահպանված է'), { icon: <Download className="h-4 w-4" /> })
     }, 'image/png')
-  }, [name, level, tr])
+  }, [displayName, level, tr])
 
   // Esc to close
   useEffect(() => {

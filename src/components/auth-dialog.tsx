@@ -16,6 +16,7 @@ import { useTranslations } from '@/lib/i18n-client'
 import { useUser } from '@/lib/store'
 import { createClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/config'
+import { localizeUserName } from '@/lib/i18n-config'
 
 type AuthMode = 'signin' | 'signup'
 
@@ -37,8 +38,9 @@ export function AuthDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
-  const { tr } = useTranslations()
+  const { locale, tr } = useTranslations()
   const { name: currentName, email: currentEmail, authenticated } = useUser()
+  const currentDisplayName = localizeUserName(currentName, locale)
   const [mode, setMode] = useState<AuthMode>('signin')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -140,7 +142,7 @@ export function AuthDialog({
               <div className="mb-2 grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white">
                 <UserRound className="h-5 w-5" />
               </div>
-              <DialogTitle>{currentName}</DialogTitle>
+              <DialogTitle>{currentDisplayName}</DialogTitle>
               <DialogDescription>{currentEmail}</DialogDescription>
             </DialogHeader>
             <div className="mt-5 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm text-emerald-600 dark:text-emerald-300">

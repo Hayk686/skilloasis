@@ -21,6 +21,7 @@ import {
   Network,
   Terminal,
   Languages,
+  ChevronDown,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useNav, useUI, useUser, ViewId } from '@/lib/store'
@@ -31,6 +32,14 @@ import { Footer } from '@/components/footer'
 import { CommandPalette, CommandTrigger } from '@/components/command-palette'
 import { useLocaleSync, useTranslations, type TranslationKey } from '@/lib/i18n-client'
 import { AuthDialog } from '@/components/auth-dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { localizeUserName } from '@/lib/i18n-config'
 
 const NAV_ITEMS: { id: ViewId; label: TranslationKey; icon: typeof Home; desc: TranslationKey }[] = [
   { id: 'home', label: 'navHome', icon: Home, desc: 'navHomeDesc' },
@@ -85,6 +94,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { sidebarOpen, setSidebar, setCommandOpen } = useUI()
   const { xp, level, streak, name, authenticated } = useUser()
   const [authOpen, setAuthOpen] = useState(false)
+  const displayName = localizeUserName(name, locale)
 
   return (
     <div className="relative flex min-h-screen flex-col">
@@ -133,29 +143,41 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <kbd className="rounded border border-border/60 bg-muted/40 px-1 py-0.5 text-[10px]">⌘K</kbd>
             </button>
             <ThemeToggle />
-            <label className="hidden items-center gap-1 rounded-lg border border-border/60 bg-card/40 px-2 md:flex">
-              <Languages className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="sr-only">Language</span>
-              <select
-                value={locale}
-                onChange={(event) => setLocale(event.target.value as typeof locale)}
-                className="h-8 bg-transparent text-xs outline-none"
-              >
-                {locales.map((item) => (
-                  <option key={item} value={item}>{languageNames[item]}</option>
-                ))}
-              </select>
-            </label>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={t('language')}
+                  className="hidden h-9 items-center gap-1.5 rounded-lg border border-border/60 bg-card/40 px-2.5 text-xs transition-colors hover:border-border hover:text-foreground md:flex"
+                >
+                  <Languages className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span>{languageNames[locale]}</span>
+                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-32">
+                <DropdownMenuRadioGroup
+                  value={locale}
+                  onValueChange={(value) => setLocale(value as typeof locale)}
+                >
+                  {locales.map((item) => (
+                    <DropdownMenuRadioItem key={item} value={item}>
+                      {languageNames[item]}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <button
               type="button"
               onClick={() => setAuthOpen(true)}
-              aria-label={authenticated ? name : t('account')}
+              aria-label={authenticated ? displayName : t('account')}
               className="flex h-9 items-center gap-2 rounded-full border border-border/60 bg-card/60 px-2 transition-colors hover:border-primary/40 hover:bg-card"
             >
               <div className="grid h-6 w-6 place-items-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-[10px] font-bold text-white">
-                {name.charAt(0).toUpperCase()}
+                {displayName.charAt(0).toUpperCase()}
               </div>
-              <span className="hidden max-w-24 truncate text-xs font-medium sm:inline">{name}</span>
+              <span className="hidden max-w-24 truncate text-xs font-medium sm:inline">{displayName}</span>
             </button>
           </div>
         </div>

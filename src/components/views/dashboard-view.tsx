@@ -49,6 +49,7 @@ import { useNav, useUser } from '@/lib/store'
 import { ShareCard } from '@/components/share-card'
 import { getSubject, localizeSubject } from '@/lib/subjects'
 import { levelProgress, ACHIEVEMENTS, localizeAchievement } from '@/lib/gamify-client'
+import { localizeUserName } from '@/lib/i18n-config'
 import { seededFraction } from '@/lib/utils'
 import {
   PageSection,
@@ -476,6 +477,7 @@ export function DashboardView() {
   const userStore = useUser()
   const { xp, level, streak, name } = userStore
   const { locale, dateLocale, tr, localize } = useTranslations()
+  const displayName = localizeUserName(name, locale)
 
   const [userData, setUserData] = useState<UserData | null>(null)
   const [progressData, setProgressData] = useState<ProgressData | null>(null)
@@ -487,7 +489,7 @@ export function DashboardView() {
 
   // editable name
   const [editingName, setEditingName] = useState(false)
-  const [nameDraft, setNameDraft] = useState(name)
+  const [nameDraft, setNameDraft] = useState(displayName)
   const [savingName, setSavingName] = useState(false)
   const nameInputRef = useRef<HTMLInputElement | null>(null)
 
@@ -553,9 +555,9 @@ export function DashboardView() {
 
   const saveName = useCallback(async () => {
     const trimmed = nameDraft.trim()
-    if (!trimmed || trimmed === name) {
+    if (!trimmed || trimmed === displayName) {
       setEditingName(false)
-      setNameDraft(name)
+      setNameDraft(displayName)
       return
     }
     setSavingName(true)
@@ -576,12 +578,12 @@ export function DashboardView() {
       }
     } catch {
       toast.error(tr('Не удалось сохранить имя', 'Could not save the name', 'Չհաջողվեց պահպանել անունը'))
-      setNameDraft(name)
+      setNameDraft(displayName)
     } finally {
       setSavingName(false)
       setEditingName(false)
     }
-  }, [nameDraft, name, tr])
+  }, [nameDraft, displayName, tr])
 
   /* ---------- daily challenge submit ---------- */
   const submitDaily = useCallback(async () => {
@@ -796,7 +798,7 @@ export function DashboardView() {
                               e.preventDefault()
                               saveName()
                             } else if (e.key === 'Escape') {
-                              setNameDraft(name)
+                              setNameDraft(displayName)
                               setEditingName(false)
                             }
                           }}
@@ -812,14 +814,14 @@ export function DashboardView() {
                     ) : (
                       <button
                         onClick={() => {
-                          setNameDraft(name)
+                          setNameDraft(displayName)
                           setEditingName(true)
                         }}
                         className="group inline-flex items-center gap-2 rounded-lg px-1 py-0.5 transition-colors hover:bg-muted/40"
                         title={tr('Изменить имя', 'Edit name', 'Փոխել անունը')}
                       >
                         <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
-                          {name}
+                          {displayName}
                         </h2>
                         <Pencil className="h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
                       </button>
