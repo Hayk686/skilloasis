@@ -45,15 +45,11 @@ NVIDIA_BASE_URL="https://integrate.api.nvidia.com/v1"
 
 `NVIDIA_BASE_URL` is an optional override. The application uses
 `nvidia/nemotron-3-super-120b-a12b` for content generation. When Armenian is
-selected, `qwen/qwen3-next-80b-a3b-instruct` translates Nemotron's complete
-draft while preserving structured JSON, Markdown, formulas, and code. Both
-models use `NVIDIA_API_KEY` by default. Lesson narration uses the browser's
-built-in speech synthesis and does not require an API call.
-
-NVIDIA currently marks Qwen's free hosted endpoint as deprecated. Qwen is used
-only when both `NVIDIA_QWEN_BASE_URL` and `NVIDIA_QWEN_API_KEY` are set from its
-partner provider. Without them, Armenian generation immediately uses Nemotron
-instead of spending the request timeout on an unavailable endpoint.
+selected, `openai/gpt-oss-120b` translates Nemotron's complete English draft
+into Eastern Armenian while preserving structured JSON, Markdown, formulas,
+and code. Both models use the same NVIDIA endpoint and `NVIDIA_API_KEY`; no
+second provider key is required. Lesson narration uses the browser's built-in
+speech synthesis and does not require an API call.
 
 ## Quality checks
 
