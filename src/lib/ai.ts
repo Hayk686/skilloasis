@@ -46,6 +46,7 @@ async function nvidiaCompletion(
     throw new AIServiceError('AI_KEY_MISSING', 'NVIDIA_API_KEY is required')
   }
   let response: Response
+  let responseBody: string
   try {
     response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
@@ -59,20 +60,24 @@ async function nvidiaCompletion(
         messages,
         temperature: options.temperature ?? 1,
         top_p: 0.95,
-        max_tokens: options.maxTokens ?? 8192,
+        max_tokens: options.maxTokens ?? 4096,
         reasoning_effort: 'none',
         stream: false,
       }),
-      signal: AbortSignal.timeout(options.timeoutMs ?? 55_000),
+      signal: AbortSignal.timeout(options.timeoutMs ?? 90_000),
     })
+    responseBody = await response.text()
   } catch (error) {
-    if (error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError')) {
+    const errorName = error && typeof error === 'object' && 'name' in error
+      ? String(error.name)
+      : ''
+    if (errorName === 'TimeoutError' || errorName === 'AbortError') {
       throw new AIServiceError('AI_TIMEOUT', 'NVIDIA API request timed out')
     }
     throw new AIServiceError('AI_PROVIDER_ERROR', 'Could not reach NVIDIA API')
   }
   if (!response.ok) {
-    const details = (await response.text()).slice(0, 500)
+    const details = responseBody.slice(0, 500)
     const code: AIErrorCode =
       response.status === 401 || response.status === 403
         ? 'AI_UNAUTHORIZED'
@@ -83,8 +88,13 @@ async function nvidiaCompletion(
             : 'AI_PROVIDER_ERROR'
     throw new AIServiceError(code, `NVIDIA API returned ${response.status}: ${details}`)
   }
-  const payload = await response.json() as {
+  let payload: {
     choices?: Array<{ message?: { content?: string } }>
+  }
+  try {
+    payload = JSON.parse(responseBody) as typeof payload
+  } catch {
+    throw new AIServiceError('AI_PROVIDER_ERROR', 'NVIDIA API returned invalid JSON')
   }
   const content = payload.choices?.[0]?.message?.content?.trim()
   if (!content) throw new AIServiceError('AI_EMPTY_RESPONSE', 'NVIDIA API returned an empty response')
@@ -113,9 +123,13 @@ Return only the final user-facing answer. Do not expose analysis, hidden reasoni
     { role: 'system', content: `${system}\n\n${outputLanguageRule}\n\n${responseRule}` },
     ...messages,
   ]
+  const completionDeadline = Date.now() + 110_000
+  const remainingTimeout = (maximum: number) =>
+    Math.max(1_000, Math.min(maximum, completionDeadline - Date.now()))
   try {
     let content = await nvidiaCompletion(messagesWithSystem, {
       temperature: opts.temperature,
+      timeoutMs: remainingTimeout(locale === 'hy' ? 70_000 : 95_000),
     })
     if (opts.json) {
       content = extractJson(content)
@@ -137,7 +151,8 @@ Return only the final user-facing answer. Do not expose analysis, hidden reasoni
         ]
         content = extractJson(await nvidiaCompletion(repairMessages, {
           temperature: 0.2,
-          maxTokens: 8192,
+          maxTokens: 4096,
+          timeoutMs: remainingTimeout(38_000),
         }))
       } else {
         content = await nvidiaCompletion([
@@ -146,7 +161,11 @@ Return only the final user-facing answer. Do not expose analysis, hidden reasoni
             content: `You are a fluent Eastern Armenian copy editor. Rewrite the answer in natural Eastern Armenian using the Armenian alphabet. Remove all Russian, Persian, Arabic, English, and transliterated prose. Latin characters may remain only inside code, formulas, SI units, and proper names with no standard Armenian form. Preserve facts, Markdown structure, and code. Return only the corrected answer.`,
           },
           { role: 'user', content },
-        ], { temperature: 0.2 })
+        ], {
+          temperature: 0.2,
+          maxTokens: 4096,
+          timeoutMs: remainingTimeout(38_000),
+        })
       }
     }
     return content
