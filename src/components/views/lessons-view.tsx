@@ -35,7 +35,7 @@ import {
   StaggerGroup,
   StaggerItem,
 } from '@/components/ui-blocks'
-import { AudioNarration, LessonIllustration } from '@/components/media-tools'
+import { AudioNarration } from '@/components/media-tools'
 import { BookmarkButton } from '@/components/bookmark-button'
 import { useTranslations, type LocalizedText } from '@/lib/i18n-client'
 
@@ -161,7 +161,7 @@ export function LessonsView() {
         })
         const data = await res.json()
         if (!res.ok) {
-          throw new Error(data?.error || tr('Не удалось создать урок', 'Could not create the lesson', 'Չհաջողվեց ստեղծել դասը'))
+          throw new Error(tr('Не удалось создать урок. Попробуйте ещё раз.', 'Could not create the lesson. Please try again.', 'Չհաջողվեց ստեղծել դասը։ Փորձեք կրկին։'))
         }
         setLesson(data.lesson as Lesson)
         if (typeof data.xp === 'number') {
@@ -623,13 +623,12 @@ function LessonReader({
                 )}
               </div>
 
-              {/* Media actions: audio narration + AI illustration + bookmark */}
+              {/* Media actions: browser narration + bookmark */}
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 <AudioNarration
                   text={`${lesson.title}. ${lesson.summary}. ${takeaways.join(' ')}`}
                   label={tr('Слушать урок', 'Listen to lesson', 'Լսել դասը')}
                 />
-                <LessonIllustration topic={lesson.title} summary={lesson.summary} />
                 <BookmarkButton topic={lesson.title} subject={subjectLabel ?? 'general'} lessonJson={JSON.stringify(lesson)} />
               </div>
             </div>

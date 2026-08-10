@@ -9,7 +9,7 @@ progress.
 - Next.js 16 and React 19
 - Prisma with Supabase Postgres
 - Zustand and Tailwind CSS
-- `z-ai-web-dev-sdk` or an OpenAI-compatible text API
+- NVIDIA API Catalog (OpenAI-compatible hosted NIM endpoint)
 
 ## Local setup
 
@@ -19,7 +19,9 @@ progress.
    - `DATABASE_URL`: pooled runtime connection.
    - `DIRECT_URL`: direct migration connection.
 4. Set a random `LUMINA_SESSION_SECRET` with at least 32 characters.
-5. Run:
+5. Create a free key at [build.nvidia.com](https://build.nvidia.com/) and set
+   `NVIDIA_API_KEY`.
+6. Run:
 
 ```powershell
 bun install
@@ -31,20 +33,18 @@ bun run dev
 The initial migration creates all application tables. The old local SQLite
 database was development-only and is not part of the Supabase migration.
 
-## AI providers
+## NVIDIA AI
 
-The default `AI_PROVIDER=zai` keeps compatibility with the original runtime.
-For a free OpenAI-compatible text provider, configure:
+Lumina uses NVIDIA's hosted OpenAI-compatible endpoint. Configure:
 
 ```dotenv
-AI_PROVIDER="openai-compatible"
-AI_BASE_URL="https://provider.example/v1"
-AI_API_KEY="..."
-AI_MODEL="..."
+NVIDIA_API_KEY="nvapi-..."
+NVIDIA_BASE_URL="https://integrate.api.nvidia.com/v1"
+NVIDIA_MODEL="meta/llama-3.3-70b-instruct"
 ```
 
-Image generation and speech currently use `z-ai-web-dev-sdk`. They should be
-connected separately after choosing providers that support those modalities.
+`NVIDIA_BASE_URL` and `NVIDIA_MODEL` are optional overrides. Lesson narration
+uses the browser's built-in speech synthesis and does not require an API call.
 
 ## Quality checks
 

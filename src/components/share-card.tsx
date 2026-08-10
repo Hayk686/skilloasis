@@ -1,22 +1,18 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   X,
   Download,
   Sparkles,
-  Loader2,
-  Wand2,
   Trophy,
-  RefreshCw,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { useUser } from '@/lib/store'
 import { ACHIEVEMENTS, levelProgress } from '@/lib/gamify-client'
-import { cn } from '@/lib/utils'
-import { useTranslations, type LocalizedText } from '@/lib/i18n-client'
+import { useTranslations } from '@/lib/i18n-client'
 
 interface ShareCardProps {
   open: boolean
@@ -24,27 +20,13 @@ interface ShareCardProps {
   achievements: { type: string; unlockedAt: string | Date }[]
 }
 
-const localized = (ru: string, en: string, hy: string): LocalizedText => ({ ru, en, hy })
-
-const STYLES = [
-  { id: 'cosmic', label: localized('Космос', 'Cosmos', 'Տիեզերք'), emoji: '🌌' },
-  { id: 'aurora', label: localized('Сияние', 'Aurora', 'Փայլ'), emoji: '🌠' },
-  { id: 'geometric', label: localized('Геометрия', 'Geometry', 'Երկրաչափություն'), emoji: '🔷' },
-  { id: 'fluid', label: localized('Поток', 'Flow', 'Հոսք'), emoji: '🌊' },
-]
-
 const CANVAS_W = 1200
 const CANVAS_H = 630
 
 export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) {
   const { name, xp, level, streak } = useUser()
-  const { dateLocale, tr, localize } = useTranslations()
+  const { dateLocale, tr } = useTranslations()
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [bgImage, setBgImage] = useState<HTMLImageElement | null>(null)
-  const [artUrl, setArtUrl] = useState<string | null>(null)
-  const [artLoading, setArtLoading] = useState(false)
-  const [activeStyle, setActiveStyle] = useState('cosmic')
-  const [useGradient, setUseGradient] = useState(true)
 
   const unlockedCount = achievements.length
   const totalAchievements = ACHIEVEMENTS.length
@@ -60,74 +42,45 @@ export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) 
     canvas.width = CANVAS_W
     canvas.height = CANVAS_H
 
-    // Background
-    if (bgImage) {
-      // Cover-fit the AI art
-      const imgRatio = bgImage.width / bgImage.height
-      const canvasRatio = CANVAS_W / CANVAS_H
-      let dw = CANVAS_W
-      let dh = CANVAS_H
-      let dx = 0
-      let dy = 0
-      if (imgRatio > canvasRatio) {
-        dh = CANVAS_H
-        dw = dh * imgRatio
-        dx = (CANVAS_W - dw) / 2
-      } else {
-        dw = CANVAS_W
-        dh = dw / imgRatio
-        dy = (CANVAS_H - dh) / 2
-      }
-      ctx.drawImage(bgImage, dx, dy, dw, dh)
-      // Dark overlay for readability
-      const grad = ctx.createLinearGradient(0, 0, 0, CANVAS_H)
-      grad.addColorStop(0, 'rgba(10, 6, 23, 0.55)')
-      grad.addColorStop(1, 'rgba(10, 6, 23, 0.92)')
-      ctx.fillStyle = grad
-      ctx.fillRect(0, 0, CANVAS_W, CANVAS_H)
-    } else {
-      // Default cosmic gradient
-      const grad = ctx.createLinearGradient(0, 0, CANVAS_W, CANVAS_H)
-      grad.addColorStop(0, '#1e0a3c')
-      grad.addColorStop(0.5, '#2d0a4e')
-      grad.addColorStop(1, '#0a0613')
-      ctx.fillStyle = grad
-      ctx.fillRect(0, 0, CANVAS_W, CANVAS_H)
-      // Subtle radial glow
-      const glow = ctx.createRadialGradient(
-        CANVAS_W * 0.75,
-        CANVAS_H * 0.3,
-        0,
-        CANVAS_W * 0.75,
-        CANVAS_H * 0.3,
-        500
-      )
-      glow.addColorStop(0, 'rgba(217, 70, 239, 0.35)')
-      glow.addColorStop(1, 'rgba(217, 70, 239, 0)')
-      ctx.fillStyle = glow
-      ctx.fillRect(0, 0, CANVAS_W, CANVAS_H)
-      const glow2 = ctx.createRadialGradient(
-        CANVAS_W * 0.2,
-        CANVAS_H * 0.8,
-        0,
-        CANVAS_W * 0.2,
-        CANVAS_H * 0.8,
-        400
-      )
-      glow2.addColorStop(0, 'rgba(139, 92, 246, 0.3)')
-      glow2.addColorStop(1, 'rgba(139, 92, 246, 0)')
-      ctx.fillStyle = glow2
-      ctx.fillRect(0, 0, CANVAS_W, CANVAS_H)
-      // Stars
-      ctx.fillStyle = 'rgba(255,255,255,0.8)'
-      for (let i = 0; i < 80; i++) {
-        const x = (i * 37 + 13) % CANVAS_W
-        const y = (i * 71 + 29) % CANVAS_H
-        const r = (i % 3) * 0.6 + 0.4
-        ctx.beginPath()
-        ctx.arc(x, y, r, 0, Math.PI * 2)
-        ctx.fill()
-      }
+    // Cosmic gradient background
+    const grad = ctx.createLinearGradient(0, 0, CANVAS_W, CANVAS_H)
+    grad.addColorStop(0, '#1e0a3c')
+    grad.addColorStop(0.5, '#2d0a4e')
+    grad.addColorStop(1, '#0a0613')
+    ctx.fillStyle = grad
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H)
+    const glow = ctx.createRadialGradient(
+      CANVAS_W * 0.75,
+      CANVAS_H * 0.3,
+      0,
+      CANVAS_W * 0.75,
+      CANVAS_H * 0.3,
+      500
+    )
+    glow.addColorStop(0, 'rgba(217, 70, 239, 0.35)')
+    glow.addColorStop(1, 'rgba(217, 70, 239, 0)')
+    ctx.fillStyle = glow
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H)
+    const glow2 = ctx.createRadialGradient(
+      CANVAS_W * 0.2,
+      CANVAS_H * 0.8,
+      0,
+      CANVAS_W * 0.2,
+      CANVAS_H * 0.8,
+      400
+    )
+    glow2.addColorStop(0, 'rgba(139, 92, 246, 0.3)')
+    glow2.addColorStop(1, 'rgba(139, 92, 246, 0)')
+    ctx.fillStyle = glow2
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H)
+    ctx.fillStyle = 'rgba(255,255,255,0.8)'
+    for (let i = 0; i < 80; i++) {
+      const x = (i * 37 + 13) % CANVAS_W
+      const y = (i * 71 + 29) % CANVAS_H
+      const r = (i % 3) * 0.6 + 0.4
+      ctx.beginPath()
+      ctx.arc(x, y, r, 0, Math.PI * 2)
+      ctx.fill()
     }
 
     // Top gradient border line
@@ -257,56 +210,11 @@ export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) 
     ctx.textAlign = 'right'
     ctx.fillText(tr('lumina · AI-обучающая платформа', 'lumina · AI learning platform', 'lumina · AI ուսուցման հարթակ'), CANVAS_W - 60, CANVAS_H - 40)
     ctx.textAlign = 'left'
-  }, [bgImage, name, xp, level, streak, unlockedCount, totalAchievements, lp.pct, dateLocale, tr])
+  }, [name, xp, level, streak, unlockedCount, totalAchievements, lp.pct, dateLocale, tr])
 
   useEffect(() => {
     if (open) draw()
-  }, [open, draw, bgImage])
-
-  // Load AI art image when artUrl changes
-  useEffect(() => {
-    if (!artUrl) {
-      setBgImage(null)
-      return
-    }
-    const img = new Image()
-    img.crossOrigin = 'anonymous'
-    img.onload = () => {
-      setBgImage(img)
-      setUseGradient(false)
-    }
-    img.onerror = () => {
-      toast.error(tr('Не удалось загрузить арт-фон', 'Could not load the art background', 'Չհաջողվեց բեռնել գեղարվեստական ֆոնը'))
-      setBgImage(null)
-    }
-    img.src = artUrl
-  }, [artUrl, tr])
-
-  const generateArt = useCallback(
-    async (styleId: string) => {
-      setArtLoading(true)
-      setActiveStyle(styleId)
-      try {
-        const res = await fetch('/api/share-art', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ style: styleId }),
-        })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error)
-        setArtUrl(data.image)
-        const style = STYLES.find((item) => item.id === styleId)
-        toast.success(`${tr('Сгенерирован арт:', 'Art generated:', 'Պատկերը ստեղծված է՝')} «${style ? localize(style.label) : data.styleLabel}»`, {
-          icon: <Wand2 className="h-4 w-4" />,
-        })
-      } catch {
-        toast.error(tr('Не удалось сгенерировать арт. Попробуйте ещё раз.', 'Could not generate art. Please try again.', 'Չհաջողվեց ստեղծել պատկերը։ Փորձեք կրկին։'))
-      } finally {
-        setArtLoading(false)
-      }
-    },
-    [localize, tr]
-  )
+  }, [open, draw])
 
   const download = useCallback(() => {
     const canvas = canvasRef.current
@@ -384,63 +292,6 @@ export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) 
                   className="block w-full"
                   style={{ aspectRatio: `${CANVAS_W} / ${CANVAS_H}` }}
                 />
-                {artLoading && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/60 backdrop-blur-sm">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="text-sm text-muted-foreground">{tr('AI создаёт уникальный арт…', 'AI is creating unique art…', 'AI-ը ստեղծում է եզակի պատկեր…')}</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Style picker */}
-              <div className="mt-5">
-                <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  <Wand2 className="h-3 w-3" />
-                  {tr('AI-арт фон', 'AI art background', 'AI գեղարվեստական ֆոն')}
-                </p>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  {STYLES.map((s) => (
-                    <button
-                      key={s.id}
-                      onClick={() => generateArt(s.id)}
-                      disabled={artLoading}
-                      className={cn(
-                        'group relative overflow-hidden rounded-xl border p-3 text-left transition-all disabled:opacity-50',
-                        activeStyle === s.id && !useGradient
-                          ? 'border-primary/50 bg-primary/10 shadow-md shadow-primary/10'
-                          : 'border-border/60 bg-card/40 hover:border-border hover:bg-card/70'
-                      )}
-                    >
-                      <div className="text-lg">{s.emoji}</div>
-                      <div className="mt-1 text-xs font-medium">{localize(s.label)}</div>
-                      {activeStyle === s.id && !useGradient && (
-                        <div className="absolute right-2 top-2 grid h-4 w-4 place-items-center rounded-full bg-primary text-[9px] text-primary-foreground">
-                          ✓
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-                <div className="mt-2 flex items-center justify-between">
-                  <button
-                    onClick={() => {
-                      setArtUrl(null)
-                      setUseGradient(true)
-                    }}
-                    className={cn(
-                      'flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs transition-colors',
-                      useGradient
-                        ? 'bg-primary/10 text-primary'
-                        : 'text-muted-foreground hover:text-foreground'
-                    )}
-                  >
-                    <RefreshCw className="h-3 w-3" />
-                    {tr('Космический градиент', 'Cosmic gradient', 'Տիեզերական գրադիենտ')}
-                  </button>
-                  <span className="text-[11px] text-muted-foreground">
-                    +8 XP {tr('за генерацию арта', 'for generating art', 'պատկեր ստեղծելու համար')}
-                  </span>
-                </div>
               </div>
             </div>
 

@@ -1,14 +1,7 @@
-import ZAI from 'z-ai-web-dev-sdk'
 import { getLanguageInstruction } from '@/lib/locale-server'
 
-let _zai: Awaited<ReturnType<typeof ZAI.create>> | null = null
-
-export async function getAI() {
-  if (!_zai) {
-    _zai = await ZAI.create()
-  }
-  return _zai
-}
+const NVIDIA_BASE_URL = 'https://integrate.api.nvidia.com/v1'
+const NVIDIA_DEFAULT_MODEL = 'meta/llama-3.3-70b-instruct'
 
 export interface ChatTurn {
   role: 'user' | 'assistant'
@@ -20,38 +13,43 @@ interface CompletionMessage {
   content: string
 }
 
-async function openAICompatibleCompletion(
+async function nvidiaCompletion(
   messages: CompletionMessage[],
-  temperature: number,
-  json: boolean
+  temperature: number
 ): Promise<string> {
-  const baseUrl = process.env.AI_BASE_URL?.replace(/\/$/, '')
-  const apiKey = process.env.AI_API_KEY
-  const model = process.env.AI_MODEL
-  if (!baseUrl || !apiKey || !model) {
-    throw new Error('AI_BASE_URL, AI_API_KEY and AI_MODEL are required')
+  const baseUrl = (process.env.NVIDIA_BASE_URL || NVIDIA_BASE_URL).replace(/\/$/, '')
+  const apiKey = process.env.NVIDIA_API_KEY
+  const model = process.env.NVIDIA_MODEL || NVIDIA_DEFAULT_MODEL
+  if (!apiKey) {
+    throw new Error('NVIDIA_API_KEY is required')
   }
   const response = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,
+      Accept: 'application/json',
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       model,
       messages,
       temperature,
-      ...(json ? { response_format: { type: 'json_object' } } : {}),
+      top_p: 0.7,
+      max_tokens: 4096,
+      stream: false,
     }),
     signal: AbortSignal.timeout(60_000),
   })
   if (!response.ok) {
-    throw new Error(`AI provider returned ${response.status}`)
+    const details = (await response.text()).slice(0, 500)
+    throw new Error(`NVIDIA API returned ${response.status}: ${details}`)
   }
   const payload = await response.json() as {
     choices?: Array<{ message?: { content?: string } }>
   }
-  return payload.choices?.[0]?.message?.content ?? ''
+  const content = payload.choices?.[0]?.message?.content?.trim()
+  if (!content) throw new Error('NVIDIA API returned an empty response')
+  return content
 }
 
 /**
@@ -71,22 +69,7 @@ This rule applies to every user-visible sentence and to every natural-language s
     ...messages,
   ]
   try {
-    let content: string
-    if (process.env.AI_PROVIDER === 'openai-compatible') {
-      content = await openAICompatibleCompletion(
-        messagesWithSystem,
-        opts.temperature ?? 0.7,
-        Boolean(opts.json)
-      )
-    } else {
-      const zai = await getAI()
-      const completion = await zai.chat.completions.create({
-        messages: messagesWithSystem,
-        thinking: { type: 'disabled' },
-        temperature: opts.temperature ?? 0.7,
-      })
-      content = completion.choices[0]?.message?.content ?? ''
-    }
+    let content = await nvidiaCompletion(messagesWithSystem, opts.temperature ?? 0.7)
     if (opts.json) {
       content = extractJson(content)
     }

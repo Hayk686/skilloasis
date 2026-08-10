@@ -15,7 +15,7 @@ import {
   Brain,
   Rocket,
   Volume2,
-  ImageIcon,
+  Network,
   Command,
   Star,
   Quote,
@@ -252,7 +252,7 @@ export function HomeView() {
               </div>
               <p className="font-semibold">{tr('Аудио-озвучка уроков', 'Audio lessons', 'Դասերի աուդիո տարբերակ')}</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                {tr('Не хочешь читать? Включи озвучку — AI прочитает урок вслух естественным голосом.', 'Do not feel like reading? AI can read the lesson aloud in a natural voice.', 'Չե՞ս ուզում կարդալ։ AI-ը բնական ձայնով բարձրաձայն կկարդա դասը։')}
+                {tr('Не хочешь читать? Включи бесплатную озвучку прямо в браузере.', 'Do not feel like reading? Use free narration directly in your browser.', 'Չե՞ս ուզում կարդալ։ Միացրու անվճար ձայնավորումը հենց դիտարկիչում։')}
               </p>
               <button
                 onClick={() => setView('lessons')}
@@ -265,17 +265,17 @@ export function HomeView() {
           <StaggerItem>
             <GlassCard className="group h-full cursor-pointer p-5">
               <div className="mb-3 inline-grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white shadow-lg shadow-violet-500/25">
-                <ImageIcon className="h-5 w-5" />
+                <Network className="h-5 w-5" />
               </div>
-              <p className="font-semibold">{tr('AI-иллюстрации', 'AI illustrations', 'AI պատկերազարդումներ')}</p>
+              <p className="font-semibold">{tr('Карты знаний', 'Knowledge maps', 'Գիտելիքի քարտեզներ')}</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                {tr('Каждому уроку — уникальная иллюстрация, сгенерированная под тему. Визуально и запоминается.', 'Each lesson gets a unique illustration generated for its topic.', 'Յուրաքանչյուր դասի համար ստեղծվում է թեմային համապատասխան եզակի պատկերազարդում։')}
+                {tr('AI превращает любую тему в наглядную карту понятий и связей.', 'AI turns any topic into a visual map of concepts and connections.', 'AI-ը ցանկացած թեմա վերածում է հասկացությունների և կապերի տեսողական քարտեզի։')}
               </p>
               <button
-                onClick={() => setView('lessons')}
+                onClick={() => setView('mindmap')}
                 className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
               >
-                {tr('Сгенерировать', 'Generate', 'Ստեղծել')} <ArrowRight className="h-3 w-3" />
+                {tr('Построить карту', 'Build a map', 'Կառուցել քարտեզ')} <ArrowRight className="h-3 w-3" />
               </button>
             </GlassCard>
           </StaggerItem>
