@@ -42,13 +42,24 @@ async function nvidiaCompletion(
   messages: CompletionMessage[],
   options: CompletionOptions = {}
 ): Promise<string> {
-  const baseUrl = (process.env.NVIDIA_BASE_URL || NVIDIA_BASE_URL).replace(/\/$/, '')
-  const apiKey = process.env.NVIDIA_API_KEY
-  if (!apiKey) {
-    throw new AIServiceError('AI_KEY_MISSING', 'NVIDIA_API_KEY is required')
-  }
   const model = options.model ?? NEMOTRON_MODEL
   const isArmenianTranslator = model === ARMENIAN_TRANSLATOR_MODEL
+  const baseUrl = (
+    isArmenianTranslator
+      ? process.env.NVIDIA_QWEN_BASE_URL || process.env.NVIDIA_BASE_URL || NVIDIA_BASE_URL
+      : process.env.NVIDIA_BASE_URL || NVIDIA_BASE_URL
+  ).replace(/\/$/, '')
+  const apiKey = isArmenianTranslator
+    ? process.env.NVIDIA_QWEN_API_KEY || process.env.NVIDIA_API_KEY
+    : process.env.NVIDIA_API_KEY
+  if (!apiKey) {
+    throw new AIServiceError(
+      'AI_KEY_MISSING',
+      isArmenianTranslator
+        ? 'NVIDIA_QWEN_API_KEY or NVIDIA_API_KEY is required'
+        : 'NVIDIA_API_KEY is required'
+    )
+  }
   let response: Response
   let responseBody: string
   try {
@@ -157,12 +168,27 @@ Return only the final user-facing answer. Do not expose analysis, hidden reasoni
           content: `${opts.json ? `Required JSON schema and content rules:\n${system}\n\n` : ''}Translate this complete Nemotron source into Armenian${invalidJson ? ' and repair its JSON syntax' : ''}:\n${content}`,
         },
       ]
-      content = await nvidiaCompletion(translationMessages, {
-        model: ARMENIAN_TRANSLATOR_MODEL,
-        temperature: 0.7,
-        maxTokens: 4096,
-        timeoutMs: remainingTimeout(42_000),
-      })
+      let translatorModel = ARMENIAN_TRANSLATOR_MODEL
+      try {
+        content = await nvidiaCompletion(translationMessages, {
+          model: translatorModel,
+          temperature: 0.7,
+          maxTokens: 4096,
+          timeoutMs: remainingTimeout(42_000),
+        })
+      } catch (error) {
+        if (!(error instanceof AIServiceError)) throw error
+        console.warn(
+          `[ai.complete] Qwen Armenian translator unavailable (${error.code}); using Nemotron fallback`
+        )
+        translatorModel = NEMOTRON_MODEL
+        content = await nvidiaCompletion(translationMessages, {
+          model: translatorModel,
+          temperature: 0.7,
+          maxTokens: 4096,
+          timeoutMs: remainingTimeout(38_000),
+        })
+      }
       if (opts.json) content = extractJson(content)
 
       const translatedInvalidJson = Boolean(opts.json) && tryJsonParse(content) === null
@@ -176,7 +202,7 @@ Return only the final user-facing answer. Do not expose analysis, hidden reasoni
           },
           { role: 'user', content },
         ], {
-          model: ARMENIAN_TRANSLATOR_MODEL,
+          model: translatorModel,
           temperature: 0.7,
           maxTokens: 4096,
           timeoutMs: remainingTimeout(30_000),
