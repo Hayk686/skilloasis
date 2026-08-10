@@ -299,11 +299,8 @@ function SidebarContent({
       <p className="shrink-0 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
         {t('navigation')}
       </p>
-      <div className="-mx-1 shrink-0 space-y-1 px-1 pb-1">
-        {NAV_ITEMS.slice(0, 2).map(renderNavItem)}
-      </div>
       <div className="-mx-1 min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain px-1 pb-3">
-        {NAV_ITEMS.slice(2).map(renderNavItem)}
+        {NAV_ITEMS.map(renderNavItem)}
       </div>
 
       <div className="mt-3 shrink-0 rounded-xl border border-border/60 bg-gradient-to-br from-primary/5 to-fuchsia-500/5 p-3">
