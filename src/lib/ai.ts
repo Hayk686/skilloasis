@@ -146,6 +146,7 @@ Return only the final user-facing answer. Do not expose analysis, hidden reasoni
 
     const invalidJson = Boolean(opts.json) && tryJsonParse(content) === null
     if (locale === 'hy') {
+      const sourceContent = content
       const translationFormatRule = opts.json
         ? `Return exactly one valid JSON value and nothing else. Preserve every property name, array, number, boolean, ID, type value, code block, programming-language name, formula, URL, and emoji. Translate only natural-language string values. Preserve the values easy, medium, and hard when they are structural quiz difficulty values.`
         : `Preserve Markdown structure, code fences, inline code, formulas, URLs, and proper names. Return only the translated content with no introduction or notes.`
@@ -156,7 +157,7 @@ Return only the final user-facing answer. Do not expose analysis, hidden reasoni
         },
         {
           role: 'user',
-          content: `${opts.json ? `Required JSON schema and content rules:\n${system}\n\n` : ''}Translate this complete Nemotron source into Armenian${invalidJson ? ' and repair its JSON syntax' : ''}:\n${content}`,
+          content: `${opts.json ? `Required JSON schema and content rules:\n${system}\n\n` : ''}Translate this complete Nemotron source into Armenian${invalidJson ? ' and repair its JSON syntax' : ''}:\n${sourceContent}`,
         },
       ]
       let translatorModel = ARMENIAN_TRANSLATOR_MODEL
@@ -186,20 +187,29 @@ Return only the final user-facing answer. Do not expose analysis, hidden reasoni
       const translatedInvalidJson = Boolean(opts.json) && tryJsonParse(content) === null
       const translatedLanguageLeak = hasArmenianLanguageLeak(content, Boolean(opts.json))
       const remaining = completionDeadline - Date.now()
-      if ((translatedInvalidJson || translatedLanguageLeak) && remaining >= 12_000) {
-        content = await nvidiaCompletion([
-          {
-            role: 'system',
-            content: `You are the final Eastern Armenian quality editor. Return only the corrected ${opts.json ? 'valid JSON' : 'content'}. Keep structure, keys, facts, code, formulas, URLs, IDs, and emojis unchanged. Rewrite every natural-language phrase in clear, fluent, native Eastern Armenian using Armenian letters. Correct mistranslated or invented Armenian words and unnatural grammar. Remove every foreign-script and transliterated prose fragment.`,
-          },
-          { role: 'user', content },
-        ], {
-          model: NEMOTRON_MODEL,
-          temperature: 0.2,
-          maxTokens: 4096,
-          timeoutMs: remainingTimeout(90_000),
-        })
-        if (opts.json) content = extractJson(content)
+      if (remaining >= 20_000) {
+        try {
+          let editedContent = await nvidiaCompletion([
+            {
+              role: 'system',
+              content: `You are the final Eastern Armenian quality editor. Return only the corrected ${opts.json ? 'valid JSON' : 'content'}. Use the original English source to restore accurate meaning. Keep structure, keys, facts, code, formulas, URLs, IDs, and emojis unchanged. Rewrite every natural-language phrase in clear, fluent, native Eastern Armenian using Armenian letters. Correct mistranslated or invented Armenian words and unnatural grammar. Remove every foreign-script and transliterated prose fragment.${translatedInvalidJson ? ' Repair the JSON syntax.' : ''}${translatedLanguageLeak ? ' Automated validation detected foreign-language leakage.' : ''}`,
+            },
+            {
+              role: 'user',
+              content: `Original English source:\n${sourceContent}\n\nDraft Armenian translation to edit:\n${content}`,
+            },
+          ], {
+            model: NEMOTRON_MODEL,
+            temperature: 0.2,
+            maxTokens: 4096,
+            timeoutMs: remainingTimeout(90_000),
+          })
+          if (opts.json) editedContent = extractJson(editedContent)
+          if (!opts.json || tryJsonParse(editedContent) !== null) content = editedContent
+        } catch (error) {
+          if (!(error instanceof AIServiceError)) throw error
+          console.warn(`[ai.complete] Armenian final edit unavailable (${error.code}); using GPT-OSS translation`)
+        }
       }
     } else if (invalidJson) {
       if (opts.json) {
