@@ -3,7 +3,7 @@ import { getRequestLocale } from '@/lib/locale-server'
 
 const NVIDIA_BASE_URL = 'https://integrate.api.nvidia.com/v1'
 const NEMOTRON_MODEL = 'nvidia/nemotron-3-super-120b-a12b'
-const ARMENIAN_TRANSLATOR_MODEL = 'openai/gpt-oss-120b'
+const ARMENIAN_TRANSLATOR_MODEL = 'google/gemma-4-31b-it'
 
 export type AIErrorCode =
   | 'AI_KEY_MISSING'
@@ -63,9 +63,11 @@ async function nvidiaCompletion(
         model,
         messages,
         temperature: options.temperature ?? 1,
-        top_p: isArmenianTranslator ? 1 : 0.95,
+        top_p: 0.95,
         max_tokens: options.maxTokens ?? 4096,
-        reasoning_effort: isArmenianTranslator ? 'low' : 'none',
+        ...(isArmenianTranslator
+          ? { chat_template_kwargs: { enable_thinking: true } }
+          : { reasoning_effort: 'none' }),
         stream: false,
       }),
       signal: AbortSignal.timeout(options.timeoutMs ?? 90_000),
@@ -171,7 +173,7 @@ Return only the final user-facing answer. Do not expose analysis, hidden reasoni
       } catch (error) {
         if (!(error instanceof AIServiceError)) throw error
         console.warn(
-          `[ai.complete] GPT-OSS Armenian translator unavailable (${error.code}); using Nemotron fallback`
+          `[ai.complete] Gemma Armenian translator unavailable (${error.code}); using Nemotron fallback`
         )
         translatorModel = NEMOTRON_MODEL
         content = await nvidiaCompletion(translationMessages, {
@@ -207,7 +209,7 @@ Return only the final user-facing answer. Do not expose analysis, hidden reasoni
           if (!opts.json || tryJsonParse(editedContent) !== null) content = editedContent
         } catch (error) {
           if (!(error instanceof AIServiceError)) throw error
-          console.warn(`[ai.complete] Armenian final edit unavailable (${error.code}); using GPT-OSS translation`)
+          console.warn(`[ai.complete] Armenian final edit unavailable (${error.code}); using Gemma translation`)
         }
       }
     } else if (invalidJson) {

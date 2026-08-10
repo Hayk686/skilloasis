@@ -45,7 +45,7 @@ NVIDIA_BASE_URL="https://integrate.api.nvidia.com/v1"
 
 `NVIDIA_BASE_URL` is an optional override. The application uses
 `nvidia/nemotron-3-super-120b-a12b` for content generation. When Armenian is
-selected, `openai/gpt-oss-120b` translates Nemotron's complete English draft
+selected, `google/gemma-4-31b-it` translates Nemotron's complete English draft
 into Eastern Armenian while preserving structured JSON, Markdown, formulas,
 and code. Both models use the same NVIDIA endpoint and `NVIDIA_API_KEY`; no
 second provider key is required. Lesson narration uses the browser's built-in
