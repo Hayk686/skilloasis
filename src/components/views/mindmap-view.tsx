@@ -166,7 +166,7 @@ export function MindMapView() {
             <MindMapRenderer map={map} zoom={zoom} onTopicClick={(t) => {
               setSubject('general')
               if (typeof window !== 'undefined') {
-                sessionStorage.setItem('lumina:lesson-topic', t)
+                sessionStorage.setItem('skilloasis:lesson-topic', t)
               }
               setView('lessons')
             }} />

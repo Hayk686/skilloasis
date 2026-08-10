@@ -123,6 +123,7 @@ export function AuthDialog({
       const response = await fetch('/auth/signout', { method: 'POST' })
       if (!response.ok) throw new Error('Sign out failed')
       useUser.persist.clearStorage()
+      localStorage.removeItem('lumina-user')
       window.location.reload()
     } catch (authError) {
       setError(authError instanceof Error ? authError.message : 'Sign out failed')
@@ -162,7 +163,7 @@ export function AuthDialog({
               <DialogHeader>
                 <DialogTitle>
                   {mode === 'signin'
-                    ? tr('Вход в Lumina', 'Sign in to Lumina', 'Մուտք Lumina')
+                    ? tr('Вход в SkillOasis', 'Sign in to SkillOasis', 'Մուտք SkillOasis')
                     : tr('Создать аккаунт', 'Create an account', 'Ստեղծել հաշիվ')}
                 </DialogTitle>
                 <DialogDescription>

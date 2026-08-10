@@ -93,9 +93,9 @@ export function HomeView() {
               className="mx-auto mt-6 max-w-2xl text-pretty text-lg text-muted-foreground sm:text-xl"
             >
               {tr(
-                'Lumina — это AI-платформа, которая объясняет сложное простыми словами. Программирование, математика, языки, наука, история — всё в одном месте.',
-                'Lumina is an AI learning platform that explains complex ideas in simple words. Programming, mathematics, languages, science, and history—all in one place.',
-                'Lumina-ն AI ուսուցման հարթակ է, որը բարդ թեմաները բացատրում է պարզ բառերով։ Ծրագրավորում, մաթեմատիկա, լեզուներ, գիտություն և պատմություն՝ ամեն ինչ մեկ տեղում։'
+                'SkillOasis — это AI-платформа, которая объясняет сложное простыми словами. Программирование, математика, языки, наука, история — всё в одном месте.',
+                'SkillOasis is an AI learning platform that explains complex ideas in simple words. Programming, mathematics, languages, science, and history—all in one place.',
+                'SkillOasis-ը AI ուսուցման հարթակ է, որը բարդ թեմաները բացատրում է պարզ բառերով։ Ծրագրավորում, մաթեմատիկա, լեզուներ, գիտություն և պատմություն՝ ամեն ինչ մեկ տեղում։'
               )}
             </motion.p>
 
@@ -210,10 +210,10 @@ export function HomeView() {
         </StaggerGroup>
       </PageSection>
 
-      {/* Why Lumina */}
+      {/* Why SkillOasis */}
       <PageSection className="py-12">
         <div className="mb-6 text-center">
-          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">{tr('Почему Lumina', 'Why Lumina', 'Ինչու Lumina')}</h2>
+          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">{tr('Почему SkillOasis', 'Why SkillOasis', 'Ինչու SkillOasis')}</h2>
           <p className="mt-1 text-sm text-muted-foreground sm:text-base">
             {tr('Учиться должно быть радостно', 'Learning should feel joyful', 'Սովորելը պետք է հաճելի լինի')}
           </p>
@@ -313,7 +313,7 @@ export function HomeView() {
             ))}
           </div>
           <p className="text-sm text-muted-foreground">
-            {tr('Ученики по всему миру уже полюбили Lumina', 'Learners around the world already love Lumina', 'Ամբողջ աշխարհի սովորողներն արդեն սիրում են Lumina-ն')}
+            {tr('Ученики по всему миру уже полюбили SkillOasis', 'Learners around the world already love SkillOasis', 'Ամբողջ աշխարհի սովորողներն արդեն սիրում են SkillOasis-ը')}
           </p>
         </div>
         <div className="relative flex overflow-hidden mask-fade-b">

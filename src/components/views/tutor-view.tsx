@@ -76,7 +76,13 @@ const SUGGESTED_PROMPTS: { emoji: string; text: LocalizedText; subject: string }
   { emoji: '🏛️', text: localized('Почему пал Рим?', 'Why did Rome fall?', 'Ինչո՞ւ անկում ապրեց Հռոմը'), subject: 'history' },
 ]
 
-const SESSION_KEY = 'lumina:tutor-session'
+const SESSION_KEY = 'skilloasis:tutor-session'
+const LEGACY_SESSION_KEY = 'lumina:tutor-session'
+
+function clearStoredSession() {
+  sessionStorage.removeItem(SESSION_KEY)
+  sessionStorage.removeItem(LEGACY_SESSION_KEY)
+}
 
 // ---------- main view ----------
 export function TutorView() {
@@ -138,7 +144,7 @@ export function TutorView() {
       const msg = e instanceof Error ? e.message : tr('Не удалось загрузить диалог', 'Could not load the conversation', 'Չհաջողվեց բեռնել զրույցը')
       toast.error(msg)
       setSessionId(null)
-      sessionStorage.removeItem(SESSION_KEY)
+      clearStoredSession()
     } finally {
       setLoadingThread(false)
       setListOpen(false)
@@ -147,8 +153,12 @@ export function TutorView() {
 
   // On mount and locale changes: load the session list and restore the current thread.
   useEffect(() => {
-    const stored = sessionStorage.getItem(SESSION_KEY)
+    const stored =
+      sessionStorage.getItem(SESSION_KEY) ??
+      sessionStorage.getItem(LEGACY_SESSION_KEY)
     if (stored) {
+      sessionStorage.setItem(SESSION_KEY, stored)
+      sessionStorage.removeItem(LEGACY_SESSION_KEY)
       void loadThread(stored)
     }
     void loadSessions()
@@ -163,7 +173,7 @@ export function TutorView() {
       if (sessionId === sid) {
         setSessionId(null)
         setMessages([])
-        sessionStorage.removeItem(SESSION_KEY)
+        clearStoredSession()
       }
       toast.success(tr('Диалог удалён', 'Conversation deleted', 'Զրույցը ջնջված է'))
     } catch {
@@ -175,7 +185,7 @@ export function TutorView() {
     setSessionId(null)
     setMessages([])
     setInput('')
-    sessionStorage.removeItem(SESSION_KEY)
+    clearStoredSession()
     setListOpen(false)
   }
 
@@ -721,7 +731,7 @@ function Composer({
         </button>
       </div>
       <p className="mt-1.5 hidden px-1 text-[11px] text-muted-foreground sm:block">
-        {tr('Накапливай XP за каждый вопрос — развивайся вместе с Lumina', 'Earn XP for every question and grow with Lumina', 'Յուրաքանչյուր հարցի համար հավաքիր XP և զարգացիր Lumina-ի հետ')}
+        {tr('Накапливай XP за каждый вопрос — развивайся вместе с SkillOasis', 'Earn XP for every question and grow with SkillOasis', 'Յուրաքանչյուր հարցի համար հավաքիր XP և զարգացիր SkillOasis-ի հետ')}
       </p>
     </div>
   )

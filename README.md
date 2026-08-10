@@ -1,6 +1,6 @@
-# Lumina
+# SkillOasis
 
-Lumina is a free learning platform with an AI tutor, generated lessons, quizzes,
+SkillOasis is a free learning platform with an AI tutor, generated lessons, quizzes,
 flashcards, learning paths, knowledge maps, a JavaScript playground, and learner
 progress.
 
@@ -20,7 +20,7 @@ progress.
    - `DIRECT_URL`: direct migration connection.
 4. Copy the Supabase Project URL and publishable key into
    `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
-5. Set a random `LUMINA_SESSION_SECRET` with at least 32 characters.
+5. Set a random `SKILLOASIS_SESSION_SECRET` with at least 32 characters.
 6. Create a free key at [build.nvidia.com](https://build.nvidia.com/) and set
    `NVIDIA_API_KEY`.
 7. Run:
@@ -38,7 +38,7 @@ Vercel builds automatically run `prisma migrate deploy` before compiling the app
 
 ## Accounts and Google sign-in
 
-Lumina uses Supabase Auth for email/password and Google OAuth. Guest progress is
+SkillOasis uses Supabase Auth for email/password and Google OAuth. Guest progress is
 linked to the same application user when the learner creates an account.
 
 1. In Supabase Authentication > URL Configuration, set the production Site URL
@@ -55,7 +55,7 @@ linked to the same application user when the learner creates an account.
 
 ## NVIDIA AI
 
-Lumina uses NVIDIA's hosted OpenAI-compatible endpoint. Configure:
+SkillOasis uses NVIDIA's hosted OpenAI-compatible endpoint. Configure:
 
 ```dotenv
 NVIDIA_API_KEY="nvapi-..."

@@ -15,7 +15,7 @@ export function Footer() {
               <Sparkles className="h-4 w-4" />
             </div>
             <div>
-              <p className="text-sm font-semibold leading-tight">Lumina</p>
+              <p className="text-sm font-semibold leading-tight">SkillOasis</p>
               <p className="text-xs text-muted-foreground leading-tight">
                 {t('footerFree')}
               </p>
@@ -52,7 +52,7 @@ export function Footer() {
         </div>
 
         <div className="mt-6 border-t border-border/40 pt-4 text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Lumina. {t('footerCopyright')}
+          © {new Date().getFullYear()} SkillOasis. {t('footerCopyright')}
         </div>
       </div>
     </footer>

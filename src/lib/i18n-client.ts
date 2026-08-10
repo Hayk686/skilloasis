@@ -170,7 +170,7 @@ function persistLocale(locale: Locale) {
   if (typeof document === 'undefined') return
   document.documentElement.lang = locale
   document.title = SITE_TITLES[locale]
-  document.cookie = `lumina_locale=${locale}; Path=/; Max-Age=31536000; SameSite=Lax`
+  document.cookie = `skilloasis_locale=${locale}; Path=/; Max-Age=31536000; SameSite=Lax`
 }
 
 export const useLocale = create<LocaleState>((set) => ({
@@ -184,10 +184,11 @@ export const useLocale = create<LocaleState>((set) => ({
 export function useLocaleSync() {
   const setLocale = useLocale((state) => state.setLocale)
   useEffect(() => {
-    const cookieLocale = document.cookie
-      .split('; ')
-      .find((item) => item.startsWith('lumina_locale='))
-      ?.split('=')[1]
+    const cookies = document.cookie.split('; ')
+    const cookieLocale = (
+      cookies.find((item) => item.startsWith('skilloasis_locale=')) ??
+      cookies.find((item) => item.startsWith('lumina_locale='))
+    )?.split('=')[1]
     const browserLocale = navigator.language.toLowerCase().split('-')[0]
     setLocale(isLocale(cookieLocale) ? cookieLocale : isLocale(browserLocale) ? browserLocale : DEFAULT_LOCALE)
   }, [setLocale])

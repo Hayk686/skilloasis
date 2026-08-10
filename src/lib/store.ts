@@ -60,7 +60,7 @@ export const useUser = create<UserState>()(
       setHydrated: (v) => set({ hydrated: v }),
     }),
     {
-      name: 'lumina-user',
+      name: 'skilloasis-user',
       skipHydration: true,
       partialize: (state) => ({
         userId: state.userId,

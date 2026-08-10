@@ -97,8 +97,11 @@ export function LessonsView() {
   // On mount: pick up handoff topic from sessionStorage (set by Paths view)
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const stored = window.sessionStorage.getItem('lumina:lesson-topic')
+    const stored =
+      window.sessionStorage.getItem('skilloasis:lesson-topic') ??
+      window.sessionStorage.getItem('lumina:lesson-topic')
     if (stored) {
+      window.sessionStorage.removeItem('skilloasis:lesson-topic')
       window.sessionStorage.removeItem('lumina:lesson-topic')
       setTopic(stored)
       // Fire generation on next tick so state settles

@@ -15,9 +15,9 @@ export const LANGUAGE_NAMES: Record<Locale, string> = {
 }
 
 export const SITE_TITLES: Record<Locale, string> = {
-  ru: 'Lumina — Учись всему. Бесплатно. Навсегда.',
-  en: 'Lumina — Learn anything. Free. Forever.',
-  hy: 'Lumina — Սովորիր ամեն ինչ։ Անվճար։ Ընդմիշտ։',
+  ru: 'SkillOasis — Учись всему. Бесплатно. Навсегда.',
+  en: 'SkillOasis — Learn anything. Free. Forever.',
+  hy: 'SkillOasis — Սովորիր ամեն ինչ։ Անվճար։ Ընդմիշտ։',
 }
 
 export const LANGUAGE_INSTRUCTIONS: Record<Locale, string> = {

@@ -38,11 +38,11 @@ interface Challenge {
 
 const localized = (ru: string, en: string, hy: string): LocalizedText => ({ ru, en, hy })
 
-const STARTERS = localized(`// Добро пожаловать в песочницу Lumina 🚀
+const STARTERS = localized(`// Добро пожаловать в песочницу SkillOasis 🚀
 // Пиши JavaScript и нажми «Запустить» (Ctrl+Enter)
 
 function greet(name) {
-  return \`Привет, \${name}! Добро пожаловать в Lumina.\`
+  return \`Привет, \${name}! Добро пожаловать в SkillOasis.\`
 }
 
 console.log(greet('друг'))
@@ -52,11 +52,11 @@ const nums = [1, 2, 3, 4, 5]
 const sum = nums.reduce((a, b) => a + b, 0)
 console.log('Сумма:', sum)
 console.log('Среднее:', sum / nums.length)
-`, `// Welcome to the Lumina playground 🚀
+`, `// Welcome to the SkillOasis playground 🚀
 // Write JavaScript and press Run (Ctrl+Enter)
 
 function greet(name) {
-  return \`Hello, \${name}! Welcome to Lumina.\`
+  return \`Hello, \${name}! Welcome to SkillOasis.\`
 }
 
 console.log(greet('friend'))
@@ -66,11 +66,11 @@ const nums = [1, 2, 3, 4, 5]
 const sum = nums.reduce((a, b) => a + b, 0)
 console.log('Sum:', sum)
 console.log('Average:', sum / nums.length)
-`, `// Բարի գալուստ Lumina-ի կոդի փորձադաշտ 🚀
+`, `// Բարի գալուստ SkillOasis-ի կոդի փորձադաշտ 🚀
 // Գրիր JavaScript և սեղմիր «Գործարկել» (Ctrl+Enter)
 
 function greet(name) {
-  return \`Ողջույն, \${name}։ Բարի գալուստ Lumina։\`
+  return \`Ողջույն, \${name}։ Բարի գալուստ SkillOasis։\`
 }
 
 console.log(greet('ընկեր'))
@@ -156,7 +156,7 @@ function buildSandboxDoc(): string {
   const orig = { log: console.log, warn: console.warn, error: console.error, info: console.info };
   function send(type, args) {
     try {
-      parent.postMessage({ __lumina_sandbox: true, kind: 'log', log: { type, args: args.map(String) } }, '*');
+      parent.postMessage({ __skilloasis_sandbox: true, kind: 'log', log: { type, args: args.map(String) } }, '*');
     } catch (e) {}
   }
   console.log = (...a) => { send('log', a); orig.log(...a); };
@@ -164,21 +164,21 @@ function buildSandboxDoc(): string {
   console.error = (...a) => { send('error', a); orig.error(...a); };
   console.info = (...a) => { send('info', a); orig.info(...a); };
   window.addEventListener('error', (e) => {
-    parent.postMessage({ __lumina_sandbox: true, kind: 'error', message: e.message }, '*');
+    parent.postMessage({ __skilloasis_sandbox: true, kind: 'error', message: e.message }, '*');
   });
   window.addEventListener('message', (e) => {
-    if (!e.data || !e.data.__lumina_run) return;
+    if (!e.data || !e.data.__skilloasis_run) return;
     const code = e.data.code;
     let result = null;
     try {
       // Indirect eval → runs in global scope, captures return of expression
       result = eval(code);
-      parent.postMessage({ __lumina_sandbox: true, kind: 'done', result: result === undefined ? null : String(result) }, '*');
+      parent.postMessage({ __skilloasis_sandbox: true, kind: 'done', result: result === undefined ? null : String(result) }, '*');
     } catch (err) {
-      parent.postMessage({ __lumina_sandbox: true, kind: 'error', message: (err && err.message) ? err.message : String(err) }, '*');
+      parent.postMessage({ __skilloasis_sandbox: true, kind: 'error', message: (err && err.message) ? err.message : String(err) }, '*');
     }
   });
-  parent.postMessage({ __lumina_sandbox: true, kind: 'ready' }, '*');
+  parent.postMessage({ __skilloasis_sandbox: true, kind: 'ready' }, '*');
 <\/script>
 </body></html>`
 }
@@ -211,7 +211,7 @@ export function PlaygroundView() {
   useEffect(() => {
     function onMessage(e: MessageEvent) {
       const d = e.data
-      if (!d || !d.__lumina_sandbox) return
+      if (!d || !d.__skilloasis_sandbox) return
       if (d.kind === 'ready') {
         readyRef.current = true
       } else if (d.kind === 'log') {
@@ -240,7 +240,7 @@ export function PlaygroundView() {
         setTimeout(send, 80)
         return
       }
-      iframeRef.current?.contentWindow?.postMessage({ __lumina_run: true, code }, '*')
+      iframeRef.current?.contentWindow?.postMessage({ __skilloasis_run: true, code }, '*')
     }
     send()
     // safety timeout

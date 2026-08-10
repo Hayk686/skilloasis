@@ -8,7 +8,9 @@ import {
 
 export async function getRequestLocale(): Promise<Locale> {
   const cookieStore = await cookies()
-  const value = cookieStore.get('lumina_locale')?.value
+  const value =
+    cookieStore.get('skilloasis_locale')?.value ??
+    cookieStore.get('lumina_locale')?.value
   return isLocale(value) ? value : DEFAULT_LOCALE
 }
 

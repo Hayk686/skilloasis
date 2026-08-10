@@ -1,7 +1,7 @@
 ---
 Task ID: 1
 Agent: main
-Task: Test Lumina app functionality, find bugs, and fix them
+Task: Test SkillOasis app functionality, find bugs, and fix them
 
 Work Log:
 - Analyzed the entire codebase: all view components, API routes, store, hooks, and configuration

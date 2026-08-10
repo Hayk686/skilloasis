@@ -16,7 +16,7 @@ A stunning, fully-functional AI tutor chat interface (`TutorView` named export) 
 - Empty state: floating animated Sparkles icon + 6 suggested prompt chips
 - Composer: auto-growing `Textarea`, Enter-to-send / Shift+Enter newline, gradient send button with shine + scale feedback
 - Optimistic send → POST /api/chat → append reply → `useUser.setState({xp, level})` → refresh sessions
-- sessionId persisted in `sessionStorage['lumina:tutor-session']`, restored on mount
+- sessionId persisted in `sessionStorage['skilloasis:tutor-session']`, restored on mount
 - Framer Motion message entrance animations + auto-scroll to bottom
 - Errors via `toast.error`
 - Ambient cosmic glow, glassmorphism, gradient accents (violet/fuchsia/pink, no indigo/blue primary)
@@ -33,5 +33,5 @@ A stunning, fully-functional AI tutor chat interface (`TutorView` named export) 
 
 ## Notes for downstream agents
 - The `useUser.setState({xp, level})` pattern is the canonical way to sync XP from API responses client-side.
-- `sessionStorage['lumina:tutor-session']` is the key for restoring the active tutor session across reloads.
-- `sessionStorage['lumina:lesson-topic']` is used by paths-view for lesson pre-fill — different key, don't confuse.
+- `sessionStorage['skilloasis:tutor-session']` is the key for restoring the active tutor session across reloads.
+- `sessionStorage['skilloasis:lesson-topic']` is used by paths-view for lesson pre-fill — different key, don't confuse.

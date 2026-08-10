@@ -1,7 +1,7 @@
 # Task 7-c — Lessons View Agent
 
 ## Task
-Implement `/home/z/my-project/src/components/views/lessons-view.tsx` — the Interactive Lessons view (lesson generator + reader) for the Lumina learning platform.
+Implement `/home/z/my-project/src/components/views/lessons-view.tsx` — the Interactive Lessons view (lesson generator + reader) for the SkillOasis learning platform.
 
 ## What was built
 A premium, magazine-quality lesson generator & reader (~830 lines) with:
@@ -12,7 +12,7 @@ A premium, magazine-quality lesson generator & reader (~830 lines) with:
 - "Ключевые выводы" checklist grid + "Что дальше" next-lesson CTA
 - Reading progress bar (fixed, gradient, scroll-tracked)
 - Skeleton loading with shimmer blocks
-- Topic handoff via `sessionStorage['lumina:lesson-topic']` (from Paths view)
+- Topic handoff via `sessionStorage['skilloasis:lesson-topic']` (from Paths view)
 - Subject prefill via `useNav().activeSubject`
 - Framer-motion staggered reveal animations
 - XP/level sync to `useUser` store after generation

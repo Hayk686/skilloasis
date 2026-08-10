@@ -11,6 +11,11 @@ export function useUserSync() {
     let cancelled = false
 
     // Rehydrate from localStorage AFTER first render (avoids hydration mismatch)
+    const legacyUser = localStorage.getItem('lumina-user')
+    if (!localStorage.getItem('skilloasis-user') && legacyUser) {
+      localStorage.setItem('skilloasis-user', legacyUser)
+    }
+    localStorage.removeItem('lumina-user')
     useUser.persist.rehydrate()
 
     async function sync() {

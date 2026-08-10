@@ -1,14 +1,14 @@
 # Task 7-a — Dashboard View Implementation
 
 **Agent:** subagent (Z.ai Code)
-**Task:** Implement `/home/z/my-project/src/components/views/dashboard-view.tsx` — the personal progress dashboard for the Lumina learning platform.
+**Task:** Implement `/home/z/my-project/src/components/views/dashboard-view.tsx` — the personal progress dashboard for the SkillOasis learning platform.
 
 ## What was built
 
 A premium "personal cockpit" dashboard with a dark cosmic theme, violet/fuchsia/pink gradients (no indigo/blue as primary). Layout is a responsive grid of cards:
 
 1. **Hero stat card** (lg:col-span-2): greeting (time-aware: утро/день/вечер/ночь), editable name (click → inline input → Enter/blur saves via PATCH /api/user), XP progress ring (SVG with animated gradient stroke), level badge inside ring, total XP display, streak with flame icon + dynamic hint, XP-to-next-level bar.
-2. **Daily Challenge card**: fetched from GET /api/daily. Shows emoji, subject label, title, prompt, collapsible hint, XP reward pill. "Выполнить" button calls POST /api/daily {xpReward}, triggers emoji confetti burst (28 particles) + success toast, marks done in localStorage (`lumina:daily-done-{date}`), updates useUser store. After done: shows "Выполнено ✓" state with emerald styling.
+2. **Daily Challenge card**: fetched from GET /api/daily. Shows emoji, subject label, title, prompt, collapsible hint, XP reward pill. "Выполнить" button calls POST /api/daily {xpReward}, triggers emoji confetti burst (28 particles) + success toast, marks done in localStorage (`skilloasis:daily-done-{date}`), updates useUser store. After done: shows "Выполнено ✓" state with emerald styling.
 3. **Activity stats tiles**: 7 tiles in responsive grid (XP, level, streak, lessons, quizzes, flashcards, chats) with gradient icon backgrounds and stagger animation.
 4. **7-day activity chart**: recharts BarChart with gradient bars (violet→fuchsia). Today's bar uses a warmer gradient (amber→fuchsia). Empty state when all zero ("Пока тихо в космосе"). Custom tooltip with proper ru pluralization.
 5. **Subjects breakdown**: top 6 subjects as horizontal animated gradient bars, showing count and accuracy %.

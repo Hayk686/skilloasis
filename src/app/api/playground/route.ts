@@ -13,7 +13,7 @@ const playgroundSchema = z.object({
   task: z.string().trim().max(1_000).nullable().optional(),
 })
 
-const PLAYGROUND_SYSTEM = `Ты — дружелюбный AI-наставник по программированию в платформе Lumina.
+const PLAYGROUND_SYSTEM = `Ты — дружелюбный AI-наставник по программированию в платформе SkillOasis.
 Пользователь пишет JavaScript-код в песочнице и просит помощи.
 
 Отвечай кратко и по делу. Используй Markdown.

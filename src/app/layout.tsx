@@ -16,11 +16,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Lumina — Учись всему. Бесплатно. Навсегда.",
+  title: "SkillOasis — Учись всему. Бесплатно. Навсегда.",
   description:
-    "Lumina — бесплатная AI-платформа для обучения чему угодно. Интерактивные уроки, AI-наставник, адаптивные квизы и флешкарты. Полностью бесплатно, навсегда.",
+    "SkillOasis — бесплатная AI-платформа для обучения чему угодно. Интерактивные уроки, AI-наставник, адаптивные квизы и флешкарты. Полностью бесплатно, навсегда.",
   keywords: [
-    "Lumina",
+    "SkillOasis",
     "обучение",
     "AI",
     "бесплатно",
@@ -30,12 +30,12 @@ export const metadata: Metadata = {
     "наставник",
     "self-education",
   ],
-  authors: [{ name: "Lumina" }],
+  authors: [{ name: "SkillOasis" }],
   icons: {
     icon: "/logo.svg",
   },
   openGraph: {
-    title: "Lumina — Учись всему. Бесплатно.",
+    title: "SkillOasis — Учись всему. Бесплатно.",
     description: "AI-наставник, интерактивные уроки, квизы и флешкарты. Бесплатно навсегда.",
     type: "website",
   },

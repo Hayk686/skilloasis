@@ -11,7 +11,7 @@ const updateUserSchema = z.object({ name: shortText(32) })
 function runtimeErrorCode(error: unknown): string {
   if (!process.env.DATABASE_URL) return 'DATABASE_URL_MISSING'
   if (!process.env.DIRECT_URL) return 'DIRECT_URL_MISSING'
-  const secret = process.env.LUMINA_SESSION_SECRET
+  const secret = process.env.SKILLOASIS_SESSION_SECRET ?? process.env.LUMINA_SESSION_SECRET
   if (!secret || secret.length < 32) return 'SESSION_SECRET_INVALID'
 
   const code =

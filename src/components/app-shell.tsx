@@ -110,7 +110,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 blur-md opacity-50 -z-10" />
             </div>
             <div className="text-left">
-              <p className="text-base font-bold leading-none tracking-tight">Lumina</p>
+              <p className="text-base font-bold leading-none tracking-tight">SkillOasis</p>
               <p className="text-[10px] text-muted-foreground leading-none mt-0.5">
                 {t('tagline')}
               </p>
