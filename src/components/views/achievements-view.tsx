@@ -3,13 +3,15 @@
 import { useEffect, useState } from 'react'
 import { Award, Lock, Trophy, Flame, Zap, Sparkles, Brain, MessageSquare, Layers, Rocket, Gem, Globe, Headphones, Network, Terminal, Share2 } from 'lucide-react'
 import { PageSection, SectionHeader, GlassCard, LoadingState, Pill } from '@/components/ui-blocks'
-import { ACHIEVEMENTS } from '@/lib/gamify-client'
+import { ACHIEVEMENTS, localizeAchievement } from '@/lib/gamify-client'
 import { useUser } from '@/lib/store'
+import { useTranslations } from '@/lib/i18n-client'
 
 interface AchievementRow { type: string; unlockedAt: string }
 
 export function AchievementsView() {
   const { userId } = useUser()
+  const { locale, tr } = useTranslations()
   const [unlocked, setUnlocked] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
 
@@ -55,8 +57,8 @@ export function AchievementsView() {
   return (
     <PageSection className="py-8">
       <SectionHeader
-        title="Достижения"
-        subtitle="Твои награды за упорство и любопытство"
+        title={tr('Достижения', 'Achievements', 'Ձեռքբերումներ')}
+        subtitle={tr('Твои награды за упорство и любопытство', 'Rewards for your persistence and curiosity', 'Պարգևներ քո հաստատակամության և հետաքրքրասիրության համար')}
         icon={Award}
       />
 
@@ -64,13 +66,13 @@ export function AchievementsView() {
       <GlassCard className="mb-6 p-6" hover={false}>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-sm text-muted-foreground">Открыто достижений</p>
+            <p className="text-sm text-muted-foreground">{tr('Открыто достижений', 'Achievements unlocked', 'Բացված ձեռքբերումներ')}</p>
             <p className="text-3xl font-bold">
               {unlockedCount} <span className="text-lg text-muted-foreground">/ {total}</span>
             </p>
           </div>
           <div className="text-right">
-            <p className="text-sm text-muted-foreground">Прогресс</p>
+            <p className="text-sm text-muted-foreground">{tr('Прогресс', 'Progress', 'Առաջընթաց')}</p>
             <p className="text-3xl font-bold text-gradient">{pct}%</p>
           </div>
         </div>
@@ -83,12 +85,13 @@ export function AchievementsView() {
       </GlassCard>
 
       {loading ? (
-        <LoadingState label="Загружаем награды..." />
+        <LoadingState label={tr('Загружаем награды...', 'Loading achievements...', 'Բեռնում ենք ձեռքբերումները...')} />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {ACHIEVEMENTS.map((a, i) => {
             const isUnlocked = !!unlocked[a.type]
             const Icon = ICONS[a.type] || Sparkles
+            const copy = localizeAchievement(a, locale)
             return (
               <div
                 key={a.type}
@@ -112,12 +115,12 @@ export function AchievementsView() {
                   >
                     {isUnlocked ? a.emoji : <Lock className="h-6 w-6" />}
                   </div>
-                  <p className="font-semibold">{a.title}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{a.desc}</p>
+                  <p className="font-semibold">{copy.title}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{copy.desc}</p>
                   {isUnlocked && (
                     <Pill className="mt-3 border-primary/30 bg-primary/10 text-primary">
                       <Icon className="h-3 w-3" />
-                      Открыто
+                      {tr('Открыто', 'Unlocked', 'Բացված է')}
                     </Pill>
                   )}
                 </div>

@@ -17,7 +17,7 @@ import {
   Clock,
 } from 'lucide-react'
 import { useNav, useUser } from '@/lib/store'
-import { SUBJECTS, getSubject } from '@/lib/subjects'
+import { SUBJECTS, getSubject, localizeSubject } from '@/lib/subjects'
 import {
   PageSection,
   SectionHeader,
@@ -27,6 +27,7 @@ import {
   GradientButton,
   Pill,
 } from '@/components/ui-blocks'
+import { useTranslations, type LocalizedText } from '@/lib/i18n-client'
 
 /* ------------------------------------------------------------------ */
 /* Types                                                               */
@@ -53,20 +54,22 @@ type SessionSource = 'due' | 'generated'
 
 const COUNTS = [5, 8, 12, 20] as const
 
-const SUGGESTED_TOPICS: { topic: string; subject: string }[] = [
-  { topic: 'Замыкания в JavaScript', subject: 'programming' },
-  { topic: 'Теорема Пифагора', subject: 'math' },
-  { topic: 'Past Simple vs Present Perfect', subject: 'languages' },
-  { topic: 'Законы Ньютона', subject: 'science' },
-  { topic: 'Стоицизм: основные принципы', subject: 'philosophy' },
-  { topic: 'Правило третей в композиции', subject: 'art' },
-  { topic: 'Компоновка в Git', subject: 'programming' },
-  { topic: 'Древний Рим: республика', subject: 'history' },
+const localized = (ru: string, en: string, hy: string): LocalizedText => ({ ru, en, hy })
+
+const SUGGESTED_TOPICS: { topic: LocalizedText; subject: string }[] = [
+  { topic: localized('Замыкания в JavaScript', 'Closures in JavaScript', 'Փակումներ JavaScript-ում'), subject: 'programming' },
+  { topic: localized('Теорема Пифагора', 'Pythagorean theorem', 'Պյութագորասի թեորեմ'), subject: 'math' },
+  { topic: localized('Past Simple и Present Perfect', 'Past Simple vs Present Perfect', 'Past Simple և Present Perfect'), subject: 'languages' },
+  { topic: localized('Законы Ньютона', "Newton's laws", 'Նյուտոնի օրենքներ'), subject: 'science' },
+  { topic: localized('Стоицизм: основные принципы', 'Stoicism: core principles', 'Ստոիցիզմի հիմնական սկզբունքները'), subject: 'philosophy' },
+  { topic: localized('Правило третей в композиции', 'The rule of thirds in composition', 'Երրորդների կանոնը կոմպոզիցիայում'), subject: 'art' },
+  { topic: localized('Компоновка в Git', 'Rebasing in Git', 'Վերադասավորում Git-ում'), subject: 'programming' },
+  { topic: localized('Древний Рим: республика', 'Ancient Rome: the Republic', 'Հին Հռոմ․ հանրապետություն'), subject: 'history' },
 ]
 
 const QUALITY_BUTTONS: {
   quality: Quality
-  label: string
+  label: LocalizedText
   key: string
   gradient: string
   ring: string
@@ -74,7 +77,7 @@ const QUALITY_BUTTONS: {
 }[] = [
   {
     quality: 'again',
-    label: 'Снова',
+    label: localized('Снова', 'Again', 'Կրկին'),
     key: '1',
     gradient: 'from-rose-500/15 to-rose-600/5 hover:from-rose-500/35 hover:to-rose-600/15',
     ring: 'ring-rose-500/40 focus-visible:ring-rose-500',
@@ -82,7 +85,7 @@ const QUALITY_BUTTONS: {
   },
   {
     quality: 'hard',
-    label: 'Трудно',
+    label: localized('Трудно', 'Hard', 'Դժվար'),
     key: '2',
     gradient: 'from-amber-500/15 to-amber-600/5 hover:from-amber-500/35 hover:to-amber-600/15',
     ring: 'ring-amber-500/40 focus-visible:ring-amber-500',
@@ -90,7 +93,7 @@ const QUALITY_BUTTONS: {
   },
   {
     quality: 'good',
-    label: 'Хорошо',
+    label: localized('Хорошо', 'Good', 'Լավ'),
     key: '3',
     gradient: 'from-emerald-500/15 to-emerald-600/5 hover:from-emerald-500/35 hover:to-emerald-600/15',
     ring: 'ring-emerald-500/40 focus-visible:ring-emerald-500',
@@ -98,7 +101,7 @@ const QUALITY_BUTTONS: {
   },
   {
     quality: 'easy',
-    label: 'Легко',
+    label: localized('Легко', 'Easy', 'Հեշտ'),
     key: '4',
     gradient: 'from-teal-500/15 to-teal-600/5 hover:from-teal-500/35 hover:to-teal-600/15',
     ring: 'ring-teal-500/40 focus-visible:ring-teal-500',
@@ -113,6 +116,7 @@ const QUALITY_BUTTONS: {
 export function FlashcardsView() {
   const { activeSubject } = useNav()
   const user = useUser()
+  const { locale, tr, localize } = useTranslations()
 
   // Top-level mode
   const [mode, setMode] = useState<Mode>('generate')
@@ -176,7 +180,7 @@ export function FlashcardsView() {
   async function handleGenerate(givenTopic?: string) {
     const t = (givenTopic ?? topic).trim()
     if (!t) {
-      toast.error('Введи тему для карточек')
+      toast.error(tr('Введи тему для карточек', 'Enter a flashcard topic', 'Մուտքագրիր քարտերի թեման'))
       return
     }
     setTopic(t)
@@ -188,16 +192,16 @@ export function FlashcardsView() {
         body: JSON.stringify({ topic: t, subject, count }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Ошибка генерации')
-      if (!data.cards?.length) throw new Error('Карты не сгенерированы')
+      if (!res.ok) throw new Error(data.error || tr('Ошибка генерации', 'Generation failed', 'Ստեղծման սխալ'))
+      if (!data.cards?.length) throw new Error(tr('Карты не сгенерированы', 'No flashcards were generated', 'Քարտեր չեն ստեղծվել'))
 
       useUser.setState({
         xp: typeof data.xp === 'number' ? data.xp : user.xp,
         level: typeof data.level === 'number' ? data.level : user.level,
       })
 
-      toast.success(`Создано ${data.cards.length} карточек!`, {
-        description: 'Начинаем сессию повторения',
+      toast.success(tr(`Создано ${data.cards.length} карточек!`, `${data.cards.length} flashcards created!`, `Ստեղծվել է ${data.cards.length} քարտ։`), {
+        description: tr('Начинаем сессию повторения', 'Starting a review session', 'Սկսում ենք կրկնության փուլը'),
       })
 
       // The POST returns cards without ids. Refetch due list to get the
@@ -223,7 +227,7 @@ export function FlashcardsView() {
       startSession(session, 'generated')
     } catch (e) {
       console.error('[flashcards] generate', e)
-      toast.error('Не удалось создать карты. Попробуй ещё раз.')
+      toast.error(tr('Не удалось создать карты. Попробуй ещё раз.', 'Could not create flashcards. Please try again.', 'Չհաջողվեց ստեղծել քարտերը։ Փորձիր կրկին։'))
     } finally {
       setGenerating(false)
     }
@@ -233,7 +237,7 @@ export function FlashcardsView() {
 
   function startSession(cards: FlashCard[], source: SessionSource) {
     if (!cards.length) {
-      toast.error('Нет карточек для повторения')
+      toast.error(tr('Нет карточек для повторения', 'No flashcards are ready for review', 'Կրկնության համար քարտեր չկան'))
       return
     }
     setSessionCards(cards)
@@ -278,7 +282,7 @@ export function FlashcardsView() {
         body: JSON.stringify({ quality }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Ошибка')
+      if (!res.ok) throw new Error(data.error || tr('Ошибка', 'Error', 'Սխալ'))
 
       useUser.setState({
         xp: typeof data.xp === 'number' ? data.xp : user.xp,
@@ -294,7 +298,7 @@ export function FlashcardsView() {
       advance()
     } catch (e) {
       console.error('[flashcards] submit', e)
-      toast.error('Не удалось сохранить ответ')
+      toast.error(tr('Не удалось сохранить ответ', 'Could not save your answer', 'Չհաջողվեց պահպանել պատասխանը'))
     } finally {
       setSubmitting(false)
     }
@@ -321,8 +325,8 @@ export function FlashcardsView() {
     setDeleting(true)
     try {
       const res = await fetch(`/api/flashcards/${card.id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Не удалось удалить')
-      toast.success('Карточка удалена')
+      if (!res.ok) throw new Error(tr('Не удалось удалить', 'Could not delete', 'Չհաջողվեց ջնջել'))
+      toast.success(tr('Карточка удалена', 'Flashcard deleted', 'Քարտը ջնջված է'))
       // Remove from session without counting as reviewed.
       setSessionCards((prev) => {
         const next = prev.filter((_, i) => i !== currentIndex)
@@ -338,7 +342,7 @@ export function FlashcardsView() {
       })
       setFlipped(false)
     } catch {
-      toast.error('Не удалось удалить карточку')
+      toast.error(tr('Не удалось удалить карточку', 'Could not delete the flashcard', 'Չհաջողվեց ջնջել քարտը'))
     } finally {
       setDeleting(false)
     }
@@ -417,13 +421,13 @@ export function FlashcardsView() {
   return (
     <PageSection className="py-8">
       <SectionHeader
-        title="Флешкарты"
-        subtitle="Запоминай надолго с интервальным повторением"
+        title={tr('Флешкарты', 'Flashcards', 'Ուսուցման քարտեր')}
+        subtitle={tr('Запоминай надолго с интервальным повторением', 'Remember for longer with spaced repetition', 'Երկար հիշիր պարբերական կրկնության միջոցով')}
         icon={Layers}
         action={
           <Pill className="hidden sm:inline-flex border-primary/30 bg-primary/10 text-primary">
             <Zap className="h-3 w-3" />
-            SM-2 алгоритм
+            {tr('SM-2 алгоритм', 'SM-2 algorithm', 'SM-2 ալգորիթմ')}
           </Pill>
         }
       />
@@ -450,18 +454,18 @@ export function FlashcardsView() {
                   </div>
                   <div>
                     <p className="font-semibold leading-tight">
-                      У тебя{' '}
+                      {tr('У тебя', 'You have', 'Դու ունես')}{' '}
                       <span className="text-gradient">{dueCards.length}</span>{' '}
-                      {pluralizeCards(dueCards.length)} на повторение
+                      {pluralizeCards(dueCards.length, locale)} {tr('на повторение', 'to review', 'կրկնելու համար')}
                     </p>
                     <p className="mt-0.5 text-sm text-muted-foreground">
-                      Самое время освежить память — это занимает пару минут
+                      {tr('Самое время освежить память — это занимает пару минут', 'A quick review will refresh your memory in just a few minutes', 'Ժամանակն է թարմացնել հիշողությունը․ դա կտևի ընդամենը մի քանի րոպե')}
                     </p>
                   </div>
                 </div>
                 <GradientButton onClick={startDueReview} className="shrink-0">
                   <RotateCcw className="h-4 w-4" />
-                  Повторить
+                  {tr('Повторить', 'Review', 'Կրկնել')}
                 </GradientButton>
               </div>
             </GlassCard>
@@ -478,7 +482,7 @@ export function FlashcardsView() {
               htmlFor="flash-topic"
               className="mb-2 block text-sm font-medium"
             >
-              Какую тему закрепляем?
+              {tr('Какую тему закрепляем?', 'Which topic should we reinforce?', 'Ո՞ր թեման ամրապնդենք')}
             </label>
             <div className="flex flex-col gap-3 sm:flex-row">
               <input
@@ -488,7 +492,7 @@ export function FlashcardsView() {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !generating) handleGenerate()
                 }}
-                placeholder="Например: Бинарный поиск, irregular verbs, клеточное дыхание..."
+                placeholder={tr('Например: бинарный поиск, неправильные глаголы, клеточное дыхание...', 'For example: binary search, irregular verbs, cellular respiration...', 'Օրինակ՝ երկակի որոնում, անկանոն բայեր, բջջային շնչառություն...')}
                 className="flex-1 rounded-xl border border-border bg-background/60 px-4 py-3 text-sm outline-none ring-primary/20 transition placeholder:text-muted-foreground/60 focus:ring-2"
               />
               <GradientButton
@@ -499,12 +503,12 @@ export function FlashcardsView() {
                 {generating ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Создаю...
+                    {tr('Создаю...', 'Creating...', 'Ստեղծում ենք...')}
                   </>
                 ) : (
                   <>
                     <Sparkles className="h-4 w-4" />
-                    Создать карты
+                    {tr('Создать карты', 'Create flashcards', 'Ստեղծել քարտեր')}
                   </>
                 )}
               </GradientButton>
@@ -516,7 +520,7 @@ export function FlashcardsView() {
           {/* Subject chips */}
           <div>
             <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Предмет
+              {tr('Предмет', 'Subject', 'Առարկա')}
             </p>
             <div className="flex flex-wrap gap-2">
               {SUBJECTS.map((s) => {
@@ -532,7 +536,7 @@ export function FlashcardsView() {
                     }`}
                   >
                     <span>{s.emoji}</span>
-                    {s.ru}
+                    {localizeSubject(s, locale).name}
                   </button>
                 )
               })}
@@ -542,7 +546,7 @@ export function FlashcardsView() {
           {/* Count selector */}
           <div>
             <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Сколько карточек
+              {tr('Сколько карточек', 'Number of flashcards', 'Քարտերի քանակ')}
             </p>
             <div className="flex flex-wrap gap-2">
               {COUNTS.map((c) => {
@@ -567,23 +571,24 @@ export function FlashcardsView() {
           {/* Suggested topics */}
           <div>
             <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Идеи тем
+              {tr('Идеи тем', 'Topic ideas', 'Թեմաների գաղափարներ')}
             </p>
             <div className="flex flex-wrap gap-2">
               {SUGGESTED_TOPICS.map((sug) => {
                 const subj = getSubject(sug.subject)
+                const topicText = localize(sug.topic)
                 return (
                   <button
-                    key={sug.topic}
+                    key={topicText}
                     onClick={() => {
                       setSubjectLocal(sug.subject)
-                      handleGenerate(sug.topic)
+                      handleGenerate(topicText)
                     }}
                     disabled={generating}
                     className="group inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/60 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground disabled:opacity-50"
                   >
                     {subj && <span>{subj.emoji}</span>}
-                    {sug.topic}
+                    {topicText}
                     <ArrowRight className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" />
                   </button>
                 )
@@ -595,12 +600,12 @@ export function FlashcardsView() {
 
       {/* Empty hint / loading */}
       {loadingDue ? (
-        <LoadingState label="Проверяю карточки на повторение..." />
+        <LoadingState label={tr('Проверяю карточки на повторение...', 'Checking cards due for review...', 'Ստուգում ենք կրկնության ենթակա քարտերը...')} />
       ) : dueCards.length === 0 ? (
         <EmptyState
           icon={Brain}
-          title="Здесь появятся твои карточки"
-          description="Создай первую партию — выбери тему выше или подскажи идею. AI сгенерирует карточки, а ты закрепишь их методом интервального повторения."
+          title={tr('Здесь появятся твои карточки', 'Your flashcards will appear here', 'Քո քարտերը կհայտնվեն այստեղ')}
+          description={tr('Создай первую партию — выбери тему выше или подскажи идею. AI сгенерирует карточки, а ты закрепишь их методом интервального повторения.', 'Create your first set by choosing a topic above. AI will generate the cards and spaced repetition will help you remember them.', 'Ստեղծիր առաջին հավաքածուն՝ ընտրելով թեմա։ AI-ը կստեղծի քարտերը, իսկ պարբերական կրկնությունը կօգնի հիշել դրանք։')}
         />
       ) : null}
 
@@ -609,18 +614,18 @@ export function FlashcardsView() {
         {[
           {
             icon: Sparkles,
-            title: '1. Создай',
-            desc: 'Введи тему — AI сгенерирует карточки с вопросами и ответами.',
+            title: tr('1. Создай', '1. Create', '1. Ստեղծիր'),
+            desc: tr('Введи тему — AI сгенерирует карточки с вопросами и ответами.', 'Enter a topic and AI will generate question-and-answer cards.', 'Մուտքագրիր թեման, և AI-ը կստեղծի հարց ու պատասխան քարտեր։'),
           },
           {
             icon: RotateCcw,
-            title: '2. Повторяй',
-            desc: 'Переворачивай карточку и оценивай, насколько легко вспомнил.',
+            title: tr('2. Повторяй', '2. Review', '2. Կրկնիր'),
+            desc: tr('Переворачивай карточку и оценивай, насколько легко вспомнил.', 'Flip each card and rate how easily you remembered it.', 'Շրջիր յուրաքանչյուր քարտը և գնահատիր՝ որքան հեշտ հիշեցիր։'),
           },
           {
             icon: Brain,
-            title: '3. Запоминай',
-            desc: 'Алгоритм SM-2 вернётся к карточкам ровно когда нужно.',
+            title: tr('3. Запоминай', '3. Remember', '3. Հիշիր'),
+            desc: tr('Алгоритм SM-2 вернётся к карточкам ровно когда нужно.', 'The SM-2 algorithm brings cards back at the right time.', 'SM-2 ալգորիթմը քարտերը կվերադարձնի ճիշտ ժամանակին։'),
           },
         ].map((step) => (
           <GlassCard key={step.title} className="p-5">
@@ -665,6 +670,7 @@ function ReviewSession({
   onDelete: () => void
   onExit: () => void
 }) {
+  const { locale, tr, localize } = useTranslations()
   const card = cards[index]
   const total = cards.length
   const subjectInfo = card?.subject ? getSubject(card.subject) : undefined
@@ -692,16 +698,16 @@ function ReviewSession({
           className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
         >
           <ArrowRight className="h-4 w-4 rotate-180" />
-          Выйти
+          {tr('Выйти', 'Exit', 'Դուրս գալ')}
         </button>
         <div className="flex items-center gap-3">
           {source === 'due' ? (
             <Pill className="border-primary/30 bg-primary/10 text-primary">
-              <Repeat className="h-3 w-3" /> Повторение
+              <Repeat className="h-3 w-3" /> {tr('Повторение', 'Review', 'Կրկնություն')}
             </Pill>
           ) : source === 'generated' ? (
             <Pill className="border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-300">
-              <Sparkles className="h-3 w-3" /> Новые
+              <Sparkles className="h-3 w-3" /> {tr('Новые', 'New', 'Նոր')}
             </Pill>
           ) : null}
           <span className="text-sm font-semibold tabular-nums">
@@ -765,7 +771,7 @@ function ReviewSession({
                     <div className="relative mb-5">
                       <Pill className="border-border/60 bg-background/40 text-muted-foreground">
                         <Brain className="h-3 w-3" />
-                        Вопрос
+                        {tr('Вопрос', 'Question', 'Հարց')}
                       </Pill>
                     </div>
                     <p className="relative max-w-xl text-balance text-2xl font-bold leading-snug sm:text-3xl">
@@ -773,7 +779,7 @@ function ReviewSession({
                     </p>
                     <div className="relative mt-8 flex items-center gap-2 text-xs text-muted-foreground/80">
                       <RotateCcw className="h-3.5 w-3.5" />
-                      Нажми или пробел, чтобы перевернуть
+                      {tr('Нажми или пробел, чтобы перевернуть', 'Click or press Space to flip', 'Սեղմիր կամ օգտագործիր Space՝ շրջելու համար')}
                     </div>
                   </div>
 
@@ -783,7 +789,7 @@ function ReviewSession({
                       {subjectInfo && (
                         <>
                           <span>{subjectInfo.emoji}</span>
-                          <span>{subjectInfo.ru}</span>
+                          <span>{localizeSubject(subjectInfo, locale).name}</span>
                         </>
                       )}
                     </div>
@@ -793,7 +799,7 @@ function ReviewSession({
                         onDelete()
                       }}
                       disabled={deleting || !card?.id}
-                      title="Удалить карточку"
+                      title={tr('Удалить карточку', 'Delete flashcard', 'Ջնջել քարտը')}
                       className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground/70 transition-colors hover:bg-rose-500/10 hover:text-rose-400 disabled:opacity-40"
                     >
                       {deleting ? (
@@ -827,7 +833,7 @@ function ReviewSession({
                     <div className="mb-5">
                       <Pill className="border-white/20 bg-white/10 text-white">
                         <Check className="h-3 w-3" />
-                        Ответ
+                        {tr('Ответ', 'Answer', 'Պատասխան')}
                       </Pill>
                     </div>
                     <p className="max-w-xl text-balance text-xl font-semibold leading-relaxed text-white sm:text-2xl">
@@ -840,7 +846,7 @@ function ReviewSession({
                       {subjectInfo && (
                         <>
                           <span>{subjectInfo.emoji}</span>
-                          <span>{subjectInfo.ru}</span>
+                          <span>{localizeSubject(subjectInfo, locale).name}</span>
                         </>
                       )}
                     </div>
@@ -850,7 +856,7 @@ function ReviewSession({
                         onDelete()
                       }}
                       disabled={deleting || !card?.id}
-                      title="Удалить карточку"
+                      title={tr('Удалить карточку', 'Delete flashcard', 'Ջնջել քարտը')}
                       className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white/60 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-40"
                     >
                       {deleting ? (
@@ -877,7 +883,7 @@ function ReviewSession({
               className="mt-6"
             >
               <p className="mb-3 text-center text-sm text-muted-foreground">
-                Как легко было вспомнить?
+                {tr('Как легко было вспомнить?', 'How easy was it to remember?', 'Որքա՞ն հեշտ էր հիշել')}
               </p>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {QUALITY_BUTTONS.map((b) => (
@@ -887,7 +893,7 @@ function ReviewSession({
                     disabled={submitting}
                     className={`group relative flex flex-col items-center gap-1 rounded-xl border bg-gradient-to-br ${b.gradient} ${b.ring} px-3 py-3.5 text-sm font-semibold shadow-lg ${b.glow} transition-all hover:scale-[1.03] hover:shadow-xl focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-60`}
                   >
-                    <span className="text-xs font-medium">{b.label}</span>
+                    <span className="text-xs font-medium">{localize(b.label)}</span>
                     <kbd className="rounded bg-background/60 px-1.5 py-0.5 text-[10px] text-muted-foreground">
                       {b.key}
                     </kbd>
@@ -908,11 +914,11 @@ function ReviewSession({
             <kbd className="rounded border border-border/60 bg-muted/40 px-2 py-1">
               Space
             </kbd>
-            <span>перевернуть ·</span>
+            <span>{tr('перевернуть', 'flip', 'շրջել')} ·</span>
             <kbd className="rounded border border-border/60 bg-muted/40 px-2 py-1">
               1–4
             </kbd>
-            <span>оценить</span>
+            <span>{tr('оценить', 'rate', 'գնահատել')}</span>
           </motion.div>
         )}
       </div>
@@ -935,6 +941,7 @@ function CompleteScreen({
   xpGained: number
   onBack: () => void
 }) {
+  const { tr } = useTranslations()
   return (
     <PageSection className="flex min-h-[70vh] items-center justify-center py-12">
       <motion.div
@@ -963,7 +970,7 @@ function CompleteScreen({
               transition={{ delay: 0.2 }}
               className="relative text-3xl font-extrabold tracking-tight"
             >
-              Сессия <span className="text-gradient">завершена!</span>
+              {tr('Сессия', 'Session', 'Փուլը')} <span className="text-gradient">{tr('завершена!', 'complete!', 'ավարտված է։')}</span>
             </motion.h2>
 
             <motion.p
@@ -972,7 +979,7 @@ function CompleteScreen({
               transition={{ delay: 0.28 }}
               className="relative mt-2 text-sm text-muted-foreground"
             >
-              Ты повторил {reviewedCount} из {totalCards} карточек
+              {tr(`Ты повторил ${reviewedCount} из ${totalCards} карточек`, `You reviewed ${reviewedCount} of ${totalCards} flashcards`, `Դու կրկնեցիր ${totalCards}-ից ${reviewedCount} քարտ`)}
             </motion.p>
 
             {/* Stats */}
@@ -985,7 +992,7 @@ function CompleteScreen({
                   {reviewedCount}
                 </div>
                 <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                  Повторено
+                  {tr('Повторено', 'Reviewed', 'Կրկնված')}
                 </div>
               </div>
               <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
@@ -996,7 +1003,7 @@ function CompleteScreen({
                   +{xpGained}
                 </div>
                 <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                  Опыт
+                  {tr('Опыт', 'Experience', 'Փորձ')}
                 </div>
               </div>
             </div>
@@ -1009,14 +1016,14 @@ function CompleteScreen({
             >
               <GradientButton onClick={onBack} className="w-full">
                 <RotateCcw className="h-4 w-4" />
-                Создать ещё
+                {tr('Создать ещё', 'Create more', 'Ստեղծել ավելին')}
               </GradientButton>
               <button
                 onClick={onBack}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border/60 bg-card/60 px-5 py-2.5 text-sm font-semibold backdrop-blur-sm transition-colors hover:bg-accent"
               >
                 <Clock className="h-4 w-4" />
-                На главную
+                {tr('На главную', 'Back to start', 'Վերադառնալ սկզբին')}
               </button>
             </motion.div>
           </div>
@@ -1030,7 +1037,9 @@ function CompleteScreen({
 /* Helpers                                                             */
 /* ------------------------------------------------------------------ */
 
-function pluralizeCards(n: number): string {
+function pluralizeCards(n: number, locale: 'ru' | 'en' | 'hy'): string {
+  if (locale === 'en') return n === 1 ? 'flashcard' : 'flashcards'
+  if (locale === 'hy') return 'քարտ'
   const mod10 = n % 10
   const mod100 = n % 100
   if (mod10 === 1 && mod100 !== 11) return 'карточка'

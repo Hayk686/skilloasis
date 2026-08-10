@@ -6,6 +6,7 @@ import { Compass, Sparkles, Clock, Target, ArrowRight, Loader2, Route } from 'lu
 import { PageSection, SectionHeader, GlassCard, GradientButton, Pill, EmptyState } from '@/components/ui-blocks'
 import { useNav } from '@/lib/store'
 import { toast } from 'sonner'
+import { useTranslations, type LocalizedText } from '@/lib/i18n-client'
 
 interface PathStep { title: string; description: string }
 interface LearningPath {
@@ -16,26 +17,35 @@ interface LearningPath {
   steps: PathStep[]
 }
 
+const localized = (ru: string, en: string, hy: string): LocalizedText => ({ ru, en, hy })
+
 const SUGGESTIONS = [
-  'Освоить Python с нуля до автоматизации',
-  'Понять линейную алгебру для ML',
-  'Разговорный английский за 3 месяца',
-  'Основы квантовой физики',
-  'Стать frontend-разработчиком',
-  'История древнего Рима',
+  localized('Освоить Python с нуля до автоматизации', 'Learn Python from scratch through automation', 'Սովորել Python զրոյից մինչև ավտոմատացում'),
+  localized('Понять линейную алгебру для ML', 'Understand linear algebra for machine learning', 'Հասկանալ գծային հանրահաշիվը մեքենայական ուսուցման համար'),
+  localized('Разговорный английский за 3 месяца', 'Speak English confidently in three months', 'Երեք ամսում զարգացնել խոսակցական անգլերենը'),
+  localized('Основы квантовой физики', 'Learn the foundations of quantum physics', 'Սովորել քվանտային ֆիզիկայի հիմունքները'),
+  localized('Стать frontend-разработчиком', 'Become a frontend developer', 'Դառնալ frontend ծրագրավորող'),
+  localized('История древнего Рима', 'Explore the history of ancient Rome', 'Ուսումնասիրել Հին Հռոմի պատմությունը'),
 ]
+
+const LEVELS = [
+  { id: 'beginner', label: localized('Новичок', 'Beginner', 'Սկսնակ') },
+  { id: 'intermediate', label: localized('Средний', 'Intermediate', 'Միջին') },
+  { id: 'advanced', label: localized('Продвинутый', 'Advanced', 'Առաջադեմ') },
+] as const
 
 export function PathsView() {
   const [goal, setGoal] = useState('')
-  const [level, setLevel] = useState('Новичок')
+  const [level, setLevel] = useState<(typeof LEVELS)[number]['id']>('beginner')
   const [path, setPath] = useState<LearningPath | null>(null)
   const [loading, setLoading] = useState(false)
   const { setView, setSubject } = useNav()
+  const { tr, localize } = useTranslations()
 
   async function generate(g?: string) {
     const finalGoal = (g ?? goal).trim()
     if (!finalGoal) {
-      toast.error('Опиши свою цель')
+      toast.error(tr('Опиши свою цель', 'Describe your goal', 'Նկարագրիր քո նպատակը'))
       return
     }
     setGoal(finalGoal)
@@ -45,14 +55,14 @@ export function PathsView() {
       const res = await fetch('/api/paths', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ goal: finalGoal, level }),
+        body: JSON.stringify({ goal: finalGoal, level: localize(LEVELS.find((item) => item.id === level)!.label) }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       setPath(data.path)
-      toast.success('Маршрут построен!')
+      toast.success(tr('Маршрут построен!', 'Your learning path is ready!', 'Ուսուցման ուղին պատրաստ է։'))
     } catch {
-      toast.error('Не удалось построить маршрут. Попробуй ещё раз.')
+      toast.error(tr('Не удалось построить маршрут. Попробуй ещё раз.', 'Could not build the path. Please try again.', 'Չհաջողվեց կառուցել ուղին։ Փորձիր կրկին։'))
     } finally {
       setLoading(false)
     }
@@ -61,60 +71,63 @@ export function PathsView() {
   return (
     <PageSection className="py-8">
       <SectionHeader
-        title="Маршруты обучения"
-        subtitle="Опиши цель — AI построит пошаговый путь к ней"
+        title={tr('Маршруты обучения', 'Learning paths', 'Ուսուցման ուղիներ')}
+        subtitle={tr('Опиши цель — AI построит пошаговый путь к ней', 'Describe your goal and AI will create a step-by-step plan', 'Նկարագրիր նպատակը, և AI-ը կկառուցի քայլ առ քայլ ուղի')}
         icon={Compass}
       />
 
       <GlassCard className="mb-6 p-5" hover={false}>
-        <label className="mb-2 block text-sm font-medium">Какая у тебя цель?</label>
+        <label className="mb-2 block text-sm font-medium">{tr('Какая у тебя цель?', 'What is your goal?', 'Ո՞րն է քո նպատակը')}</label>
         <textarea
           value={goal}
           onChange={(e) => setGoal(e.target.value)}
-          placeholder="Например: освоить Python для анализа данных"
+          placeholder={tr('Например: освоить Python для анализа данных', 'For example: learn Python for data analysis', 'Օրինակ՝ սովորել Python տվյալների վերլուծության համար')}
           rows={2}
           className="w-full resize-none rounded-xl border border-border bg-background/60 px-4 py-3 text-sm outline-none ring-primary/20 transition focus:ring-2"
         />
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-1 rounded-lg border border-border/60 bg-muted/30 p-1">
-            {['Новичок', 'Средний', 'Продвинутый'].map((l) => (
+            {LEVELS.map((item) => (
               <button
-                key={l}
-                onClick={() => setLevel(l)}
+                key={item.id}
+                onClick={() => setLevel(item.id)}
                 className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-                  level === l ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                  level === item.id ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                {l}
+                {localize(item.label)}
               </button>
             ))}
           </div>
           <GradientButton onClick={() => generate()} disabled={loading}>
             {loading ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" /> Строю маршрут...
+                <Loader2 className="h-4 w-4 animate-spin" /> {tr('Строю маршрут...', 'Building your path...', 'Կառուցում ենք ուղին...')}
               </>
             ) : (
               <>
-                <Sparkles className="h-4 w-4" /> Построить путь
+                <Sparkles className="h-4 w-4" /> {tr('Построить путь', 'Build path', 'Կառուցել ուղի')}
               </>
             )}
           </GradientButton>
         </div>
 
         <div className="mt-4">
-          <p className="mb-2 text-xs text-muted-foreground">Или выбери идею:</p>
+          <p className="mb-2 text-xs text-muted-foreground">{tr('Или выбери идею:', 'Or choose an idea:', 'Կամ ընտրիր գաղափար։')}</p>
           <div className="flex flex-wrap gap-2">
-            {SUGGESTIONS.map((s) => (
+            {SUGGESTIONS.map((suggestion) => {
+              const text = localize(suggestion)
+              return (
               <button
-                key={s}
-                onClick={() => generate(s)}
+                key={text}
+                onClick={() => generate(text)}
                 disabled={loading}
                 className="rounded-full border border-border/60 bg-background/60 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground disabled:opacity-50"
               >
-                {s}
+                {text}
               </button>
-            ))}
+              )
+            })}
           </div>
         </div>
       </GlassCard>
@@ -152,8 +165,8 @@ export function PathsView() {
         {!path && !loading && (
           <EmptyState
             icon={Route}
-            title="Здесь появится твой персональный маршрут"
-            description="Опиши цель выше — и AI разобьёт её на конкретные шаги"
+            title={tr('Здесь появится твой персональный маршрут', 'Your personal learning path will appear here', 'Քո անհատական ուսուցման ուղին կհայտնվի այստեղ')}
+            description={tr('Опиши цель выше — и AI разобьёт её на конкретные шаги', 'Describe your goal above and AI will turn it into clear steps', 'Վերևում նկարագրիր նպատակը, և AI-ը այն կբաժանի հստակ քայլերի')}
           />
         )}
       </AnimatePresence>
@@ -168,6 +181,7 @@ function PathCard({
   path: LearningPath
   onStartStep: (title: string) => void
 }) {
+  const { tr } = useTranslations()
   return (
     <GlassCard className="overflow-hidden" hover={false}>
       <div className="relative border-b border-border/60 bg-gradient-to-br from-violet-500/10 via-fuchsia-500/10 to-pink-500/10 p-6">
@@ -180,9 +194,9 @@ function PathCard({
             <div>
               <h3 className="text-xl font-bold sm:text-2xl">{path.goal}</h3>
               <div className="mt-2 flex flex-wrap gap-2">
-                <Pill><Clock className="h-3 w-3" /> {path.duration || 'гибко'}</Pill>
+                <Pill><Clock className="h-3 w-3" /> {path.duration || tr('гибко', 'flexible', 'ճկուն')}</Pill>
                 <Pill><Target className="h-3 w-3" /> {path.level}</Pill>
-                <Pill><Route className="h-3 w-3" /> {path.steps.length} шагов</Pill>
+                <Pill><Route className="h-3 w-3" /> {path.steps.length} {tr('шагов', 'steps', 'քայլ')}</Pill>
               </div>
             </div>
           </div>
@@ -211,7 +225,7 @@ function PathCard({
                   onClick={() => onStartStep(step.title)}
                   className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
                 >
-                  Начать изучение <ArrowRight className="h-3 w-3" />
+                  {tr('Начать изучение', 'Start learning', 'Սկսել ուսուցումը')} <ArrowRight className="h-3 w-3" />
                 </button>
               </div>
             </motion.li>

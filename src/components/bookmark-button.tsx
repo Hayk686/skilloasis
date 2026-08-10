@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Bookmark, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTranslations } from '@/lib/i18n-client'
 import { toast } from 'sonner'
 import { useUser } from '@/lib/store'
 
@@ -21,6 +22,7 @@ export function BookmarkButton({
   lessonJson: string
   className?: string
 }) {
+  const { tr } = useTranslations()
   const [saved, setSaved] = useState(false)
   const [loading, setLoading] = useState(false)
   const [checked, setChecked] = useState(false)
@@ -57,9 +59,9 @@ export function BookmarkButton({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ topic }),
         })
-        if (!res.ok) throw new Error('Ошибка удаления')
+        if (!res.ok) throw new Error(tr('Ошибка удаления', 'Delete failed', 'Ջնջման սխալ'))
         setSaved(false)
-        toast.success('Удалено из избранного')
+        toast.success(tr('Удалено из избранного', 'Removed from saved items', 'Հեռացված է պահվածներից'))
       } else {
         const res = await fetch('/api/bookmarks', {
           method: 'POST',
@@ -70,14 +72,14 @@ export function BookmarkButton({
         if (!res.ok) throw new Error(data.error)
         setSaved(true)
         useUser.setState({ xp: data.xp ?? xp, level: data.level ?? level })
-        toast.success('Сохранено в избранное +3 XP')
+        toast.success(tr('Сохранено в избранное +3 XP', 'Saved +3 XP', 'Պահպանված է +3 XP'))
       }
     } catch {
-      toast.error('Не удалось сохранить')
+      toast.error(tr('Не удалось сохранить', 'Could not save', 'Չհաջողվեց պահպանել'))
     } finally {
       setLoading(false)
     }
-  }, [saved, loading, topic, subject, lessonJson, xp, level])
+  }, [saved, loading, topic, subject, lessonJson, xp, level, tr])
 
   if (!checked) return null
 
@@ -85,7 +87,7 @@ export function BookmarkButton({
     <button
       onClick={toggle}
       disabled={loading}
-      aria-label={saved ? 'Убрать из избранного' : 'Сохранить в избранное'}
+      aria-label={saved ? tr('Убрать из избранного', 'Remove from saved items', 'Հեռացնել պահվածներից') : tr('Сохранить в избранное', 'Save', 'Պահպանել')}
       className={cn(
         'group inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-medium backdrop-blur-sm transition-all disabled:opacity-60',
         saved
@@ -99,7 +101,7 @@ export function BookmarkButton({
       ) : (
         <Bookmark className={cn('h-3.5 w-3.5 transition-all', saved && 'fill-primary')} />
       )}
-      <span>{saved ? 'Сохранено' : 'Сохранить'}</span>
+      <span>{saved ? tr('Сохранено', 'Saved', 'Պահպանված է') : tr('Сохранить', 'Save', 'Պահպանել')}</span>
     </button>
   )
 }

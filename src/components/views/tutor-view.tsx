@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ReactMarkdown from 'react-markdown'
 import {
@@ -17,7 +17,7 @@ import {
 import { toast } from 'sonner'
 
 import { useNav, useUser } from '@/lib/store'
-import { SUBJECTS, getSubject } from '@/lib/subjects'
+import { SUBJECTS, getSubject, localizeSubject } from '@/lib/subjects'
 import {
   PageSection,
   SectionHeader,
@@ -42,6 +42,7 @@ import {
 } from '@/components/ui/sheet'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
+import { useTranslations, type LocalizedText } from '@/lib/i18n-client'
 
 // ---------- types ----------
 interface ChatMessage {
@@ -64,13 +65,15 @@ interface ApiMessage {
 }
 
 // ---------- suggestions ----------
-const SUGGESTED_PROMPTS: { emoji: string; text: string; subject: string }[] = [
-  { emoji: '⚛️', text: 'Объясни квантовую запутанность', subject: 'science' },
-  { emoji: '🧩', text: 'Как работают замыкания в JS?', subject: 'programming' },
-  { emoji: '🧠', text: 'Расскажи про стоицизм', subject: 'philosophy' },
-  { emoji: '📈', text: 'Что такое производная?', subject: 'math' },
-  { emoji: '🎨', text: 'В чём суть импрессионизма?', subject: 'art' },
-  { emoji: '🏛️', text: 'Почему пал Рим?', subject: 'history' },
+const localized = (ru: string, en: string, hy: string): LocalizedText => ({ ru, en, hy })
+
+const SUGGESTED_PROMPTS: { emoji: string; text: LocalizedText; subject: string }[] = [
+  { emoji: '⚛️', text: localized('Объясни квантовую запутанность', 'Explain quantum entanglement', 'Բացատրիր քվանտային խճճվածությունը'), subject: 'science' },
+  { emoji: '🧩', text: localized('Как работают замыкания в JS?', 'How do closures work in JavaScript?', 'Ինչպե՞ս են աշխատում փակումները JavaScript-ում'), subject: 'programming' },
+  { emoji: '🧠', text: localized('Расскажи про стоицизм', 'Tell me about Stoicism', 'Պատմիր ստոիցիզմի մասին'), subject: 'philosophy' },
+  { emoji: '📈', text: localized('Что такое производная?', 'What is a derivative?', 'Ի՞նչ է ածանցյալը'), subject: 'math' },
+  { emoji: '🎨', text: localized('В чём суть импрессионизма?', 'What is the essence of Impressionism?', 'Ո՞րն է իմպրեսիոնիզմի էությունը'), subject: 'art' },
+  { emoji: '🏛️', text: localized('Почему пал Рим?', 'Why did Rome fall?', 'Ինչո՞ւ անկում ապրեց Հռոմը'), subject: 'history' },
 ]
 
 const SESSION_KEY = 'lumina:tutor-session'
@@ -78,6 +81,7 @@ const SESSION_KEY = 'lumina:tutor-session'
 // ---------- main view ----------
 export function TutorView() {
   const { activeSubject } = useNav()
+  const { locale, tr } = useTranslations()
 
   const [subject, setSubject] = useState<string>(activeSubject ?? 'general')
   const [sessions, setSessions] = useState<ChatSessionMeta[]>([])
@@ -91,23 +95,13 @@ export function TutorView() {
 
   const bottomRef = useRef<HTMLDivElement>(null)
 
-  // On mount: load session list, restore current session
-  useEffect(() => {
-    const stored =
-      typeof window !== 'undefined' ? sessionStorage.getItem(SESSION_KEY) : null
-    if (stored) {
-      void loadThread(stored)
-    }
-    void loadSessions()
-  }, [])
-
   // auto-scroll to bottom when messages change / typing
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, sending])
 
   // ---------- data fns ----------
-  async function loadSessions() {
+  const loadSessions = useCallback(async () => {
     setLoadingSessions(true)
     try {
       const res = await fetch('/api/chat', { cache: 'no-store' })
@@ -120,14 +114,14 @@ export function TutorView() {
     } finally {
       setLoadingSessions(false)
     }
-  }
+  }, [])
 
-  async function loadThread(sid: string) {
+  const loadThread = useCallback(async (sid: string) => {
     setLoadingThread(true)
     try {
       const res = await fetch(`/api/chat/${sid}`, { cache: 'no-store' })
       const data = await res.json()
-      if (!res.ok) throw new Error(data?.error || 'Не удалось загрузить диалог')
+      if (!res.ok) throw new Error(data?.error || tr('Не удалось загрузить диалог', 'Could not load the conversation', 'Չհաջողվեց բեռնել զրույցը'))
       const apiMsgs = (data.session?.messages ?? []) as ApiMessage[]
       const msgs: ChatMessage[] = apiMsgs.map((m, i) => ({
         id: `${sid}-${i}`,
@@ -141,7 +135,7 @@ export function TutorView() {
       setSessionId(sid)
       sessionStorage.setItem(SESSION_KEY, sid)
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Не удалось загрузить диалог'
+      const msg = e instanceof Error ? e.message : tr('Не удалось загрузить диалог', 'Could not load the conversation', 'Չհաջողվեց բեռնել զրույցը')
       toast.error(msg)
       setSessionId(null)
       sessionStorage.removeItem(SESSION_KEY)
@@ -149,22 +143,31 @@ export function TutorView() {
       setLoadingThread(false)
       setListOpen(false)
     }
-  }
+  }, [tr])
+
+  // On mount and locale changes: load the session list and restore the current thread.
+  useEffect(() => {
+    const stored = sessionStorage.getItem(SESSION_KEY)
+    if (stored) {
+      void loadThread(stored)
+    }
+    void loadSessions()
+  }, [loadSessions, loadThread])
 
   async function deleteSession(sid: string, e?: React.MouseEvent) {
     e?.stopPropagation()
     try {
       const res = await fetch(`/api/chat/${sid}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Не удалось удалить')
+      if (!res.ok) throw new Error(tr('Не удалось удалить', 'Could not delete', 'Չհաջողվեց ջնջել'))
       setSessions((s) => s.filter((x) => x.id !== sid))
       if (sessionId === sid) {
         setSessionId(null)
         setMessages([])
         sessionStorage.removeItem(SESSION_KEY)
       }
-      toast.success('Диалог удалён')
+      toast.success(tr('Диалог удалён', 'Conversation deleted', 'Զրույցը ջնջված է'))
     } catch {
-      toast.error('Не удалось удалить диалог')
+      toast.error(tr('Не удалось удалить диалог', 'Could not delete the conversation', 'Չհաջողվեց ջնջել զրույցը'))
     }
   }
 
@@ -209,7 +212,7 @@ export function TutorView() {
         }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data?.error || 'Не удалось получить ответ')
+      if (!res.ok) throw new Error(data?.error || tr('Не удалось получить ответ', 'Could not get a response', 'Չհաջողվեց պատասխան ստանալ'))
 
       const aiMsg: ChatMessage = {
         id: `a-${Date.now()}`,
@@ -228,7 +231,7 @@ export function TutorView() {
       }
       void loadSessions()
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Не удалось получить ответ'
+      const msg = e instanceof Error ? e.message : tr('Не удалось получить ответ', 'Could not get a response', 'Չհաջողվեց պատասխան ստանալ')
       toast.error(msg)
     } finally {
       setSending(false)
@@ -259,15 +262,15 @@ export function TutorView() {
       />
 
       <SectionHeader
-        title="AI-наставник"
-        subtitle="Спроси что угодно — объясню, разберу по шагам, подскажу дальше"
+        title={tr('AI-наставник', 'AI tutor', 'AI ուսուցիչ')}
+        subtitle={tr('Спроси что угодно — объясню, разберу по шагам, подскажу дальше', 'Ask anything—I will explain it step by step and help you move forward', 'Հարցրու ցանկացած բան․ կբացատրեմ քայլ առ քայլ և կօգնեմ առաջ շարժվել')}
         icon={Sparkles}
         action={
           <div className="hidden items-center gap-2 sm:flex">
             {activeSubjectObj && (
               <Pill className="border-primary/30 bg-primary/10 text-primary">
                 <span>{activeSubjectObj.emoji}</span>
-                {activeSubjectObj.ru}
+                {localizeSubject(activeSubjectObj, locale).name}
               </Pill>
             )}
           </div>
@@ -280,7 +283,7 @@ export function TutorView() {
           <SheetTrigger asChild>
             <button className="inline-flex items-center gap-2 rounded-xl border border-border/60 bg-card/60 px-3 py-2 text-sm font-medium backdrop-blur transition hover:bg-card">
               <PanelLeft className="h-4 w-4" />
-              Диалоги
+              {tr('Диалоги', 'Conversations', 'Զրույցներ')}
               {sessions.length > 0 && (
                 <span className="rounded-full bg-primary/15 px-1.5 text-xs text-primary">
                   {sessions.length}
@@ -292,7 +295,7 @@ export function TutorView() {
             <SheetHeader>
               <SheetTitle className="flex items-center gap-2">
                 <MessagesSquare className="h-4 w-4 text-primary" />
-                Диалоги
+                {tr('Диалоги', 'Conversations', 'Զրույցներ')}
               </SheetTitle>
             </SheetHeader>
             <div className="flex-1 overflow-y-auto px-4 pb-6">
@@ -343,10 +346,10 @@ export function TutorView() {
               </div>
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold leading-tight">
-                  {sessionId ? 'Активный диалог' : 'Новый диалог'}
+                  {sessionId ? tr('Активный диалог', 'Active conversation', 'Ակտիվ զրույց') : tr('Новый диалог', 'New conversation', 'Նոր զրույց')}
                 </p>
                 <p className="truncate text-xs text-muted-foreground">
-                  {sending ? 'Наставник печатает…' : 'Готов помочь'}
+                  {sending ? tr('Наставник печатает…', 'Tutor is typing…', 'Ուսուցիչը գրում է…') : tr('Готов помочь', 'Ready to help', 'Պատրաստ եմ օգնել')}
                 </p>
               </div>
             </div>
@@ -359,7 +362,7 @@ export function TutorView() {
             <ScrollArea className="h-full">
               <div className="space-y-4 px-4 py-4 sm:px-6">
                 {loadingThread ? (
-                  <LoadingState label="Загружаю диалог…" />
+                  <LoadingState label={tr('Загружаю диалог…', 'Loading conversation…', 'Բեռնում ենք զրույցը…')} />
                 ) : messages.length === 0 ? (
                   <EmptyChat
                     onPick={(p, s) => {
@@ -412,13 +415,14 @@ function SidebarContent({
   onDelete: (id: string, e?: React.MouseEvent) => void
   onNew: () => void
 }) {
+  const { dateLocale, tr } = useTranslations()
   return (
     <div className="flex h-full flex-col gap-3">
       <NewChatButton onClick={onNew} />
 
       <div className="flex items-center gap-2 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
         <MessagesSquare className="h-3.5 w-3.5" />
-        Недавние
+        {tr('Недавние', 'Recent', 'Վերջինները')}
       </div>
 
       <div className="-mr-1 flex-1 overflow-y-auto pr-1">
@@ -430,9 +434,9 @@ function SidebarContent({
           </div>
         ) : sessions.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border/60 p-4 text-center text-xs text-muted-foreground">
-            Пока нет диалогов
+            {tr('Пока нет диалогов', 'No conversations yet', 'Դեռ զրույցներ չկան')}
             <br />
-            Задай первый вопрос 👇
+            {tr('Задай первый вопрос 👇', 'Ask your first question 👇', 'Տուր առաջին հարցը 👇')}
           </div>
         ) : (
           <ul className="space-y-1.5">
@@ -460,16 +464,16 @@ function SidebarContent({
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium leading-tight">
-                        {s.title || 'Без названия'}
+                        {s.title || tr('Без названия', 'Untitled', 'Անվերնագիր')}
                       </p>
                       <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                        {s._count?.messages ?? 0} сообщ. · {formatDate(s.updatedAt)}
+                        {s._count?.messages ?? 0} {tr('сообщ.', 'messages', 'հաղորդագրություն')} · {formatDate(s.updatedAt, dateLocale, tr)}
                       </p>
                     </div>
                     <button
                       onClick={(e) => onDelete(s.id, e)}
                       className="absolute right-1.5 top-1.5 rounded-md p-1 text-muted-foreground opacity-0 transition-all hover:bg-destructive/15 hover:text-destructive group-hover:opacity-100"
-                      aria-label="Удалить диалог"
+                      aria-label={tr('Удалить диалог', 'Delete conversation', 'Ջնջել զրույցը')}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -491,6 +495,7 @@ function NewChatButton({
   onClick: () => void
   small?: boolean
 }) {
+  const { tr } = useTranslations()
   return (
     <button
       onClick={onClick}
@@ -502,7 +507,7 @@ function NewChatButton({
       <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
       <span className="relative flex items-center gap-2">
         <Plus className="h-4 w-4" />
-        Новый диалог
+        {tr('Новый диалог', 'New conversation', 'Նոր զրույց')}
       </span>
     </button>
   )
@@ -516,6 +521,7 @@ function SubjectPicker({
   value: string
   onChange: (v: string) => void
 }) {
+  const { locale, tr } = useTranslations()
   return (
     <div className="flex items-center gap-2">
       <BookOpen className="hidden h-4 w-4 text-muted-foreground sm:block" />
@@ -524,19 +530,19 @@ function SubjectPicker({
           className="h-9 w-[140px] border-border/60 bg-background/60 text-xs sm:w-[180px] sm:text-sm"
           size="sm"
         >
-          <SelectValue placeholder="Предмет" />
+          <SelectValue placeholder={tr('Предмет', 'Subject', 'Առարկա')} />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="general">
             <span className="flex items-center gap-2">
-              <span>✨</span> Общий
+              <span>✨</span> {tr('Общий', 'General', 'Ընդհանուր')}
             </span>
           </SelectItem>
           {SUBJECTS.map((s) => (
             <SelectItem key={s.id} value={s.id}>
               <span className="flex items-center gap-2">
                 <span>{s.emoji}</span>
-                {s.ru}
+                {localizeSubject(s, locale).name}
               </span>
             </SelectItem>
           ))}
@@ -549,6 +555,7 @@ function SubjectPicker({
 // ---------- message bubble ----------
 function MessageBubble({ message }: { message: ChatMessage }) {
   const isUser = message.role === 'user'
+  const { tr } = useTranslations()
   return (
     <motion.div
       layout
@@ -560,7 +567,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
       {/* avatar */}
       {isUser ? (
         <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-border/60 bg-card/60 text-muted-foreground">
-          <span className="text-xs font-bold">Я</span>
+          <span className="text-xs font-bold">{tr('Я', 'Me', 'Ես')}</span>
         </div>
       ) : (
         <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 text-white shadow-md shadow-fuchsia-500/30">
@@ -618,6 +625,7 @@ function EmptyChat({
 }: {
   onPick: (prompt: string, subject?: string) => void
 }) {
+  const { tr, localize } = useTranslations()
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -634,29 +642,31 @@ function EmptyChat({
       </motion.div>
 
       <h3 className="text-xl font-bold sm:text-2xl">
-        Привет! Я твой <span className="text-gradient">AI-наставник</span>
+        {tr('Привет! Я твой', 'Hi! I am your', 'Ողջույն։ Ես քո')} <span className="text-gradient">{tr('AI-наставник', 'AI tutor', 'AI ուսուցիչն եմ')}</span>
       </h3>
       <p className="mt-2 max-w-md text-sm text-muted-foreground">
-        Спроси что угодно — от квантовой физики до основ философии. Выбери идею
-        ниже или напиши свой вопрос.
+        {tr('Спроси что угодно — от квантовой физики до основ философии. Выбери идею ниже или напиши свой вопрос.', 'Ask anything—from quantum physics to philosophy. Choose an idea below or write your own question.', 'Հարցրու ցանկացած բան՝ քվանտային ֆիզիկայից մինչև փիլիսոփայություն։ Ընտրիր ներքևի գաղափարներից մեկը կամ գրիր քո հարցը։')}
       </p>
 
       <div className="mt-6 grid w-full max-w-2xl gap-2 sm:grid-cols-2">
-        {SUGGESTED_PROMPTS.map((p) => (
+        {SUGGESTED_PROMPTS.map((p) => {
+          const text = localize(p.text)
+          return (
           <motion.button
-            key={p.text}
+            key={text}
             whileHover={{ y: -2 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => onPick(p.text, p.subject)}
+            onClick={() => onPick(text, p.subject)}
             className="group flex items-center gap-3 rounded-xl border border-border/60 bg-background/40 p-3 text-left transition-all hover:border-primary/40 hover:bg-primary/5"
           >
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-muted/60 text-lg">
               {p.emoji}
             </span>
-            <span className="text-sm font-medium">{p.text}</span>
+            <span className="text-sm font-medium">{text}</span>
             <Zap className="ml-auto h-3.5 w-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-hover:text-primary" />
           </motion.button>
-        ))}
+          )
+        })}
       </div>
     </motion.div>
   )
@@ -676,6 +686,7 @@ function Composer({
   onSend: () => void
   disabled: boolean
 }) {
+  const { tr } = useTranslations()
   return (
     <div className="border-t border-border/60 bg-card/40 p-3 backdrop-blur sm:p-4">
       <div className="relative flex items-end gap-2">
@@ -684,7 +695,7 @@ function Composer({
             value={value}
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={onKeyDown}
-            placeholder="Напиши вопрос наставнику… (Enter — отправить, Shift+Enter — перенос)"
+            placeholder={tr('Напиши вопрос наставнику… (Enter — отправить, Shift+Enter — перенос)', 'Ask the tutor… (Enter to send, Shift+Enter for a new line)', 'Գրիր հարց ուսուցչին… (Enter՝ ուղարկելու, Shift+Enter՝ նոր տողի համար)')}
             rows={1}
             className="max-h-40 min-h-[48px] resize-none rounded-2xl border-border/60 bg-background/60 px-4 py-3 text-sm leading-relaxed ring-primary/20 focus-visible:ring-2"
           />
@@ -697,7 +708,7 @@ function Composer({
             'group relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-2xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 text-white shadow-lg shadow-fuchsia-500/25 transition-all',
             'hover:scale-105 hover:shadow-xl hover:shadow-fuchsia-500/40 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100'
           )}
-          aria-label="Отправить сообщение"
+          aria-label={tr('Отправить сообщение', 'Send message', 'Ուղարկել հաղորդագրությունը')}
         >
           <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
           <span className="relative">
@@ -710,26 +721,30 @@ function Composer({
         </button>
       </div>
       <p className="mt-1.5 hidden px-1 text-[11px] text-muted-foreground sm:block">
-        Накапливай XP за каждый вопрос — развивайся вместе с Lumina
+        {tr('Накапливай XP за каждый вопрос — развивайся вместе с Lumina', 'Earn XP for every question and grow with Lumina', 'Յուրաքանչյուր հարցի համար հավաքիր XP և զարգացիր Lumina-ի հետ')}
       </p>
     </div>
   )
 }
 
 // ---------- utils ----------
-function formatDate(iso: string): string {
+function formatDate(
+  iso: string,
+  dateLocale: string,
+  tr: (ru: string, en: string, hy: string) => string
+): string {
   try {
     const d = new Date(iso)
     const now = new Date()
     const diffMs = now.getTime() - d.getTime()
     const diffMin = Math.floor(diffMs / 60000)
-    if (diffMin < 1) return 'только что'
-    if (diffMin < 60) return `${diffMin} мин назад`
+    if (diffMin < 1) return tr('только что', 'just now', 'հենց նոր')
+    if (diffMin < 60) return tr(`${diffMin} мин назад`, `${diffMin} min ago`, `${diffMin} րոպե առաջ`)
     const diffH = Math.floor(diffMin / 60)
-    if (diffH < 24) return `${diffH} ч назад`
+    if (diffH < 24) return tr(`${diffH} ч назад`, `${diffH} hr ago`, `${diffH} ժամ առաջ`)
     const diffD = Math.floor(diffH / 24)
-    if (diffD < 7) return `${diffD} д назад`
-    return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+    if (diffD < 7) return tr(`${diffD} д назад`, `${diffD} days ago`, `${diffD} օր առաջ`)
+    return d.toLocaleDateString(dateLocale, { day: 'numeric', month: 'short' })
   } catch {
     return ''
   }

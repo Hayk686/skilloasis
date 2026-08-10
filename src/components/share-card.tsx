@@ -16,6 +16,7 @@ import { toast } from 'sonner'
 import { useUser } from '@/lib/store'
 import { ACHIEVEMENTS, levelProgress } from '@/lib/gamify-client'
 import { cn } from '@/lib/utils'
+import { useTranslations, type LocalizedText } from '@/lib/i18n-client'
 
 interface ShareCardProps {
   open: boolean
@@ -23,11 +24,13 @@ interface ShareCardProps {
   achievements: { type: string; unlockedAt: string | Date }[]
 }
 
+const localized = (ru: string, en: string, hy: string): LocalizedText => ({ ru, en, hy })
+
 const STYLES = [
-  { id: 'cosmic', label: 'Космос', emoji: '🌌' },
-  { id: 'aurora', label: 'Сияние', emoji: '🌠' },
-  { id: 'geometric', label: 'Геометрия', emoji: '🔷' },
-  { id: 'fluid', label: 'Поток', emoji: '🌊' },
+  { id: 'cosmic', label: localized('Космос', 'Cosmos', 'Տիեզերք'), emoji: '🌌' },
+  { id: 'aurora', label: localized('Сияние', 'Aurora', 'Փայլ'), emoji: '🌠' },
+  { id: 'geometric', label: localized('Геометрия', 'Geometry', 'Երկրաչափություն'), emoji: '🔷' },
+  { id: 'fluid', label: localized('Поток', 'Flow', 'Հոսք'), emoji: '🌊' },
 ]
 
 const CANVAS_W = 1200
@@ -35,6 +38,7 @@ const CANVAS_H = 630
 
 export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) {
   const { name, xp, level, streak } = useUser()
+  const { dateLocale, tr, localize } = useTranslations()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [bgImage, setBgImage] = useState<HTMLImageElement | null>(null)
   const [artUrl, setArtUrl] = useState<string | null>(null)
@@ -166,10 +170,10 @@ export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) 
     ctx.fillText('Lumina', 132, 88)
     ctx.fillStyle = 'rgba(255,255,255,0.55)'
     ctx.font = '13px ui-sans-serif, system-ui, sans-serif'
-    ctx.fillText('Учись всему. Бесплатно. Навсегда.', 132, 108)
+    ctx.fillText(tr('Учись всему. Бесплатно. Навсегда.', 'Learn anything. Free. Forever.', 'Սովորիր ամեն ինչ։ Անվճար։ Ընդմիշտ։'), 132, 108)
 
     // Date (top-right)
-    const dateStr = new Date().toLocaleDateString('ru-RU', {
+    const dateStr = new Date().toLocaleDateString(dateLocale, {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
@@ -188,7 +192,7 @@ export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) 
 
     ctx.fillStyle = 'rgba(217, 70, 239, 1)'
     ctx.font = '600 22px ui-sans-serif, system-ui, sans-serif'
-    ctx.fillText(`Уровень ${level} · ${lp.pct}% к след. уровню`, 60, 270)
+    ctx.fillText(tr(`Уровень ${level} · ${lp.pct}% к след. уровню`, `Level ${level} · ${lp.pct}% to the next level`, `Մակարդակ ${level} · ${lp.pct}% մինչև հաջորդ մակարդակ`), 60, 270)
 
     // Progress bar
     const barX = 60
@@ -210,10 +214,10 @@ export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) 
 
     // Stats grid (4 cards bottom)
     const stats = [
-      { icon: '⚡', value: xp.toLocaleString('ru-RU'), label: 'XP' },
-      { icon: '🔥', value: String(streak), label: 'дней подряд' },
-      { icon: '🏆', value: String(level), label: 'уровень' },
-      { icon: '🎖️', value: `${unlockedCount}/${totalAchievements}`, label: 'достижений' },
+      { icon: '⚡', value: xp.toLocaleString(dateLocale), label: 'XP' },
+      { icon: '🔥', value: String(streak), label: tr('дней подряд', 'day streak', 'օր անընդմեջ') },
+      { icon: '🏆', value: String(level), label: tr('уровень', 'level', 'մակարդակ') },
+      { icon: '🎖️', value: `${unlockedCount}/${totalAchievements}`, label: tr('достижений', 'achievements', 'ձեռքբերում') },
     ]
     const cardW = 240
     const cardH = 110
@@ -251,9 +255,9 @@ export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) 
     ctx.fillStyle = 'rgba(255,255,255,0.4)'
     ctx.font = '13px ui-sans-serif, system-ui, sans-serif'
     ctx.textAlign = 'right'
-    ctx.fillText('lumina · AI-обучающая платформа', CANVAS_W - 60, CANVAS_H - 40)
+    ctx.fillText(tr('lumina · AI-обучающая платформа', 'lumina · AI learning platform', 'lumina · AI ուսուցման հարթակ'), CANVAS_W - 60, CANVAS_H - 40)
     ctx.textAlign = 'left'
-  }, [bgImage, name, xp, level, streak, unlockedCount, totalAchievements, lp.pct])
+  }, [bgImage, name, xp, level, streak, unlockedCount, totalAchievements, lp.pct, dateLocale, tr])
 
   useEffect(() => {
     if (open) draw()
@@ -272,11 +276,11 @@ export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) 
       setUseGradient(false)
     }
     img.onerror = () => {
-      toast.error('Не удалось загрузить арт-фон')
+      toast.error(tr('Не удалось загрузить арт-фон', 'Could not load the art background', 'Չհաջողվեց բեռնել գեղարվեստական ֆոնը'))
       setBgImage(null)
     }
     img.src = artUrl
-  }, [artUrl])
+  }, [artUrl, tr])
 
   const generateArt = useCallback(
     async (styleId: string) => {
@@ -291,16 +295,17 @@ export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) 
         const data = await res.json()
         if (!res.ok) throw new Error(data.error)
         setArtUrl(data.image)
-        toast.success(`Сгенерирован арт: «${data.styleLabel}»`, {
+        const style = STYLES.find((item) => item.id === styleId)
+        toast.success(`${tr('Сгенерирован арт:', 'Art generated:', 'Պատկերը ստեղծված է՝')} «${style ? localize(style.label) : data.styleLabel}»`, {
           icon: <Wand2 className="h-4 w-4" />,
         })
       } catch {
-        toast.error('Не удалось сгенерировать арт. Попробуйте ещё раз.')
+        toast.error(tr('Не удалось сгенерировать арт. Попробуйте ещё раз.', 'Could not generate art. Please try again.', 'Չհաջողվեց ստեղծել պատկերը։ Փորձեք կրկին։'))
       } finally {
         setArtLoading(false)
       }
     },
-    []
+    [localize, tr]
   )
 
   const download = useCallback(() => {
@@ -314,9 +319,9 @@ export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) 
       a.download = `lumina-${name}-${level}.png`
       a.click()
       URL.revokeObjectURL(url)
-      toast.success('Карточка сохранена', { icon: <Download className="h-4 w-4" /> })
+      toast.success(tr('Карточка сохранена', 'Card saved', 'Քարտը պահպանված է'), { icon: <Download className="h-4 w-4" /> })
     }, 'image/png')
-  }, [name, level])
+  }, [name, level, tr])
 
   // Esc to close
   useEffect(() => {
@@ -355,16 +360,16 @@ export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) 
                   <Sparkles className="h-4.5 w-4.5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold leading-tight">Карточка прогресса</h3>
+                  <h3 className="text-base font-bold leading-tight">{tr('Карточка прогресса', 'Progress card', 'Առաջընթացի քարտ')}</h3>
                   <p className="text-xs text-muted-foreground">
-                    Поделись своими успехами в Lumina
+                    {tr('Поделись своими успехами в Lumina', 'Share your progress in Lumina', 'Կիսվիր Lumina-ում քո առաջընթացով')}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => onOpenChange(false)}
                 className="grid h-8 w-8 place-items-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground"
-                aria-label="Закрыть"
+                aria-label={tr('Закрыть', 'Close', 'Փակել')}
               >
                 <X className="h-4 w-4" />
               </button>
@@ -382,7 +387,7 @@ export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) 
                 {artLoading && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/60 backdrop-blur-sm">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="text-sm text-muted-foreground">AI создаёт уникальный арт…</p>
+                    <p className="text-sm text-muted-foreground">{tr('AI создаёт уникальный арт…', 'AI is creating unique art…', 'AI-ը ստեղծում է եզակի պատկեր…')}</p>
                   </div>
                 )}
               </div>
@@ -391,7 +396,7 @@ export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) 
               <div className="mt-5">
                 <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   <Wand2 className="h-3 w-3" />
-                  AI-арт фон
+                  {tr('AI-арт фон', 'AI art background', 'AI գեղարվեստական ֆոն')}
                 </p>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {STYLES.map((s) => (
@@ -407,7 +412,7 @@ export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) 
                       )}
                     >
                       <div className="text-lg">{s.emoji}</div>
-                      <div className="mt-1 text-xs font-medium">{s.label}</div>
+                      <div className="mt-1 text-xs font-medium">{localize(s.label)}</div>
                       {activeStyle === s.id && !useGradient && (
                         <div className="absolute right-2 top-2 grid h-4 w-4 place-items-center rounded-full bg-primary text-[9px] text-primary-foreground">
                           ✓
@@ -430,10 +435,10 @@ export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) 
                     )}
                   >
                     <RefreshCw className="h-3 w-3" />
-                    Космический градиент
+                    {tr('Космический градиент', 'Cosmic gradient', 'Տիեզերական գրադիենտ')}
                   </button>
                   <span className="text-[11px] text-muted-foreground">
-                    +8 XP за генерацию арта
+                    +8 XP {tr('за генерацию арта', 'for generating art', 'պատկեր ստեղծելու համար')}
                   </span>
                 </div>
               </div>
@@ -443,11 +448,11 @@ export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) 
             <div className="flex items-center justify-between gap-2 border-t border-border/60 px-5 py-3.5">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Trophy className="h-3.5 w-3.5 text-amber-400" />
-                {unlockedCount} из {totalAchievements} достижений · {xp} XP
+                {unlockedCount} {tr('из', 'of', 'ընդամենը')} {totalAchievements} {tr('достижений', 'achievements', 'ձեռքբերում')} · {xp} XP
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
-                  Закрыть
+                  {tr('Закрыть', 'Close', 'Փակել')}
                 </Button>
                 <Button
                   onClick={download}
@@ -455,7 +460,7 @@ export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) 
                   size="sm"
                 >
                   <Download className="h-4 w-4" />
-                  Скачать PNG
+                  {tr('Скачать PNG', 'Download PNG', 'Ներբեռնել PNG')}
                 </Button>
               </div>
             </div>

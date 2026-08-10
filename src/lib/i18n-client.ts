@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import { create } from 'zustand'
 import {
   DEFAULT_LOCALE,
   isLocale,
   LANGUAGE_NAMES,
+  SITE_TITLES,
   SUPPORTED_LOCALES,
   type Locale,
 } from '@/lib/i18n-config'
@@ -149,6 +150,14 @@ const translations = {
 
 export type TranslationKey = keyof typeof translations.ru
 
+export type LocalizedText = Record<Locale, string>
+
+export const DATE_LOCALES: Record<Locale, string> = {
+  ru: 'ru-RU',
+  en: 'en-US',
+  hy: 'hy-AM',
+}
+
 interface LocaleState {
   locale: Locale
   setLocale: (locale: Locale) => void
@@ -157,6 +166,7 @@ interface LocaleState {
 function persistLocale(locale: Locale) {
   if (typeof document === 'undefined') return
   document.documentElement.lang = locale
+  document.title = SITE_TITLES[locale]
   document.cookie = `lumina_locale=${locale}; Path=/; Max-Age=31536000; SameSite=Lax`
 }
 
@@ -182,11 +192,22 @@ export function useLocaleSync() {
 
 export function useTranslations() {
   const locale = useLocale((state) => state.locale)
+  const setLocale = useLocale((state) => state.setLocale)
+  const t = useCallback((key: TranslationKey) => translations[locale][key], [locale])
+  const tr = useCallback(
+    (ru: string, en: string, hy: string) => ({ ru, en, hy })[locale],
+    [locale]
+  )
+  const localize = useCallback((value: LocalizedText) => value[locale], [locale])
+
   return {
     locale,
     locales: SUPPORTED_LOCALES,
     languageNames: LANGUAGE_NAMES,
-    setLocale: useLocale((state) => state.setLocale),
-    t: (key: TranslationKey) => translations[locale][key],
+    dateLocale: DATE_LOCALES[locale],
+    setLocale,
+    t,
+    tr,
+    localize,
   }
 }

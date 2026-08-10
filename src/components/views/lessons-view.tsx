@@ -23,7 +23,7 @@ import {
   Bookmark,
 } from 'lucide-react'
 import { useNav, useUser } from '@/lib/store'
-import { SUBJECTS, getSubject } from '@/lib/subjects'
+import { SUBJECTS, getSubject, localizeSubject } from '@/lib/subjects'
 import {
   PageSection,
   SectionHeader,
@@ -37,6 +37,7 @@ import {
 } from '@/components/ui-blocks'
 import { AudioNarration, LessonIllustration } from '@/components/media-tools'
 import { BookmarkButton } from '@/components/bookmark-button'
+import { useTranslations, type LocalizedText } from '@/lib/i18n-client'
 
 /* ===================== Types ===================== */
 
@@ -63,23 +64,30 @@ interface Lesson {
 
 /* ===================== Constants ===================== */
 
+const localized = (ru: string, en: string, hy: string): LocalizedText => ({ ru, en, hy })
+
 const SUGGESTED_TOPICS = [
-  'Квантовая механика',
-  'Рекурсия в Python',
-  'Как работает ДНК',
-  'Теория относительности',
-  'Стоицизм',
+  localized('Квантовая механика', 'Quantum mechanics', 'Քվանտային մեխանիկա'),
+  localized('Рекурсия в Python', 'Recursion in Python', 'Ռեկուրսիա Python-ում'),
+  localized('Как работает ДНК', 'How DNA works', 'Ինչպես է աշխատում ԴՆԹ-ն'),
+  localized('Теория относительности', 'Theory of relativity', 'Հարաբերականության տեսություն'),
+  localized('Стоицизм', 'Stoicism', 'Ստոիցիզմ'),
 ]
 
-const LEVELS = ['Новичок', 'Средний', 'Продвинутый'] as const
+const LEVELS = [
+  { id: 'beginner', label: localized('Новичок', 'Beginner', 'Սկսնակ') },
+  { id: 'intermediate', label: localized('Средний', 'Intermediate', 'Միջին') },
+  { id: 'advanced', label: localized('Продвинутый', 'Advanced', 'Առաջադեմ') },
+] as const
 
 /* ===================== Main view ===================== */
 
 export function LessonsView() {
   const { activeSubject } = useNav()
+  const { locale, tr, localize } = useTranslations()
   const [topic, setTopic] = useState('')
   const [subject, setSubject] = useState<string | null>(activeSubject)
-  const [level, setLevel] = useState<string>('Новичок')
+  const [level, setLevel] = useState<(typeof LEVELS)[number]['id']>('beginner')
   const [lesson, setLesson] = useState<Lesson | null>(null)
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -135,7 +143,7 @@ export function LessonsView() {
     async (topicArg?: string) => {
       const finalTopic = (topicArg ?? topic).trim()
       if (!finalTopic) {
-        toast.error('Введи тему урока')
+        toast.error(tr('Введи тему урока', 'Enter a lesson topic', 'Մուտքագրիր դասի թեման'))
         inputRef.current?.focus()
         return
       }
@@ -148,28 +156,28 @@ export function LessonsView() {
           body: JSON.stringify({
             topic: finalTopic,
             subject: subject ?? 'general',
-            level,
+            level: localize(LEVELS.find((item) => item.id === level)!.label),
           }),
         })
         const data = await res.json()
         if (!res.ok) {
-          throw new Error(data?.error || 'Не удалось создать урок')
+          throw new Error(data?.error || tr('Не удалось создать урок', 'Could not create the lesson', 'Չհաջողվեց ստեղծել դասը'))
         }
         setLesson(data.lesson as Lesson)
         if (typeof data.xp === 'number') {
           useUser.setState({ xp: data.xp, level: data.level })
         }
-        toast.success('Урок готов! +25 XP')
+        toast.success(tr('Урок готов! +25 XP', 'Lesson ready! +25 XP', 'Դասը պատրաստ է։ +25 XP'))
         // Scrolling is handled by the dedicated effect below (fires when lesson
         // commits to the DOM, so the ref is reliably attached).
       } catch (e) {
-        const msg = e instanceof Error ? e.message : 'Не удалось создать урок'
+        const msg = e instanceof Error ? e.message : tr('Не удалось создать урок', 'Could not create the lesson', 'Չհաջողվեց ստեղծել դասը')
         toast.error(msg)
       } finally {
         setLoading(false)
       }
     },
-    [topic, subject, level]
+    [topic, subject, level, tr, localize]
   )
 
   const resetToNew = useCallback(() => {
@@ -213,8 +221,8 @@ export function LessonsView() {
       </AnimatePresence>
 
       <SectionHeader
-        title="Интерактивные уроки"
-        subtitle="Введи тему — AI создаст красивый урок за секунды"
+        title={tr('Интерактивные уроки', 'Interactive lessons', 'Ինտերակտիվ դասեր')}
+        subtitle={tr('Введи тему — AI создаст красивый урок за секунды', 'Enter a topic and AI will create a rich lesson in seconds', 'Մուտքագրիր թեման, և AI-ը վայրկյանների ընթացքում կստեղծի ամբողջական դաս')}
         icon={BookOpen}
       />
 
@@ -235,7 +243,7 @@ export function LessonsView() {
               <CompactBar
                 lesson={lesson}
                 onNew={resetToNew}
-                subjectLabel={subjectObj?.ru}
+                subjectLabel={subjectObj ? localizeSubject(subjectObj, locale).name : undefined}
                 onScrollToLesson={() =>
                   lessonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                 }
@@ -293,7 +301,7 @@ export function LessonsView() {
         >
           <LessonReader
             lesson={lesson}
-            subjectLabel={subjectObj?.ru}
+            subjectLabel={subjectObj ? localizeSubject(subjectObj, locale).name : undefined}
             onNext={(t) => generate(t)}
           />
         </motion.div>
@@ -310,20 +318,23 @@ export function LessonsView() {
           >
             <EmptyState
               icon={Sparkles}
-              title="Идеи для изучения"
-              description="Введи свою тему выше или начни с одной из этих"
+              title={tr('Идеи для изучения', 'Ideas to explore', 'Ուսումնասիրության գաղափարներ')}
+              description={tr('Введи свою тему выше или начни с одной из этих', 'Enter your own topic above or start with one of these', 'Վերևում մուտքագրիր քո թեման կամ սկսիր այս տարբերակներից մեկից')}
               action={
                 <div className="mt-2 flex flex-wrap justify-center gap-2">
-                  {SUGGESTED_TOPICS.map((t) => (
+                  {SUGGESTED_TOPICS.map((suggestion) => {
+                    const text = localize(suggestion)
+                    return (
                     <button
-                      key={t}
-                      onClick={() => generate(t)}
+                      key={text}
+                      onClick={() => generate(text)}
                       className="group inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/60 px-3.5 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:border-primary/40 hover:text-foreground"
                     >
-                      {t}
+                      {text}
                       <ChevronRight className="h-3 w-3 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
                     </button>
-                  ))}
+                    )
+                  })}
                 </div>
               }
             />
@@ -351,21 +362,22 @@ function FullInputPanel({
   setTopic: (v: string) => void
   subject: string | null
   setSubject: (v: string | null) => void
-  level: string
-  setLevel: (v: string) => void
+  level: (typeof LEVELS)[number]['id']
+  setLevel: (v: (typeof LEVELS)[number]['id']) => void
   loading: boolean
   onGenerate: (topic?: string) => void
   inputRef: React.RefObject<HTMLTextAreaElement | null>
 }) {
+  const { locale, tr, localize } = useTranslations()
   return (
     <GlassCard className="overflow-hidden" hover={false} gradient>
       <div className="p-5 sm:p-6">
-        <label className="mb-2 block text-sm font-medium">Что хочешь изучить?</label>
+        <label className="mb-2 block text-sm font-medium">{tr('Что хочешь изучить?', 'What would you like to learn?', 'Ի՞նչ ես ուզում սովորել')}</label>
         <textarea
           ref={inputRef}
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
-          placeholder="Например: как работают нейронные сети"
+          placeholder={tr('Например: как работают нейронные сети', 'For example: how neural networks work', 'Օրինակ՝ ինչպես են աշխատում նեյրոնային ցանցերը')}
           rows={2}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
@@ -378,12 +390,12 @@ function FullInputPanel({
 
         {/* Subject chips */}
         <div className="mt-4">
-          <p className="mb-2 text-xs text-muted-foreground">Предмет:</p>
+          <p className="mb-2 text-xs text-muted-foreground">{tr('Предмет:', 'Subject:', 'Առարկա։')}</p>
           <div className="flex flex-wrap gap-2">
             <SubjectChip
               active={!subject}
               emoji="✨"
-              label="Авто"
+              label={tr('Авто', 'Auto', 'Ավտո')}
               onClick={() => setSubject(null)}
             />
             {SUBJECTS.map((s) => (
@@ -391,7 +403,7 @@ function FullInputPanel({
                 key={s.id}
                 active={subject === s.id}
                 emoji={s.emoji}
-                label={s.ru}
+                label={localizeSubject(s, locale).name}
                 onClick={() => setSubject(s.id)}
               />
             ))}
@@ -401,19 +413,19 @@ function FullInputPanel({
         {/* Level + Generate */}
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="mb-1.5 text-xs text-muted-foreground">Уровень:</p>
+            <p className="mb-1.5 text-xs text-muted-foreground">{tr('Уровень:', 'Level:', 'Մակարդակ։')}</p>
             <div className="inline-flex items-center gap-1 rounded-lg border border-border/60 bg-muted/30 p-1">
-              {LEVELS.map((l) => (
+              {LEVELS.map((item) => (
                 <button
-                  key={l}
-                  onClick={() => setLevel(l)}
+                  key={item.id}
+                  onClick={() => setLevel(item.id)}
                   className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-                    level === l
+                    level === item.id
                       ? 'bg-primary text-primary-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  {l}
+                  {localize(item.label)}
                 </button>
               ))}
             </div>
@@ -421,18 +433,18 @@ function FullInputPanel({
           <GradientButton onClick={() => onGenerate()} disabled={loading} className="mt-5 sm:mt-0">
             {loading ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" /> Создаю урок...
+                <Loader2 className="h-4 w-4 animate-spin" /> {tr('Создаю урок...', 'Creating lesson...', 'Ստեղծում ենք դասը...')}
               </>
             ) : (
               <>
-                <Sparkles className="h-4 w-4" /> Создать урок
+                <Sparkles className="h-4 w-4" /> {tr('Создать урок', 'Create lesson', 'Ստեղծել դաս')}
               </>
             )}
           </GradientButton>
         </div>
 
         <p className="mt-3 text-[11px] text-muted-foreground/70">
-          Подсказка: нажми <kbd className="rounded border border-border/60 bg-muted/40 px-1 py-0.5 font-mono text-[10px]">⌘/Ctrl + Enter</kbd> для быстрого запуска
+          {tr('Подсказка: нажми', 'Tip: press', 'Հուշում․ սեղմիր')} <kbd className="rounded border border-border/60 bg-muted/40 px-1 py-0.5 font-mono text-[10px]">⌘/Ctrl + Enter</kbd> {tr('для быстрого запуска', 'to start quickly', 'արագ սկսելու համար')}
         </p>
       </div>
     </GlassCard>
@@ -478,6 +490,7 @@ function CompactBar({
   onScrollToLesson: () => void
   subjectLabel?: string
 }) {
+  const { tr } = useTranslations()
   return (
     <GlassCard className="overflow-hidden" hover={false}>
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 sm:p-4">
@@ -492,7 +505,7 @@ function CompactBar({
             <p className="truncate text-sm font-semibold">{lesson.title}</p>
             <p className="truncate text-xs text-muted-foreground">
               {subjectLabel ? `${subjectLabel} · ` : ''}
-              {lesson.durationMin} мин · {lesson.difficulty}
+              {lesson.durationMin} {tr('мин', 'min', 'րոպե')} · {lesson.difficulty}
             </p>
           </div>
         </button>
@@ -500,7 +513,7 @@ function CompactBar({
           onClick={onNew}
           className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-background/60 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5"
         >
-          <RefreshCw className="h-3.5 w-3.5" /> Новый урок
+          <RefreshCw className="h-3.5 w-3.5" /> {tr('Новый урок', 'New lesson', 'Նոր դաս')}
         </button>
       </div>
     </GlassCard>
@@ -518,10 +531,11 @@ function Shimmer({ className }: { className?: string }) {
 }
 
 function LessonSkeleton() {
+  const { tr } = useTranslations()
   return (
     <GlassCard className="overflow-hidden" hover={false}>
       <LoadingState
-        label="Создаём твой урок..."
+        label={tr('Создаём твой урок...', 'Creating your lesson...', 'Ստեղծում ենք քո դասը...')}
         className="border-b border-border/60 py-4"
       />
       {/* Hero skeleton */}
@@ -568,6 +582,7 @@ function LessonReader({
   subjectLabel?: string
   onNext: (topic: string) => void
 }) {
+  const { tr } = useTranslations()
   const blocks = lesson.blocks ?? []
   const takeaways = lesson.keyTakeaways ?? []
 
@@ -596,7 +611,7 @@ function LessonReader({
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Pill>
-                  <Clock className="h-3 w-3" /> {lesson.durationMin} мин
+                  <Clock className="h-3 w-3" /> {lesson.durationMin} {tr('мин', 'min', 'րոպե')}
                 </Pill>
                 <Pill>
                   <Gauge className="h-3 w-3" /> {lesson.difficulty}
@@ -612,7 +627,7 @@ function LessonReader({
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 <AudioNarration
                   text={`${lesson.title}. ${lesson.summary}. ${takeaways.join(' ')}`}
-                  label="Слушать урок"
+                  label={tr('Слушать урок', 'Listen to lesson', 'Լսել դասը')}
                 />
                 <LessonIllustration topic={lesson.title} summary={lesson.summary} />
                 <BookmarkButton topic={lesson.title} subject={subjectLabel ?? 'general'} lessonJson={JSON.stringify(lesson)} />
@@ -639,7 +654,7 @@ function LessonReader({
               <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 text-primary ring-1 ring-primary/20">
                 <CheckCircle2 className="h-4 w-4" />
               </div>
-              <h3 className="text-lg font-bold tracking-tight">Ключевые выводы</h3>
+              <h3 className="text-lg font-bold tracking-tight">{tr('Ключевые выводы', 'Key takeaways', 'Հիմնական եզրակացություններ')}</h3>
             </div>
             <StaggerGroup className="grid gap-3 sm:grid-cols-2">
               {takeaways.map((kt, i) => (
@@ -664,12 +679,12 @@ function LessonReader({
             className="mt-10 overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-violet-500/10 via-fuchsia-500/10 to-pink-500/10 p-5"
           >
             <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-primary/80">
-              Что дальше
+              {tr('Что дальше', 'What is next', 'Ինչ է հաջորդը')}
             </p>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-base font-semibold sm:text-lg">{lesson.nextTopic}</p>
               <GradientButton onClick={() => onNext(lesson.nextTopic)}>
-                Создать урок <ArrowRight className="h-4 w-4" />
+                {tr('Создать урок', 'Create lesson', 'Ստեղծել դաս')} <ArrowRight className="h-4 w-4" />
               </GradientButton>
             </div>
           </motion.div>
@@ -682,6 +697,7 @@ function LessonReader({
 /* ===================== Block renderer ===================== */
 
 function BlockRenderer({ block }: { block: LessonBlock }) {
+  const { tr } = useTranslations()
   switch (block.type) {
     case 'heading':
       return (
@@ -700,7 +716,7 @@ function BlockRenderer({ block }: { block: LessonBlock }) {
       return (
         <AccentCard
           icon={Lightbulb}
-          label="Аналогия"
+          label={tr('Аналогия', 'Analogy', 'Համեմատություն')}
           accent="amber"
         >
           <MarkdownText className="text-sm text-foreground/90">{block.text}</MarkdownText>
@@ -711,7 +727,7 @@ function BlockRenderer({ block }: { block: LessonBlock }) {
       return (
         <AccentCard
           icon={FlaskConical}
-          label="Пример"
+          label={tr('Пример', 'Example', 'Օրինակ')}
           accent="emerald"
         >
           <MarkdownText className="text-sm text-foreground/90">{block.text}</MarkdownText>
@@ -722,7 +738,7 @@ function BlockRenderer({ block }: { block: LessonBlock }) {
       return (
         <AccentCard
           icon={AlertCircle}
-          label="Важно"
+          label={tr('Важно', 'Important', 'Կարևոր')}
           accent="rose"
         >
           <MarkdownText className="text-sm text-foreground/90">{block.text}</MarkdownText>
@@ -749,7 +765,7 @@ function BlockRenderer({ block }: { block: LessonBlock }) {
         <div className="rounded-2xl border border-border/60 bg-background/40 p-4 sm:p-5">
           <div className="mb-3 flex items-center gap-2">
             <ListOrdered className="h-4 w-4 text-primary" />
-            <p className="text-sm font-semibold">Шаги</p>
+            <p className="text-sm font-semibold">{tr('Шаги', 'Steps', 'Քայլեր')}</p>
           </div>
           <ol className="relative space-y-3 before:absolute before:left-[15px] before:top-2 before:h-[calc(100%-1rem)] before:w-px before:bg-border">
             {(block.items ?? []).map((item, i) => (
@@ -853,6 +869,7 @@ function MarkdownText({
 function SavedLessonsBar({ onOpen }: { onOpen: (topic: string, subject: string) => void }) {
   const [bookmarks, setBookmarks] = useState<Array<{ id: string; topic: string; subject: string; createdAt: string }>>([])
   const [open, setOpen] = useState(false)
+  const { tr } = useTranslations()
 
   useEffect(() => {
     fetch('/api/bookmarks', { cache: 'no-store' })
@@ -870,7 +887,7 @@ function SavedLessonsBar({ onOpen }: { onOpen: (topic: string, subject: string) 
         className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
       >
         <Bookmark className="h-4 w-4 text-primary" />
-        Избранные уроки ({bookmarks.length})
+        {tr('Избранные уроки', 'Saved lessons', 'Պահված դասեր')} ({bookmarks.length})
         {open ? <ChevronRight className="h-3.5 w-3.5 rotate-90" /> : <ChevronRight className="h-3.5 w-3.5" />}
       </button>
       <AnimatePresence>

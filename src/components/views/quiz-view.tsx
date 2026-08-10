@@ -19,7 +19,7 @@ import {
   Lightbulb,
 } from 'lucide-react'
 import { useNav, useUser } from '@/lib/store'
-import { SUBJECTS, getSubject } from '@/lib/subjects'
+import { SUBJECTS, getSubject, localizeSubject } from '@/lib/subjects'
 import {
   PageSection,
   SectionHeader,
@@ -38,6 +38,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 import { cn, seededFraction } from '@/lib/utils'
+import { useTranslations, type LocalizedText } from '@/lib/i18n-client'
 
 // ---------- types & constants ----------
 
@@ -61,23 +62,29 @@ interface QuizResult {
 }
 
 const COUNTS = [3, 5, 10, 15]
-const LEVELS = ['Любой', 'Новичок', 'Средний', 'Продвинутый']
+const localized = (ru: string, en: string, hy: string): LocalizedText => ({ ru, en, hy })
+const LEVELS = [
+  { id: 'any', label: localized('Любой', 'Any', 'Ցանկացած') },
+  { id: 'beginner', label: localized('Новичок', 'Beginner', 'Սկսնակ') },
+  { id: 'intermediate', label: localized('Средний', 'Intermediate', 'Միջին') },
+  { id: 'advanced', label: localized('Продвинутый', 'Advanced', 'Առաջադեմ') },
+] as const
 const LETTERS = ['A', 'B', 'C', 'D']
 
 const FALLBACK_TOPICS = [
-  'Основы Python',
-  'Линейная алгебра',
-  'Законы Ньютона',
-  'English tenses',
-  'Древняя Греция',
-  'Стоицизм',
-  'React Hooks',
-  'Теория вероятностей',
+  localized('Основы Python', 'Python basics', 'Python-ի հիմունքներ'),
+  localized('Линейная алгебра', 'Linear algebra', 'Գծային հանրահաշիվ'),
+  localized('Законы Ньютона', "Newton's laws", 'Նյուտոնի օրենքներ'),
+  localized('Времена английского языка', 'English tenses', 'Անգլերենի ժամանակաձևեր'),
+  localized('Древняя Греция', 'Ancient Greece', 'Հին Հունաստան'),
+  localized('Стоицизм', 'Stoicism', 'Ստոիցիզմ'),
+  localized('React Hooks', 'React Hooks', 'React Hooks'),
+  localized('Теория вероятностей', 'Probability theory', 'Հավանականությունների տեսություն'),
 ]
 
 // ---------- helpers ----------
 
-function difficultyMeta(d: string) {
+function difficultyMeta(d: string, tr: (ru: string, en: string, hy: string) => string) {
   const diff = (d || '').toLowerCase()
   if (
     diff.startsWith('easy') ||
@@ -86,7 +93,7 @@ function difficultyMeta(d: string) {
     diff.startsWith('прост')
   ) {
     return {
-      label: 'Легко',
+      label: tr('Легко', 'Easy', 'Հեշտ'),
       cls: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300',
       dot: 'bg-emerald-400',
     }
@@ -98,13 +105,13 @@ function difficultyMeta(d: string) {
     diff.startsWith('прод')
   ) {
     return {
-      label: 'Сложно',
+      label: tr('Сложно', 'Hard', 'Բարդ'),
       cls: 'border-rose-500/40 bg-rose-500/10 text-rose-300',
       dot: 'bg-rose-400',
     }
   }
   return {
-    label: 'Средне',
+    label: tr('Средне', 'Medium', 'Միջին'),
     cls: 'border-amber-500/40 bg-amber-500/10 text-amber-300',
     dot: 'bg-amber-400',
   }
@@ -120,11 +127,12 @@ function formatTime(sec: number) {
 
 export function QuizView() {
   const { activeSubject } = useNav()
+  const { locale, tr, localize } = useTranslations()
   const [phase, setPhase] = useState<Phase>('setup')
   const [topic, setTopic] = useState('')
   const [subject, setSubject] = useState<string>(activeSubject || 'programming')
   const [count, setCount] = useState<number>(5)
-  const [level, setLevel] = useState<string>('Любой')
+  const [level, setLevel] = useState<(typeof LEVELS)[number]['id']>('any')
   const [questions, setQuestions] = useState<QuizQuestion[]>([])
   const [attemptId, setAttemptId] = useState<string | null>(null)
   const [answers, setAnswers] = useState<(number | null | undefined)[]>([])
@@ -151,8 +159,8 @@ export function QuizView() {
 
   const suggestedTopics = useMemo(() => {
     const subj = getSubject(subject)
-    return subj?.topics?.slice(0, 6) ?? FALLBACK_TOPICS
-  }, [subject])
+    return subj ? localizeSubject(subj, locale).topics.slice(0, 6) : FALLBACK_TOPICS.map(localize)
+  }, [subject, locale, localize])
 
   const currentScore = useMemo(() => {
     return questions.reduce((acc, q, i) => {
@@ -171,14 +179,14 @@ export function QuizView() {
     topic?: string
     subject?: string
     count?: number
-    level?: string
+    level?: (typeof LEVELS)[number]['id']
   }) {
     const t = (opts?.topic ?? topic).trim()
     const s = opts?.subject ?? subject
     const c = opts?.count ?? count
     const l = opts?.level ?? level
     if (!t) {
-      toast.error('Укажите тему квиза')
+      toast.error(tr('Укажите тему квиза', 'Enter a quiz topic', 'Մուտքագրեք հարցաշարի թեման'))
       return
     }
     setTopic(t)
@@ -195,13 +203,13 @@ export function QuizView() {
           topic: t,
           subject: s,
           count: c,
-          level: l === 'Любой' ? undefined : l,
+          level: l === 'any' ? undefined : localize(LEVELS.find((item) => item.id === l)!.label),
         }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      if (!data.questions?.length) throw new Error('Нет вопросов')
-      if (!data.attemptId) throw new Error('Нет идентификатора квиза')
+      if (!data.questions?.length) throw new Error(tr('Нет вопросов', 'No questions returned', 'Հարցեր չեն ստացվել'))
+      if (!data.attemptId) throw new Error(tr('Нет идентификатора квиза', 'Quiz identifier is missing', 'Հարցաշարի նույնացուցիչը բացակայում է'))
       setAttemptId(data.attemptId)
       setQuestions(data.questions)
       setAnswers(Array(data.questions.length).fill(undefined))
@@ -209,9 +217,9 @@ export function QuizView() {
       setRevealed(false)
       setElapsed(0)
       setPhase('quiz')
-      toast.success('Квиз готов! Удачи 🎯')
+      toast.success(tr('Квиз готов! Удачи 🎯', 'Quiz ready! Good luck 🎯', 'Հարցաշարը պատրաստ է։ Հաջողություն 🎯'))
     } catch {
-      toast.error('Не удалось создать квиз. Попробуйте ещё раз.')
+      toast.error(tr('Не удалось создать квиз. Попробуйте ещё раз.', 'Could not create the quiz. Please try again.', 'Չհաջողվեց ստեղծել հարցաշարը։ Փորձեք կրկին։'))
       setPhase('setup')
     }
   }
@@ -243,13 +251,13 @@ export function QuizView() {
   async function handleCheck() {
     const selected = answers[currentIdx]
     if (selected === undefined || selected === null) {
-      toast.error('Выбери вариант ответа')
+      toast.error(tr('Выбери вариант ответа', 'Choose an answer', 'Ընտրիր պատասխանի տարբերակը'))
       return
     }
     try {
       await submitAnswer(selected)
     } catch {
-      toast.error('Не удалось проверить ответ')
+      toast.error(tr('Не удалось проверить ответ', 'Could not check the answer', 'Չհաջողվեց ստուգել պատասխանը'))
     }
   }
 
@@ -261,7 +269,7 @@ export function QuizView() {
     try {
       await submitAnswer(null)
     } catch {
-      toast.error('Не удалось пропустить вопрос')
+      toast.error(tr('Не удалось пропустить вопрос', 'Could not skip the question', 'Չհաջողվեց բաց թողնել հարցը'))
     }
   }
 
@@ -289,10 +297,10 @@ export function QuizView() {
       setQuizResult(data)
       useUser.setState({ xp: data.xp, level: data.level })
       if (data.xpGain > 0) {
-        toast.success(`+${data.xpGain} XP`, { description: 'Прогресс сохранён' })
+        toast.success(`+${data.xpGain} XP`, { description: tr('Прогресс сохранён', 'Progress saved', 'Առաջընթացը պահպանված է') })
       }
     } catch {
-      toast.error('Не удалось сохранить прогресс')
+      toast.error(tr('Не удалось сохранить прогресс', 'Could not save progress', 'Չհաջողվեց պահպանել առաջընթացը'))
     } finally {
       setSubmitting(false)
     }
@@ -312,8 +320,8 @@ export function QuizView() {
   return (
     <PageSection className="py-8">
       <SectionHeader
-        title="Квиз-арена"
-        subtitle="Адаптивный квиз по любой теме — проверь себя и заработай XP"
+        title={tr('Квиз-арена', 'Quiz arena', 'Հարցաշարի մրցասպարեզ')}
+        subtitle={tr('Адаптивный квиз по любой теме — проверь себя и заработай XP', 'Take an adaptive quiz on any topic, test yourself, and earn XP', 'Անցիր հարմարեցվող հարցաշար ցանկացած թեմայով, ստուգիր գիտելիքներդ և վաստակիր XP')}
         icon={Trophy}
       />
 
@@ -422,18 +430,19 @@ function SetupPhase({
   setSubject: (v: string) => void
   count: number
   setCount: (v: number) => void
-  level: string
-  setLevel: (v: string) => void
+  level: (typeof LEVELS)[number]['id']
+  setLevel: (v: (typeof LEVELS)[number]['id']) => void
   suggestedTopics: string[]
   onStart: () => void
 }) {
+  const { locale, tr, localize } = useTranslations()
   return (
     <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
       <GlassCard className="p-6 sm:p-8" hover={false}>
         <div className="space-y-6">
           {/* subject chips */}
           <div>
-            <label className="mb-2 block text-sm font-medium">Предмет</label>
+            <label className="mb-2 block text-sm font-medium">{tr('Предмет', 'Subject', 'Առարկա')}</label>
             <div className="flex flex-wrap gap-2">
               {SUBJECTS.map((s) => (
                 <button
@@ -448,7 +457,7 @@ function SetupPhase({
                   )}
                 >
                   <span>{s.emoji}</span>
-                  <span>{s.ru}</span>
+                  <span>{localizeSubject(s, locale).name}</span>
                 </button>
               ))}
             </div>
@@ -456,7 +465,7 @@ function SetupPhase({
 
           {/* topic input */}
           <div>
-            <label className="mb-2 block text-sm font-medium">Тема квиза</label>
+            <label className="mb-2 block text-sm font-medium">{tr('Тема квиза', 'Quiz topic', 'Հարցաշարի թեմա')}</label>
             <input
               type="text"
               value={topic}
@@ -464,11 +473,11 @@ function SetupPhase({
               onKeyDown={(e) => {
                 if (e.key === 'Enter') onStart()
               }}
-              placeholder="Например: замыкания в JavaScript"
+              placeholder={tr('Например: замыкания в JavaScript', 'For example: closures in JavaScript', 'Օրինակ՝ փակումներ JavaScript-ում')}
               className="w-full rounded-xl border border-border bg-background/60 px-4 py-3 text-sm outline-none ring-primary/20 transition focus:ring-2"
             />
             <div className="mt-3">
-              <p className="mb-2 text-xs text-muted-foreground">Подсказки:</p>
+              <p className="mb-2 text-xs text-muted-foreground">{tr('Подсказки:', 'Suggestions:', 'Հուշումներ։')}</p>
               <div className="flex flex-wrap gap-2">
                 {suggestedTopics.map((t) => (
                   <button
@@ -488,7 +497,7 @@ function SetupPhase({
           {/* count + level selectors */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm font-medium">Вопросов</label>
+              <label className="mb-2 block text-sm font-medium">{tr('Вопросов', 'Questions', 'Հարցերի քանակ')}</label>
               <div className="inline-flex items-center gap-1 rounded-lg border border-border/60 bg-muted/30 p-1">
                 {COUNTS.map((c) => (
                   <button
@@ -508,21 +517,21 @@ function SetupPhase({
               </div>
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium">Уровень</label>
+              <label className="mb-2 block text-sm font-medium">{tr('Уровень', 'Level', 'Մակարդակ')}</label>
               <div className="inline-flex flex-wrap items-center gap-1 rounded-lg border border-border/60 bg-muted/30 p-1">
-                {LEVELS.map((l) => (
+                {LEVELS.map((item) => (
                   <button
-                    key={l}
+                    key={item.id}
                     type="button"
-                    onClick={() => setLevel(l)}
+                    onClick={() => setLevel(item.id)}
                     className={cn(
                       'rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
-                      level === l
+                      level === item.id
                         ? 'bg-primary text-primary-foreground'
                         : 'text-muted-foreground hover:text-foreground'
                     )}
                   >
-                    {l}
+                    {localize(item.label)}
                   </button>
                 ))}
               </div>
@@ -530,7 +539,7 @@ function SetupPhase({
           </div>
 
           <GradientButton onClick={onStart} className="w-full px-6 py-3.5 text-base">
-            <Sparkles className="h-5 w-5" /> Начать квиз
+            <Sparkles className="h-5 w-5" /> {tr('Начать квиз', 'Start quiz', 'Սկսել հարցաշարը')}
           </GradientButton>
         </div>
       </GlassCard>
@@ -540,35 +549,35 @@ function SetupPhase({
         <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-gradient-to-br from-violet-500/30 to-fuchsia-500/30 blur-3xl" />
         <div className="relative">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-            <Sparkles className="h-3.5 w-3.5" /> Адаптивные вопросы
+            <Sparkles className="h-3.5 w-3.5" /> {tr('Адаптивные вопросы', 'Adaptive questions', 'Հարմարեցվող հարցեր')}
           </div>
-          <h3 className="text-2xl font-bold">Как это работает?</h3>
+          <h3 className="text-2xl font-bold">{tr('Как это работает?', 'How does it work?', 'Ինչպե՞ս է սա աշխատում')}</h3>
           <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
             <li className="flex items-start gap-2">
               <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary/15 text-[10px] font-bold text-primary">
                 1
               </span>
-              Выбери предмет и тему — или введи свою.
+              {tr('Выбери предмет и тему — или введи свою.', 'Choose a subject and topic, or enter your own.', 'Ընտրիր առարկան ու թեման կամ մուտքագրիր քոնը։')}
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary/15 text-[10px] font-bold text-primary">
                 2
               </span>
-              AI сгенерирует уникальные вопросы с объяснениями.
+              {tr('AI сгенерирует уникальные вопросы с объяснениями.', 'AI will generate unique questions with explanations.', 'AI-ը կստեղծի եզակի հարցեր՝ բացատրություններով։')}
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary/15 text-[10px] font-bold text-primary">
                 3
               </span>
-              Отвечай, проверяй себя и забирай XP за верные ответы.
+              {tr('Отвечай, проверяй себя и забирай XP за верные ответы.', 'Answer, check your knowledge, and earn XP for correct answers.', 'Պատասխանիր, ստուգիր գիտելիքներդ և ճիշտ պատասխանների համար վաստակիր XP։')}
             </li>
           </ul>
           <div className="mt-6 flex flex-wrap gap-2">
             <Pill className="text-amber-300">
-              <Award className="h-3 w-3" /> +10 XP за верный
+              <Award className="h-3 w-3" /> +10 XP {tr('за верный', 'per correct answer', 'ճիշտ պատասխանի համար')}
             </Pill>
             <Pill className="text-emerald-300">
-              <Trophy className="h-3 w-3" /> +20 XP за идеал
+              <Trophy className="h-3 w-3" /> +20 XP {tr('за идеал', 'for a perfect score', 'կատարյալ արդյունքի համար')}
             </Pill>
           </div>
         </div>
@@ -645,7 +654,8 @@ function QuizPhase({
   onExit: () => void
   isLast: boolean
 }) {
-  const diff = difficultyMeta(question.difficulty)
+  const { tr } = useTranslations()
+  const diff = difficultyMeta(question.difficulty, tr)
   const correctIndex = question.correctIndex ?? -1
   const isCorrect = revealed && selected === correctIndex
   const options = question.options ?? []
@@ -662,13 +672,13 @@ function QuizPhase({
               type="button"
               onClick={onExit}
               className="grid h-7 w-7 place-items-center rounded-lg border border-border/60 text-muted-foreground transition-colors hover:text-foreground"
-              title="Выйти из квиза"
-              aria-label="Выйти из квиза"
+              title={tr('Выйти из квиза', 'Exit quiz', 'Դուրս գալ հարցաշարից')}
+              aria-label={tr('Выйти из квиза', 'Exit quiz', 'Դուրս գալ հարցաշարից')}
             >
               <ArrowLeft className="h-4 w-4" />
             </button>
-            <span className="font-semibold">Вопрос {questionNumber}</span>
-            <span className="text-muted-foreground">из {total}</span>
+            <span className="font-semibold">{tr('Вопрос', 'Question', 'Հարց')} {questionNumber}</span>
+            <span className="text-muted-foreground">{tr('из', 'of', 'ընդամենը')} {total}</span>
           </div>
           <div className="flex items-center gap-2">
             <Pill className="text-amber-300">
@@ -754,13 +764,13 @@ function QuizPhase({
                   onClick={onSkip}
                   className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  Пропустить
+                  {tr('Пропустить', 'Skip', 'Բաց թողնել')}
                 </button>
                 <GradientButton
                   onClick={onCheck}
                   disabled={selected === undefined || selected === null}
                 >
-                  <Check className="h-4 w-4" /> Проверить
+                  <Check className="h-4 w-4" /> {tr('Проверить', 'Check', 'Ստուգել')}
                 </GradientButton>
               </>
             ) : (
@@ -768,11 +778,11 @@ function QuizPhase({
                 <GradientButton onClick={onNext}>
                   {isLast ? (
                     <>
-                      Завершить квиз <Trophy className="h-4 w-4" />
+                      {tr('Завершить квиз', 'Finish quiz', 'Ավարտել հարցաշարը')} <Trophy className="h-4 w-4" />
                     </>
                   ) : (
                     <>
-                      Следующий вопрос <ArrowRight className="h-4 w-4" />
+                      {tr('Следующий вопрос', 'Next question', 'Հաջորդ հարցը')} <ArrowRight className="h-4 w-4" />
                     </>
                   )}
                 </GradientButton>
@@ -851,6 +861,7 @@ function ExplanationCard({
   explanation: string
   correctText?: string
 }) {
+  const { tr } = useTranslations()
   return (
     <div
       className={cn(
@@ -878,11 +889,11 @@ function ExplanationCard({
               isCorrect ? 'text-emerald-300' : 'text-rose-300'
             )}
           >
-            {isCorrect ? 'Верно! 🎉' : skipped ? 'Пропущено' : 'Не совсем...'}
+            {isCorrect ? tr('Верно! 🎉', 'Correct! 🎉', 'Ճիշտ է։ 🎉') : skipped ? tr('Пропущено', 'Skipped', 'Բաց է թողնված') : tr('Не совсем...', 'Not quite...', 'Ոչ այնքան...')}
           </p>
           {!isCorrect && correctText && (
             <p className="mt-1 text-sm">
-              <span className="text-muted-foreground">Правильный ответ: </span>
+              <span className="text-muted-foreground">{tr('Правильный ответ:', 'Correct answer:', 'Ճիշտ պատասխանը։')} </span>
               <span className="font-medium text-emerald-300">{correctText}</span>
             </p>
           )}
@@ -916,6 +927,7 @@ function ResultsPhase({
   onNewQuiz: () => void
   onRetryTopic: () => void
 }) {
+  const { locale, tr } = useTranslations()
   const total = questions.length
   const correct = questions.reduce(
     (acc, q, i) => acc + (answers[i] === q.correctIndex ? 1 : 0),
@@ -929,12 +941,12 @@ function ResultsPhase({
   const isOk = pct >= 40
 
   const headline = isPerfect
-    ? 'Безупречно!'
+    ? tr('Безупречно!', 'Perfect!', 'Կատարյալ է։')
     : isGood
-      ? 'Отличная работа!'
+      ? tr('Отличная работа!', 'Great work!', 'Հիանալի աշխատանք։')
       : isOk
-        ? 'Неплохо!'
-        : 'Есть над чем поработать'
+        ? tr('Неплохо!', 'Nice effort!', 'Վատ չէ։')
+        : tr('Есть над чем поработать', 'Keep practicing', 'Դեռ աշխատելու տեղ կա')
   const headlineEmoji = isPerfect ? '🏆' : isGood ? '🌟' : isOk ? '✨' : '💪'
 
   return (
@@ -972,8 +984,8 @@ function ResultsPhase({
             transition={{ delay: 0.45 }}
             className="mt-1 text-sm text-muted-foreground"
           >
-            Квиз по теме «{topic}»
-            {subj ? ` · ${subj.emoji} ${subj.ru}` : ''}
+            {tr('Квиз по теме', 'Quiz on', 'Հարցաշար թեմայով')} «{topic}»
+            {subj ? ` · ${subj.emoji} ${localizeSubject(subj, locale).name}` : ''}
           </motion.p>
 
           <motion.div
@@ -990,12 +1002,12 @@ function ResultsPhase({
 
           {/* stats grid */}
           <div className="mx-auto mt-8 grid max-w-2xl grid-cols-2 gap-3 sm:grid-cols-4">
-            <StatCard icon={Target} label="Точность" value={`${pct}%`} accent="text-violet-300" />
-            <StatCard icon={Check} label="Верно" value={`${correct}`} accent="text-emerald-300" />
-            <StatCard icon={X} label="Ошибок" value={`${total - correct}`} accent="text-rose-300" />
+            <StatCard icon={Target} label={tr('Точность', 'Accuracy', 'Ճշգրտություն')} value={`${pct}%`} accent="text-violet-300" />
+            <StatCard icon={Check} label={tr('Верно', 'Correct', 'Ճիշտ')} value={`${correct}`} accent="text-emerald-300" />
+            <StatCard icon={X} label={tr('Ошибок', 'Incorrect', 'Սխալ')} value={`${total - correct}`} accent="text-rose-300" />
             <StatCard
               icon={Award}
-              label="XP получено"
+              label={tr('XP получено', 'XP earned', 'Ստացված XP')}
               value={submitting ? '…' : result ? `+${result.xpGain}` : '—'}
               accent="text-amber-300"
             />
@@ -1009,14 +1021,14 @@ function ResultsPhase({
               ) : (
                 <RotateCcw className="h-4 w-4" />
               )}
-              Ещё по этой теме
+              {tr('Ещё по этой теме', 'More on this topic', 'Կրկին այս թեմայով')}
             </GradientButton>
             <button
               type="button"
               onClick={onNewQuiz}
               className="inline-flex items-center gap-2 rounded-xl border border-border/60 bg-background/40 px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-background/70"
             >
-              <Sparkles className="h-4 w-4" /> Новый квиз
+              <Sparkles className="h-4 w-4" /> {tr('Новый квиз', 'New quiz', 'Նոր հարցաշար')}
             </button>
           </div>
         </GlassCard>
@@ -1031,17 +1043,17 @@ function ResultsPhase({
       >
         <GlassCard className="overflow-hidden" hover={false}>
           <div className="border-b border-border/60 p-5">
-            <h3 className="text-lg font-bold">Разбор ответов</h3>
+            <h3 className="text-lg font-bold">{tr('Разбор ответов', 'Answer review', 'Պատասխանների վերլուծություն')}</h3>
             <p className="text-sm text-muted-foreground">
-              Посмотри правильные ответы и объяснения
+              {tr('Посмотри правильные ответы и объяснения', 'Review the correct answers and explanations', 'Դիտիր ճիշտ պատասխաններն ու բացատրությունները')}
             </p>
           </div>
           <div className="px-4 py-2 sm:px-5">
             {questions.length === 0 ? (
               <EmptyState
                 icon={Target}
-                title="Нет вопросов для разбора"
-                description="Попробуй пройти квиз ещё раз"
+                title={tr('Нет вопросов для разбора', 'No questions to review', 'Վերլուծելու հարցեր չկան')}
+                description={tr('Попробуй пройти квиз ещё раз', 'Try taking the quiz again', 'Փորձիր կրկին անցնել հարցաշարը')}
               />
             ) : (
               <Accordion type="single" collapsible>
@@ -1079,7 +1091,7 @@ function ResultsPhase({
                         <div className="grid gap-2 sm:grid-cols-2">
                           <div className="rounded-lg border border-rose-500/30 bg-rose-500/5 p-3">
                             <p className="text-xs font-medium text-rose-300">
-                              {wasSkipped ? 'Пропущено' : 'Твой ответ'}
+                              {wasSkipped ? tr('Пропущено', 'Skipped', 'Բաց է թողնված') : tr('Твой ответ', 'Your answer', 'Քո պատասխանը')}
                             </p>
                             <p className="mt-1 text-foreground">
                               {wasSkipped || ans === null || ans === undefined
@@ -1089,7 +1101,7 @@ function ResultsPhase({
                           </div>
                           <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3">
                             <p className="text-xs font-medium text-emerald-300">
-                              Правильный ответ
+                              {tr('Правильный ответ', 'Correct answer', 'Ճիշտ պատասխան')}
                             </p>
                             <p className="mt-1 text-foreground">
                               {qOptions[correctIndex] ?? '—'}

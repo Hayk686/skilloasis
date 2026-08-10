@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Volume2, Loader2, ImageIcon, X, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { useTranslations } from '@/lib/i18n-client'
 
 /* ============================================================
  * AudioNarration — text-to-speech player with chunked playback.
@@ -21,13 +22,15 @@ interface AudioState {
 
 export function AudioNarration({
   text,
-  label = 'Слушать',
+  label,
   className,
 }: {
   text: string
   label?: string
   className?: string
 }) {
+  const { tr } = useTranslations()
+  const displayLabel = label ?? tr('Слушать', 'Listen', 'Լսել')
   const [state, setState] = useState<AudioState>({ loading: false, playing: false, url: null })
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
@@ -64,7 +67,7 @@ export function AudioNarration({
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        throw new Error(err.error || 'Ошибка TTS')
+        throw new Error(err.error || tr('Ошибка TTS', 'Text-to-speech error', 'Ձայնավորման սխալ'))
       }
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
@@ -78,12 +81,12 @@ export function AudioNarration({
           })
         }
       }, 50)
-      toast.success('Аудио готово ▶')
+      toast.success(tr('Аудио готово ▶', 'Audio ready ▶', 'Աուդիոն պատրաստ է ▶'))
     } catch (e) {
       setState((s) => ({ ...s, loading: false }))
-      toast.error(e instanceof Error ? e.message : 'Не удалось создать аудио')
+      toast.error(e instanceof Error ? e.message : tr('Не удалось создать аудио', 'Could not create audio', 'Չհաջողվեց ստեղծել աուդիոն'))
     }
-  }, [cleanText, state.url, state.playing])
+  }, [cleanText, state.url, state.playing, tr])
 
   // cleanup
   useEffect(() => {
@@ -98,7 +101,7 @@ export function AudioNarration({
         onClick={state.playing ? stop : play}
         disabled={state.loading || !cleanText}
         className="group inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3.5 py-1.5 text-xs font-medium backdrop-blur-sm transition-all hover:border-primary/40 hover:bg-primary/5 disabled:opacity-60"
-        aria-label={state.playing ? 'Остановить' : label}
+        aria-label={state.playing ? tr('Остановить', 'Stop', 'Կանգնեցնել') : displayLabel}
       >
         {state.loading ? (
           <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
@@ -109,7 +112,7 @@ export function AudioNarration({
         ) : (
           <Volume2 className="h-3.5 w-3.5 text-primary" />
         )}
-        <span>{state.loading ? 'Готовлю аудио…' : state.playing ? 'Стоп' : label}</span>
+        <span>{state.loading ? tr('Готовлю аудио…', 'Preparing audio…', 'Պատրաստում ենք աուդիոն…') : state.playing ? tr('Стоп', 'Stop', 'Կանգ') : displayLabel}</span>
       </button>
       {state.url && (
         <audio
@@ -161,6 +164,7 @@ export function LessonIllustration({
   summary?: string
   className?: string
 }) {
+  const { tr } = useTranslations()
   const [state, setState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
   const [url, setUrl] = useState<string | null>(null)
 
@@ -178,12 +182,12 @@ export function LessonIllustration({
       if (!res.ok) throw new Error(data.error)
       setUrl(data.url)
       setState('ready')
-      toast.success('Иллюстрация готова ✨')
+      toast.success(tr('Иллюстрация готова ✨', 'Illustration ready ✨', 'Պատկերազարդումը պատրաստ է ✨'))
     } catch (e) {
       setState('error')
-      toast.error(e instanceof Error ? e.message : 'Не удалось создать изображение')
+      toast.error(e instanceof Error ? e.message : tr('Не удалось создать изображение', 'Could not create the image', 'Չհաջողվեց ստեղծել պատկերը'))
     }
-  }, [topic, summary, state])
+  }, [topic, summary, state, tr])
 
   if (state === 'idle') {
     return (
@@ -195,7 +199,7 @@ export function LessonIllustration({
         )}
       >
         <ImageIcon className="h-3.5 w-3.5 text-primary" />
-        <span>Показать иллюстрацию</span>
+        <span>{tr('Показать иллюстрацию', 'Show illustration', 'Ցույց տալ պատկերազարդումը')}</span>
       </button>
     )
   }
@@ -211,7 +215,7 @@ export function LessonIllustration({
         <div className="absolute inset-0 animate-shimmer" />
         <div className="relative flex flex-col items-center gap-2 text-muted-foreground">
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
-          <span className="text-xs">Рисую иллюстрацию…</span>
+          <span className="text-xs">{tr('Рисую иллюстрацию…', 'Creating illustration…', 'Ստեղծում ենք պատկերազարդումը…')}</span>
         </div>
       </div>
     )
@@ -227,7 +231,7 @@ export function LessonIllustration({
         )}
       >
         <RefreshCw className="h-3.5 w-3.5" />
-        <span>Повторить</span>
+        <span>{tr('Повторить', 'Try again', 'Փորձել կրկին')}</span>
       </button>
     )
   }
@@ -240,16 +244,16 @@ export function LessonIllustration({
       transition={{ duration: 0.4 }}
       className={cn('group relative overflow-hidden rounded-2xl border border-border/60', className)}
     >
-      <img src={url!} alt={`Иллюстрация: ${topic}`} className="h-44 w-full object-cover" />
+      <img src={url!} alt={`${tr('Иллюстрация:', 'Illustration:', 'Պատկերազարդում։')} ${topic}`} className="h-44 w-full object-cover" />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
       <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between p-3">
         <span className="rounded-md bg-black/40 px-2 py-1 text-[10px] font-medium text-white backdrop-blur-sm">
-          ✨ AI-иллюстрация
+          ✨ {tr('AI-иллюстрация', 'AI illustration', 'AI պատկերազարդում')}
         </span>
         <button
           onClick={() => setState('idle')}
           className="grid h-7 w-7 place-items-center rounded-md bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
-          aria-label="Скрыть"
+          aria-label={tr('Скрыть', 'Hide', 'Թաքցնել')}
         >
           <X className="h-3.5 w-3.5" />
         </button>

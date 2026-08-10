@@ -14,7 +14,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { useNav, useUser } from '@/lib/store'
-import { SUBJECTS } from '@/lib/subjects'
+import { SUBJECTS, localizeSubject } from '@/lib/subjects'
 import {
   PageSection,
   SectionHeader,
@@ -25,6 +25,7 @@ import {
 } from '@/components/ui-blocks'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { useTranslations, type LocalizedText } from '@/lib/i18n-client'
 
 interface MindMapNode {
   id: string
@@ -32,15 +33,17 @@ interface MindMapNode {
   children?: MindMapNode[]
 }
 
+const localized = (ru: string, en: string, hy: string): LocalizedText => ({ ru, en, hy })
+
 const SUGGESTIONS = [
-  'Нейронные сети',
-  'Квантовая механика',
-  'Французская революция',
-  'Теория относительности',
-  'Экосистема океана',
-  'Основы дизайна',
-  'Стоицизм',
-  'ДНК и генетика',
+  localized('Нейронные сети', 'Neural networks', 'Նեյրոնային ցանցեր'),
+  localized('Квантовая механика', 'Quantum mechanics', 'Քվանտային մեխանիկա'),
+  localized('Французская революция', 'French Revolution', 'Ֆրանսիական հեղափոխություն'),
+  localized('Теория относительности', 'Theory of relativity', 'Հարաբերականության տեսություն'),
+  localized('Экосистема океана', 'Ocean ecosystem', 'Օվկիանոսի էկոհամակարգ'),
+  localized('Основы дизайна', 'Design fundamentals', 'Դիզայնի հիմունքներ'),
+  localized('Стоицизм', 'Stoicism', 'Ստոիցիզմ'),
+  localized('ДНК и генетика', 'DNA and genetics', 'ԴՆԹ և գենետիկա'),
 ]
 
 const BRANCH_COLORS = [
@@ -54,6 +57,7 @@ const BRANCH_COLORS = [
 ]
 
 export function MindMapView() {
+  const { locale, tr, localize } = useTranslations()
   const [topic, setTopic] = useState('')
   const [map, setMap] = useState<{ root: MindMapNode } | null>(null)
   const [loading, setLoading] = useState(false)
@@ -65,14 +69,17 @@ export function MindMapView() {
   useEffect(() => {
     if (activeSubject) {
       const s = SUBJECTS.find((s) => s.id === activeSubject)
-      if (s) setTopic(s.topics[0] || s.ru)
+      if (s) {
+        const subject = localizeSubject(s, locale)
+        setTopic(subject.topics[0] || subject.name)
+      }
     }
-  }, [activeSubject])
+  }, [activeSubject, locale])
 
   const generate = useCallback(async (t?: string) => {
     const finalTopic = (t ?? topic).trim()
     if (!finalTopic) {
-      toast.error('Введите тему для карты')
+      toast.error(tr('Введите тему для карты', 'Enter a topic for the map', 'Մուտքագրեք քարտեզի թեման'))
       return
     }
     setTopic(finalTopic)
@@ -88,19 +95,19 @@ export function MindMapView() {
       if (!res.ok) throw new Error(data.error)
       setMap(data.map)
       useUser.setState({ xp: data.xp ?? xp, level: data.level ?? level })
-      toast.success('+10 XP за карту знаний!')
+      toast.success(tr('+10 XP за карту знаний!', '+10 XP for your knowledge map!', '+10 XP գիտելիքի քարտեզի համար։'))
     } catch {
-      toast.error('Не удалось создать карту. Попробуйте ещё раз.')
+      toast.error(tr('Не удалось создать карту. Попробуйте ещё раз.', 'Could not create the map. Please try again.', 'Չհաջողվեց ստեղծել քարտեզը։ Փորձեք կրկին։'))
     } finally {
       setLoading(false)
     }
-  }, [topic, xp, level])
+  }, [topic, xp, level, tr])
 
   return (
     <PageSection className="py-8">
       <SectionHeader
-        title="Карты знаний"
-        subtitle="Визуальная карта концепций — увидь связи между идеями"
+        title={tr('Карты знаний', 'Knowledge maps', 'Գիտելիքի քարտեզներ')}
+        subtitle={tr('Визуальная карта концепций — увидь связи между идеями', 'Visualize concepts and discover the connections between ideas', 'Տեսողական դարձրու հասկացությունները և բացահայտիր գաղափարների կապերը')}
         icon={Network}
       />
 
@@ -108,38 +115,41 @@ export function MindMapView() {
       <GlassCard className="mb-6 p-5" hover={false}>
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-0 flex-1">
-            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Тема</label>
+            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{tr('Тема', 'Topic', 'Թեմա')}</label>
             <input
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && generate()}
-              placeholder="Например: нейронные сети, теория относительности…"
+              placeholder={tr('Например: нейронные сети, теория относительности…', 'For example: neural networks, theory of relativity…', 'Օրինակ՝ նեյրոնային ցանցեր, հարաբերականության տեսություն…')}
               className="w-full rounded-xl border border-border bg-background/60 px-4 py-2.5 text-sm outline-none ring-primary/20 transition focus:ring-2"
             />
           </div>
           <GradientButton onClick={() => generate()} disabled={loading || !topic.trim()}>
             {loading ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" /> Создаю карту…
+                <Loader2 className="h-4 w-4 animate-spin" /> {tr('Создаю карту…', 'Creating map…', 'Ստեղծում ենք քարտեզը…')}
               </>
             ) : (
               <>
-                <Sparkles className="h-4 w-4" /> Создать карту
+                <Sparkles className="h-4 w-4" /> {tr('Создать карту', 'Create map', 'Ստեղծել քարտեզ')}
               </>
             )}
           </GradientButton>
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
-          {SUGGESTIONS.map((s) => (
+          {SUGGESTIONS.map((suggestion) => {
+            const text = localize(suggestion)
+            return (
             <button
-              key={s}
-              onClick={() => generate(s)}
+              key={text}
+              onClick={() => generate(text)}
               disabled={loading}
               className="rounded-full border border-border/60 bg-background/60 px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground disabled:opacity-50"
             >
-              {s}
+              {text}
             </button>
-          ))}
+            )
+          })}
         </div>
       </GlassCard>
 
@@ -147,7 +157,7 @@ export function MindMapView() {
       <AnimatePresence mode="wait">
         {loading && (
           <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <LoadingState label="AI строит карту знаний…" />
+            <LoadingState label={tr('AI строит карту знаний…', 'AI is building your knowledge map…', 'AI-ը կառուցում է գիտելիքի քարտեզը…')} />
           </motion.div>
         )}
 
@@ -166,8 +176,8 @@ export function MindMapView() {
         {!map && !loading && (
           <EmptyState
             icon={Network}
-            title="Визуализируй свои знания"
-            description="Введи тему — AI построит интерактивную карту концепций с цветовыми ветками и связями"
+            title={tr('Визуализируй свои знания', 'Visualize your knowledge', 'Տեսողական դարձրու գիտելիքներդ')}
+            description={tr('Введи тему — AI построит интерактивную карту концепций с цветовыми ветками и связями', 'Enter a topic and AI will build an interactive map of concepts and connections', 'Մուտքագրեք թեման, և AI-ը կկառուցի հասկացությունների ու կապերի ինտերակտիվ քարտեզ')}
           />
         )}
       </AnimatePresence>
@@ -269,6 +279,7 @@ function BranchCard({
   depth: number
   onTopicClick: (label: string) => void
 }) {
+  const { tr } = useTranslations()
   const [expanded, setExpanded] = useState(depth < 2)
   const hasChildren = node.children && node.children.length > 0
 
@@ -305,7 +316,7 @@ function BranchCard({
           <button
             onClick={(e) => { e.stopPropagation(); onTopicClick(node.label) }}
             className="grid h-6 w-6 place-items-center rounded-md text-primary hover:bg-primary/10"
-            aria-label={`Изучить ${node.label}`}
+            aria-label={`${tr('Изучить', 'Study', 'Ուսումնասիրել')} ${node.label}`}
           >
             <BookOpen className="h-3 w-3" />
           </button>

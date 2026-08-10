@@ -63,8 +63,11 @@ export async function complete(
   opts: { temperature?: number; json?: boolean } = {}
 ): Promise<string> {
   const languageInstruction = await getLanguageInstruction()
+  const outputLanguageRule = `OUTPUT LANGUAGE — HIGHEST PRIORITY:
+${languageInstruction}
+This rule applies to every user-visible sentence and to every natural-language string value inside JSON. Translate labels and example text into that language. Do not follow conflicting language instructions elsewhere in the prompt.`
   const messagesWithSystem: CompletionMessage[] = [
-    { role: 'system', content: `${system}\n\n${languageInstruction}` },
+    { role: 'system', content: `${system}\n\n${outputLanguageRule}` },
     ...messages,
   ]
   try {
@@ -158,7 +161,6 @@ export function safeJsonParse<T>(raw: string, fallback: T): T {
 
 const TUTOR_SYSTEM = `Ты — Lumina, тёплый, мудрый и воодушевляющий AI-наставник.
 Принципы:
-- Отвечай на русском языке (если пользователь не пишет на другом).
 - Объясняй СЛОЖНОЕ ПРОСТО: используй аналогии из жизни, короткие примеры, шаги.
 - Будь лаконичным, но не сухим. Используй Markdown: заголовки ##, списки, **жирный**, \`код\`, цитаты.
 - Если уместно — задавай проверочный вопрос в конце, чтобы ученик думал дальше.
@@ -219,8 +221,7 @@ const LESSON_SYSTEM = `Ты — мастер создания увлекател
 Правила:
 - 8-14 блоков, логичный ритм: объяснение -> пример -> аналогия -> шаги.
 - Текст блоков живой и понятный, без академической сухости.
-- Для программирования включай блоки code.
-- Используй русский язык.`
+- Для программирования включай блоки code.`
 
 export async function generateLesson(topic: string, level?: string): Promise<Lesson> {
   const prompt = `Создай урок по теме: "${topic}"${level ? ` для уровня: ${level}` : ''}.
@@ -273,8 +274,7 @@ const QUIZ_SYSTEM = `Ты — генератор адаптивных квизо
 - 4 варианта ответа, только один правильный.
 - Вопросы проверяют понимание, а не зубрёжку.
 - Объяснение к каждому ответу.
-- Сложность прогрессирует: первые легче, последние сложнее.
-- Русский язык.`
+- Сложность прогрессирует: первые легче, последние сложнее.`
 
 export async function generateQuiz(
   topic: string,
@@ -307,8 +307,7 @@ const FLASH_SYSTEM = `Ты — генератор флешкарт для инт
 - {N} карт по теме.
 - front — вопрос или термин (коротко).
 - back — ответ ёмкий и точный.
-- Покрывай ключевые концепции темы.
-- Русский язык.`
+- Покрывай ключевые концепции темы.`
 
 export async function generateFlashcards(
   topic: string,
@@ -349,7 +348,7 @@ export interface DailyChallenge {
 const DAILY_SYSTEM = `Ты — генератор ежедневных интеллектуальных вызовов.
 Верни ОДИН вызов в СТРОГОМ JSON формате:
 {
-  "subject": "название предмета по-русски",
+  "subject": "название предмета",
   "emoji": "один эмодзи",
   "title": "короткое название вызова",
   "prompt": "что нужно сделать/решить/объяснить — 1-3 предложения",
@@ -357,7 +356,7 @@ const DAILY_SYSTEM = `Ты — генератор ежедневных инте�
   "xpReward": 30
 }
 Вызовы должны быть разнообразными: задача, загадка, вопрос на размышление, творческое задание.
-Русский язык. xpReward от 20 до 50.`
+xpReward от 20 до 50.`
 
 export async function generateDailyChallenge(seed: string): Promise<DailyChallenge> {
   const raw = await complete(DAILY_SYSTEM, [
@@ -403,8 +402,7 @@ const PATH_SYSTEM = `Ты — проектировщик образовател�
 Правила:
 - 6-10 шагов, от простого к сложному.
 - Каждый шаг — конкретная тема с обоснованием.
-- Реалистичная длительность.
-- Русский язык.`
+- Реалистичная длительность.`
 
 export async function generatePath(goal: string, level?: string): Promise<LearningPath> {
   const raw = await complete(PATH_SYSTEM, [

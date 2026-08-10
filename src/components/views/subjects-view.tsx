@@ -3,12 +3,14 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkles, ArrowRight, BookOpen, Trophy, Layers, MessagesSquare, ChevronRight } from 'lucide-react'
-import { SUBJECTS, Subject } from '@/lib/subjects'
+import { SUBJECTS, Subject, localizeSubject, localizeSubjectLevel } from '@/lib/subjects'
 import { useNav } from '@/lib/store'
 import { PageSection, SectionHeader, Pill, StaggerGroup, StaggerItem } from '@/components/ui-blocks'
+import { useTranslations } from '@/lib/i18n-client'
 
 export function SubjectsView() {
   const { activeSubject, setSubject, setView } = useNav()
+  const { locale, tr } = useTranslations()
   const [selected, setSelected] = useState<Subject | null>(
     activeSubject ? SUBJECTS.find((s) => s.id === activeSubject) ?? null : null
   )
@@ -16,14 +18,15 @@ export function SubjectsView() {
   return (
     <PageSection className="py-8">
       <SectionHeader
-        title="Предметы"
-        subtitle="Выбери область знаний и начни погружение"
+        title={tr('Предметы', 'Subjects', 'Առարկաներ')}
+        subtitle={tr('Выбери область знаний и начни погружение', 'Choose a field and start exploring', 'Ընտրիր գիտելիքի ոլորտը և սկսիր ուսումնասիրել')}
         icon={Sparkles}
       />
 
       <StaggerGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {SUBJECTS.map((s) => (
-          <StaggerItem key={s.id}>
+        {SUBJECTS.map((s) => {
+          const subject = localizeSubject(s, locale)
+          return <StaggerItem key={s.id}>
             <button
               onClick={() => {
                 setSelected(s)
@@ -37,24 +40,24 @@ export function SubjectsView() {
                   {s.emoji}
                 </div>
                 <div className="flex items-center gap-2">
-                  <p className="font-semibold">{s.ru}</p>
-                  <Pill className="text-[10px]">{s.level}</Pill>
+                  <p className="font-semibold">{subject.name}</p>
+                  <Pill className="text-[10px]">{localizeSubjectLevel(s.level, locale)}</Pill>
                 </div>
-                <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">{s.description}</p>
+                <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">{subject.description}</p>
                 <div className="mt-3 flex flex-wrap gap-1.5">
-                  {s.topics.map((t) => (
+                  {subject.topics.map((t) => (
                     <span key={t} className="rounded-md bg-muted/60 px-2 py-0.5 text-[11px] text-muted-foreground">
                       {t}
                     </span>
                   ))}
                 </div>
                 <div className="mt-4 flex items-center gap-1 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
-                  Открыть <ChevronRight className="h-3.5 w-3.5" />
+                  {tr('Открыть', 'Open', 'Բացել')} <ChevronRight className="h-3.5 w-3.5" />
                 </div>
               </div>
             </button>
           </StaggerItem>
-        ))}
+        })}
       </StaggerGroup>
 
       {/* Subject detail drawer */}
@@ -86,11 +89,13 @@ function SubjectDetail({
   onClose: () => void
   onAction: (v: 'tutor' | 'lessons' | 'quiz' | 'flashcards') => void
 }) {
+  const { locale, tr } = useTranslations()
+  const localizedSubject = localizeSubject(subject, locale)
   const actions = [
-    { id: 'tutor' as const, label: 'Спросить наставника', desc: 'Чат по теме', icon: MessagesSquare },
-    { id: 'lessons' as const, label: 'Изучить тему', desc: 'Интерактивный урок', icon: BookOpen },
-    { id: 'quiz' as const, label: 'Квиз', desc: 'Проверить знания', icon: Trophy },
-    { id: 'flashcards' as const, label: 'Флешкарты', desc: 'Запомнить термины', icon: Layers },
+    { id: 'tutor' as const, label: tr('Спросить наставника', 'Ask the tutor', 'Հարցնել ուսուցչին'), desc: tr('Чат по теме', 'Topic chat', 'Զրույց թեմայի շուրջ'), icon: MessagesSquare },
+    { id: 'lessons' as const, label: tr('Изучить тему', 'Explore the topic', 'Ուսումնասիրել թեման'), desc: tr('Интерактивный урок', 'Interactive lesson', 'Ինտերակտիվ դաս'), icon: BookOpen },
+    { id: 'quiz' as const, label: tr('Квиз', 'Quiz', 'Հարցաշար'), desc: tr('Проверить знания', 'Test your knowledge', 'Ստուգել գիտելիքները'), icon: Trophy },
+    { id: 'flashcards' as const, label: tr('Флешкарты', 'Flashcards', 'Քարտեր'), desc: tr('Запомнить термины', 'Remember key terms', 'Հիշել եզրույթները'), icon: Layers },
   ]
   return (
     <>
@@ -122,17 +127,17 @@ function SubjectDetail({
         </div>
         <div className="px-6 pb-6 pt-10">
           <div className="flex items-center gap-2">
-            <h3 className="text-xl font-bold">{subject.ru}</h3>
-            <Pill>{subject.level}</Pill>
+            <h3 className="text-xl font-bold">{localizedSubject.name}</h3>
+            <Pill>{localizeSubjectLevel(subject.level, locale)}</Pill>
           </div>
-          <p className="mt-1.5 text-sm text-muted-foreground">{subject.description}</p>
+          <p className="mt-1.5 text-sm text-muted-foreground">{localizedSubject.description}</p>
 
           <div className="mt-5">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Популярные темы
+              {tr('Популярные темы', 'Popular topics', 'Հանրաճանաչ թեմաներ')}
             </p>
             <div className="flex flex-wrap gap-2">
-              {subject.topics.map((t) => (
+              {localizedSubject.topics.map((t) => (
                 <span key={t} className="rounded-lg border border-border/60 bg-muted/30 px-3 py-1.5 text-sm">
                   {t}
                 </span>

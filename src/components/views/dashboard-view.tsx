@@ -12,7 +12,7 @@ import {
   type TooltipProps,
 } from 'recharts'
 import { formatDistanceToNow } from 'date-fns'
-import { ru } from 'date-fns/locale'
+import { enUS, hy, ru } from 'date-fns/locale'
 import {
   LayoutDashboard,
   Flame,
@@ -47,8 +47,8 @@ import {
 import { toast } from 'sonner'
 import { useNav, useUser } from '@/lib/store'
 import { ShareCard } from '@/components/share-card'
-import { getSubject } from '@/lib/subjects'
-import { levelProgress, ACHIEVEMENTS } from '@/lib/gamify-client'
+import { getSubject, localizeSubject } from '@/lib/subjects'
+import { levelProgress, ACHIEVEMENTS, localizeAchievement } from '@/lib/gamify-client'
 import { seededFraction } from '@/lib/utils'
 import {
   PageSection,
@@ -60,6 +60,8 @@ import {
   StaggerGroup,
   StaggerItem,
 } from '@/components/ui-blocks'
+import { useTranslations, type LocalizedText } from '@/lib/i18n-client'
+import type { Locale } from '@/lib/i18n-config'
 
 /* ============================================================ *
  * Types
@@ -126,21 +128,23 @@ interface DailyChallenge {
  * Helpers
  * ============================================================ */
 
-function timeAgo(dateStr: string): string {
+const DATE_FNS_LOCALES = { ru, en: enUS, hy } as const
+
+function timeAgo(dateStr: string, locale: Locale): string {
   try {
     return formatDistanceToNow(new Date(dateStr), {
-      locale: ru,
+      locale: DATE_FNS_LOCALES[locale],
       addSuffix: true,
     })
   } catch {
-    return 'недавно'
+    return locale === 'ru' ? 'недавно' : locale === 'en' ? 'recently' : 'վերջերս'
   }
 }
 
-function subjectLabel(id: string): string {
-  if (!id || id === 'general') return 'Общее'
+function subjectLabel(id: string, locale: Locale): string {
+  if (!id || id === 'general') return locale === 'ru' ? 'Общее' : locale === 'en' ? 'General' : 'Ընդհանուր'
   const s = getSubject(id)
-  return s ? s.ru : 'Общее'
+  return s ? localizeSubject(s, locale).name : locale === 'ru' ? 'Общее' : locale === 'en' ? 'General' : 'Ընդհանուր'
 }
 
 function subjectGradient(id: string): string {
@@ -178,15 +182,20 @@ const KIND_META: Record<
   },
 }
 
-function getKindMeta(kind: string) {
-  return (
-    KIND_META[kind] || {
+function getKindMeta(kind: string, tr: (ru: string, en: string, hy: string) => string) {
+  const meta = KIND_META[kind] || {
       icon: Sparkles,
-      label: kind || 'Активность',
+      label: kind || tr('Активность', 'Activity', 'Ակտիվություն'),
       tone: 'text-primary',
       ring: 'bg-primary/15 ring-primary/30 text-primary',
     }
-  )
+  const labels: Record<string, string> = {
+    quiz: tr('Квиз', 'Quiz', 'Հարցաշար'),
+    lesson: tr('Урок', 'Lesson', 'Դաս'),
+    flashcard: tr('Флешкарты', 'Flashcards', 'Քարտեր'),
+    chat: tr('Чат', 'Chat', 'Զրույց'),
+  }
+  return { ...meta, label: labels[kind] ?? meta.label }
 }
 
 interface DaySeriesItem {
@@ -196,14 +205,14 @@ interface DaySeriesItem {
   isToday: boolean
 }
 
-function build7DaySeries(byDay: Record<string, number>): DaySeriesItem[] {
+function build7DaySeries(byDay: Record<string, number>, dateLocale: string): DaySeriesItem[] {
   const days: DaySeriesItem[] = []
   const today = new Date()
   for (let i = 6; i >= 0; i--) {
     const d = new Date(today)
     d.setDate(today.getDate() - i)
     const key = d.toISOString().slice(0, 10)
-    const weekday = d.toLocaleDateString('ru-RU', { weekday: 'short' })
+    const weekday = d.toLocaleDateString(dateLocale, { weekday: 'short' })
     const isToday = i === 0
     days.push({
       key,
@@ -246,6 +255,7 @@ function XpRing({
   pct: number
   level: number
 }) {
+  const { tr } = useTranslations()
   const r = 54
   const c = 2 * Math.PI * r
   const dash = (Math.max(0, Math.min(100, pct)) / 100) * c
@@ -288,7 +298,7 @@ function XpRing({
           {level}
         </span>
         <span className="mt-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          уровень
+          {tr('уровень', 'level', 'մակարդակ')}
         </span>
       </div>
     </div>
@@ -393,36 +403,36 @@ function StatTile({
 
 const QUICK_ACTIONS: {
   id: Parameters<ReturnType<typeof useNav.getState>['setView']>[0]
-  title: string
-  desc: string
+  title: LocalizedText
+  desc: LocalizedText
   icon: typeof Sparkles
   gradient: string
 }[] = [
   {
     id: 'tutor',
-    title: 'Наставник',
-    desc: 'Спроси AI',
+    title: { ru: 'Наставник', en: 'Tutor', hy: 'Ուսուցիչ' },
+    desc: { ru: 'Спроси AI', en: 'Ask AI', hy: 'Հարցրու AI-ին' },
     icon: MessagesSquare,
     gradient: 'from-violet-500 to-fuchsia-500',
   },
   {
     id: 'lessons',
-    title: 'Урок',
-    desc: 'Новая тема',
+    title: { ru: 'Урок', en: 'Lesson', hy: 'Դաս' },
+    desc: { ru: 'Новая тема', en: 'New topic', hy: 'Նոր թեմա' },
     icon: BookOpen,
     gradient: 'from-emerald-500 to-teal-500',
   },
   {
     id: 'quiz',
-    title: 'Квиз',
-    desc: 'Проверь себя',
+    title: { ru: 'Квиз', en: 'Quiz', hy: 'Հարցաշար' },
+    desc: { ru: 'Проверь себя', en: 'Test yourself', hy: 'Ստուգիր քեզ' },
     icon: Trophy,
     gradient: 'from-amber-500 to-orange-500',
   },
   {
     id: 'flashcards',
-    title: 'Флешкарты',
-    desc: 'Запомни',
+    title: { ru: 'Флешкарты', en: 'Flashcards', hy: 'Քարտեր' },
+    desc: { ru: 'Запомни', en: 'Remember', hy: 'Հիշիր' },
     icon: Layers,
     gradient: 'from-pink-500 to-rose-500',
   },
@@ -433,19 +443,22 @@ const QUICK_ACTIONS: {
  * ============================================================ */
 
 function ChartTooltip({ active, payload, label }: TooltipProps<number, string>) {
+  const { locale, tr } = useTranslations()
   if (!active || !payload || payload.length === 0) return null
   const v = Number(payload[0]?.value ?? 0)
   return (
     <div className="rounded-xl border border-border/70 bg-card/95 px-3 py-2 text-xs shadow-xl backdrop-blur-md">
       <div className="font-semibold text-foreground">{label}</div>
       <div className="mt-0.5 text-muted-foreground">
-        {v === 0 ? 'нет активности' : `${v} ${pluralActivity(v)}`}
+        {v === 0 ? tr('нет активности', 'no activity', 'ակտիվություն չկա') : `${v} ${pluralActivity(v, locale)}`}
       </div>
     </div>
   )
 }
 
-function pluralActivity(n: number) {
+function pluralActivity(n: number, locale: Locale) {
+  if (locale === 'en') return n === 1 ? 'activity' : 'activities'
+  if (locale === 'hy') return 'գործողություն'
   const mod10 = n % 10
   const mod100 = n % 100
   if (mod10 === 1 && mod100 !== 11) return 'действие'
@@ -462,6 +475,7 @@ export function DashboardView() {
   const { setView } = useNav()
   const userStore = useUser()
   const { xp, level, streak, name } = userStore
+  const { locale, dateLocale, tr, localize } = useTranslations()
 
   const [userData, setUserData] = useState<UserData | null>(null)
   const [progressData, setProgressData] = useState<ProgressData | null>(null)
@@ -558,16 +572,16 @@ export function DashboardView() {
         setUserData((prev) =>
           prev ? { ...prev, name: data.user.name } : prev
         )
-        toast.success('Имя обновлено ✨')
+        toast.success(tr('Имя обновлено ✨', 'Name updated ✨', 'Անունը թարմացված է ✨'))
       }
     } catch {
-      toast.error('Не удалось сохранить имя')
+      toast.error(tr('Не удалось сохранить имя', 'Could not save the name', 'Չհաջողվեց պահպանել անունը'))
       setNameDraft(name)
     } finally {
       setSavingName(false)
       setEditingName(false)
     }
-  }, [nameDraft, name])
+  }, [nameDraft, name, tr])
 
   /* ---------- daily challenge submit ---------- */
   const submitDaily = useCallback(async () => {
@@ -589,16 +603,16 @@ export function DashboardView() {
       )
       setDailyDone(true)
       setConfettiBurst((b) => b + 1)
-      toast.success(`+${data.xpGain} XP за вызов!`, {
-        description: 'Так держать — каждый шаг приближает к мечте 🚀',
+      toast.success(tr(`+${data.xpGain} XP за вызов!`, `+${data.xpGain} XP for the challenge!`, `+${data.xpGain} XP մարտահրավերի համար։`), {
+        description: tr('Так держать — каждый шаг приближает к мечте 🚀', 'Keep going—every step brings you closer to your goal 🚀', 'Շարունակի՛ր․ յուրաքանչյուր քայլ քեզ մոտեցնում է նպատակիդ 🚀'),
       })
       setTimeout(() => setConfettiBurst(0), 1800)
     } catch {
-      toast.error('Не удалось засчитать вызов')
+      toast.error(tr('Не удалось засчитать вызов', 'Could not complete the challenge', 'Չհաջողվեց ավարտել մարտահրավերը'))
     } finally {
       setSubmittingDaily(false)
     }
-  }, [challenge, dailyDone, submittingDaily])
+  }, [challenge, dailyDone, submittingDaily, tr])
 
   /* ---------- derived ---------- */
   const lp = useMemo(() => levelProgress(xp), [xp])
@@ -608,8 +622,8 @@ export function DashboardView() {
   const xpToNext = Math.max(0, lp.next - xp)
 
   const daySeries = useMemo(
-    () => (progressData ? build7DaySeries(progressData.byDay) : []),
-    [progressData]
+    () => (progressData ? build7DaySeries(progressData.byDay, dateLocale) : []),
+    [progressData, dateLocale]
   )
   const weekTotal = useMemo(
     () => daySeries.reduce((s, d) => s + d.count, 0),
@@ -622,14 +636,14 @@ export function DashboardView() {
     const entries = Object.entries(progressData.bySubject)
       .map(([id, agg]) => ({
         id,
-        label: subjectLabel(id),
+        label: subjectLabel(id, locale),
         gradient: subjectGradient(id),
         ...agg,
         accuracy: agg.total > 0 ? Math.round((agg.correct / agg.total) * 100) : null,
       }))
       .sort((a, b) => b.count - a.count)
     return entries
-  }, [progressData])
+  }, [progressData, locale])
 
   const subjectMax = useMemo(
     () => subjectRows.reduce((m, s) => Math.max(m, s.count), 0) || 1,
@@ -661,10 +675,10 @@ export function DashboardView() {
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-              Кабинет прогресса
+              {tr('Кабинет прогресса', 'Progress dashboard', 'Առաջընթացի վահանակ')}
             </h1>
             <p className="text-sm text-muted-foreground">
-              Твой личный космический капсульный пульт
+              {tr('Твой личный космический капсульный пульт', 'Your personal mission control', 'Քո անհատական կառավարման կենտրոնը')}
             </p>
           </div>
         </div>
@@ -689,7 +703,7 @@ export function DashboardView() {
             <div className="h-56 animate-pulse rounded-xl bg-muted/40" />
           </GlassCard>
         </div>
-        <LoadingState label="Собираем звёзды в созвездия..." className="mt-4" />
+        <LoadingState label={tr('Собираем звёзды в созвездия...', 'Connecting the stars...', 'Միացնում ենք աստղերը համաստեղությունների մեջ...')} className="mt-4" />
       </PageSection>
     )
   }
@@ -698,21 +712,21 @@ export function DashboardView() {
   const hour = new Date().getHours()
   const greetingWord =
     hour < 6
-      ? 'Доброй ночи'
+      ? tr('Доброй ночи', 'Good night', 'Բարի գիշեր')
       : hour < 12
-        ? 'Доброе утро'
+        ? tr('Доброе утро', 'Good morning', 'Բարի լույս')
         : hour < 18
-          ? 'Привет'
-          : 'Добрый вечер'
+          ? tr('Привет', 'Hello', 'Ողջույն')
+          : tr('Добрый вечер', 'Good evening', 'Բարի երեկո')
 
   const streakHint =
     streak >= 7
-      ? 'Ты в потоке недели! 🔥'
+      ? tr('Ты в потоке недели! 🔥', 'You are on a weekly streak! 🔥', 'Դու շաբաթվա հոսքի մեջ ես։ 🔥')
       : streak >= 3
-        ? 'Держишь ритм — продолжай!'
+        ? tr('Держишь ритм — продолжай!', 'You have momentum—keep going!', 'Պահպանում ես ռիթմը․ շարունակիր։')
         : streak >= 1
-          ? 'Заходи завтра, чтобы поднять серию'
-          : 'Сделай первый шаг сегодня'
+          ? tr('Заходи завтра, чтобы поднять серию', 'Come back tomorrow to grow your streak', 'Վերադարձիր վաղը՝ շարքը շարունակելու համար')
+          : tr('Сделай первый шаг сегодня', 'Take the first step today', 'Առաջին քայլը կատարիր այսօր')
 
   return (
     <PageSection className="py-8">
@@ -724,17 +738,17 @@ export function DashboardView() {
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-              Кабинет прогресса
+              {tr('Кабинет прогресса', 'Progress dashboard', 'Առաջընթացի վահանակ')}
             </h1>
             <p className="text-sm text-muted-foreground sm:text-base">
-              Твой личный космический пульт роста
+              {tr('Твой личный космический пульт роста', 'Your personal growth mission control', 'Քո զարգացման անհատական կառավարման կենտրոնը')}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Pill className="border-primary/30 bg-primary/10 text-primary">
             <Calendar className="h-3 w-3" />
-            {new Date().toLocaleDateString('ru-RU', {
+            {new Date().toLocaleDateString(dateLocale, {
               day: 'numeric',
               month: 'long',
             })}
@@ -744,7 +758,7 @@ export function DashboardView() {
             className="group inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/60 px-3 py-1.5 text-xs font-medium text-foreground transition-all hover:border-primary/40 hover:bg-primary/10 hover:shadow-md hover:shadow-primary/10"
           >
             <Share2 className="h-3.5 w-3.5 text-primary transition-transform group-hover:scale-110" />
-            <span className="hidden sm:inline">Поделиться</span>
+            <span className="hidden sm:inline">{tr('Поделиться', 'Share', 'Կիսվել')}</span>
           </button>
         </div>
       </div>
@@ -789,7 +803,7 @@ export function DashboardView() {
                           onBlur={saveName}
                           maxLength={32}
                           className="w-44 rounded-lg border border-primary/40 bg-background/80 px-3 py-1.5 text-2xl font-bold tracking-tight outline-none focus:ring-2 focus:ring-primary/30 sm:text-3xl"
-                          placeholder="Имя"
+                          placeholder={tr('Имя', 'Name', 'Անուն')}
                         />
                         {savingName && (
                           <Loader2 className="h-4 w-4 animate-spin text-primary" />
@@ -802,7 +816,7 @@ export function DashboardView() {
                           setEditingName(true)
                         }}
                         className="group inline-flex items-center gap-2 rounded-lg px-1 py-0.5 transition-colors hover:bg-muted/40"
-                        title="Изменить имя"
+                        title={tr('Изменить имя', 'Edit name', 'Փոխել անունը')}
                       >
                         <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
                           {name}
@@ -831,7 +845,7 @@ export function DashboardView() {
                           {streak}
                         </span>
                         <span className="text-xs uppercase tracking-wider text-muted-foreground">
-                          {pluralDays(streak)} подряд
+                          {pluralDays(streak, locale)} {tr('подряд', 'in a row', 'անընդմեջ')}
                         </span>
                       </div>
                       <p className="mt-0.5 text-xs text-muted-foreground">
@@ -844,12 +858,12 @@ export function DashboardView() {
                   <div className="mt-5">
                     <div className="mb-1.5 flex items-center justify-between text-xs text-muted-foreground">
                       <span>
-                        {xpInto.toLocaleString('ru-RU')} / {xpSpan.toLocaleString('ru-RU')} XP
+                        {xpInto.toLocaleString(dateLocale)} / {xpSpan.toLocaleString(dateLocale)} XP
                       </span>
                       <span>
-                        до {lp.level + 1} ур. ещё{' '}
+                        {tr('до', 'to', 'մինչև')} {lp.level + 1} {tr('ур. ещё', 'level', 'մակարդակ')}{' '}
                         <span className="font-semibold text-primary">
-                          {xpToNext.toLocaleString('ru-RU')} XP
+                          {xpToNext.toLocaleString(dateLocale)} XP
                         </span>
                       </span>
                     </div>
@@ -869,10 +883,10 @@ export function DashboardView() {
                   <XpRing pct={xpPct} level={level} />
                   <div className="mt-2 text-center">
                     <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                      всего XP
+                      {tr('всего XP', 'total XP', 'ընդհանուր XP')}
                     </div>
                     <div className="text-xl font-bold text-gradient">
-                      {xp.toLocaleString('ru-RU')}
+                      {xp.toLocaleString(dateLocale)}
                     </div>
                   </div>
                 </div>
@@ -895,11 +909,11 @@ export function DashboardView() {
                 <div className="mb-3 flex items-center justify-between">
                   <Pill className="border-fuchsia-500/40 bg-fuchsia-500/10 text-fuchsia-300">
                     <Target className="h-3 w-3" />
-                    Вызов дня
+                    {tr('Вызов дня', 'Daily challenge', 'Օրվա մարտահրավեր')}
                   </Pill>
                   <span className="text-xs text-muted-foreground">
                     {challenge
-                      ? new Date(challenge.date).toLocaleDateString('ru-RU', {
+                      ? new Date(challenge.date).toLocaleDateString(dateLocale, {
                           day: 'numeric',
                           month: 'short',
                         })
@@ -915,7 +929,7 @@ export function DashboardView() {
                       </div>
                       <div className="min-w-0">
                         <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                          {subjectLabel(challenge.subject)}
+                          {subjectLabel(challenge.subject, locale)}
                         </div>
                         <h3 className="font-semibold leading-tight">
                           {challenge.title}
@@ -935,7 +949,7 @@ export function DashboardView() {
                       <ChevronDown
                         className={`h-3 w-3 transition-transform ${hintOpen ? 'rotate-180' : ''}`}
                       />
-                      {hintOpen ? 'Скрыть подсказку' : 'Показать подсказку'}
+                      {hintOpen ? tr('Скрыть подсказку', 'Hide hint', 'Թաքցնել հուշումը') : tr('Показать подсказку', 'Show hint', 'Ցույց տալ հուշումը')}
                     </button>
                     <AnimatePresence>
                       {hintOpen && (
@@ -961,7 +975,7 @@ export function DashboardView() {
                       {dailyDone ? (
                         <div className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/15 px-4 py-2 text-sm font-semibold text-emerald-300">
                           <Check className="h-4 w-4" />
-                          Выполнено
+                          {tr('Выполнено', 'Completed', 'Ավարտված է')}
                         </div>
                       ) : (
                         <GradientButton
@@ -972,11 +986,11 @@ export function DashboardView() {
                           {submittingDaily ? (
                             <>
                               <Loader2 className="h-4 w-4 animate-spin" />
-                              Засчитываем...
+                              {tr('Засчитываем...', 'Completing...', 'Գրանցում ենք...')}
                             </>
                           ) : (
                             <>
-                              Выполнить
+                              {tr('Выполнить', 'Complete', 'Ավարտել')}
                               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                             </>
                           )}
@@ -987,8 +1001,8 @@ export function DashboardView() {
                 ) : (
                   <EmptyState
                     icon={Target}
-                    title="Вызов скоро появится"
-                    description="Не удалось загрузить вызов дня. Загляни позже."
+                    title={tr('Вызов скоро появится', 'A challenge will appear soon', 'Մարտահրավերը շուտով կհայտնվի')}
+                    description={tr('Не удалось загрузить вызов дня. Загляни позже.', 'The daily challenge could not be loaded. Check back later.', 'Չհաջողվեց բեռնել օրվա մարտահրավերը։ Փորձիր ավելի ուշ։')}
                   />
                 )}
               </div>
@@ -1015,8 +1029,8 @@ export function DashboardView() {
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-semibold leading-tight">{a.title}</p>
-                      <p className="text-xs text-muted-foreground">{a.desc}</p>
+                      <p className="font-semibold leading-tight">{localize(a.title)}</p>
+                      <p className="text-xs text-muted-foreground">{localize(a.desc)}</p>
                     </div>
                     <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
                   </div>
@@ -1031,49 +1045,49 @@ export function DashboardView() {
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
         <StatTile
           icon={Zap}
-          label="Всего XP"
-          value={xp.toLocaleString('ru-RU')}
+          label={tr('Всего XP', 'Total XP', 'Ընդհանուր XP')}
+          value={xp.toLocaleString(dateLocale)}
           gradient="from-violet-500 to-fuchsia-500"
           delay={0}
         />
         <StatTile
           icon={Star}
-          label="Уровень"
+          label={tr('Уровень', 'Level', 'Մակարդակ')}
           value={level}
           gradient="from-fuchsia-500 to-pink-500"
           delay={0.04}
         />
         <StatTile
           icon={Flame}
-          label="Серия дней"
+          label={tr('Серия дней', 'Day streak', 'Օրերի շարք')}
           value={streak}
           gradient="from-orange-500 to-amber-500"
           delay={0.08}
         />
         <StatTile
           icon={BookOpen}
-          label="Уроки"
+          label={tr('Уроки', 'Lessons', 'Դասեր')}
           value={userData?.counts?.lessons ?? 0}
           gradient="from-emerald-500 to-teal-500"
           delay={0.12}
         />
         <StatTile
           icon={Trophy}
-          label="Квизы"
+          label={tr('Квизы', 'Quizzes', 'Հարցաշարեր')}
           value={quizCount}
           gradient="from-amber-500 to-orange-500"
           delay={0.16}
         />
         <StatTile
           icon={Layers}
-          label="Флешкарты"
+          label={tr('Флешкарты', 'Flashcards', 'Քարտեր')}
           value={userData?.counts?.flashcards ?? 0}
           gradient="from-pink-500 to-rose-500"
           delay={0.2}
         />
         <StatTile
           icon={MessagesSquare}
-          label="Чаты"
+          label={tr('Чаты', 'Chats', 'Զրույցներ')}
           value={userData?.counts?.chatSessions ?? 0}
           gradient="from-fuchsia-500 to-violet-500"
           delay={0.24}
@@ -1090,29 +1104,29 @@ export function DashboardView() {
                 <TrendingUp className="h-4 w-4" />
               </div>
               <div>
-                <h3 className="font-semibold">Активность за 7 дней</h3>
+                <h3 className="font-semibold">{tr('Активность за 7 дней', 'Activity over seven days', 'Վերջին յոթ օրվա ակտիվություն')}</h3>
                 <p className="text-xs text-muted-foreground">
-                  Каждый шаг — это рост
+                  {tr('Каждый шаг — это рост', 'Every step is growth', 'Յուրաքանչյուր քայլ զարգացում է')}
                 </p>
               </div>
             </div>
             <Pill className="border-primary/30 bg-primary/10 text-primary">
               <Sparkles className="h-3 w-3" />
-              {weekTotal} {pluralActivity(weekTotal)}
+              {weekTotal} {pluralActivity(weekTotal, locale)}
             </Pill>
           </div>
 
           {allWeekZero ? (
             <EmptyState
               icon={Calendar}
-              title="Пока тихо в космосе"
-              description="Сделай первый шаг — сгенерируй урок или пройди квиз, и здесь зажгутся звёзды активности."
+              title={tr('Пока тихо в космосе', 'It is quiet here for now', 'Այստեղ դեռ հանգիստ է')}
+              description={tr('Сделай первый шаг — сгенерируй урок или пройди квиз, и здесь зажгутся звёзды активности.', 'Create a lesson or take a quiz and your activity will light up here.', 'Ստեղծիր դաս կամ անցիր հարցաշար, և քո ակտիվությունն այստեղ կերևա։')}
               action={
                 <GradientButton
                   onClick={() => setView('lessons')}
                   className="px-4 py-2 text-sm"
                 >
-                  Начать урок
+                  {tr('Начать урок', 'Start a lesson', 'Սկսել դաս')}
                   <ArrowRight className="h-4 w-4" />
                 </GradientButton>
               }
@@ -1194,9 +1208,9 @@ export function DashboardView() {
               <Brain className="h-4 w-4" />
             </div>
             <div>
-              <h3 className="font-semibold">По предметам</h3>
+                <h3 className="font-semibold">{tr('По предметам', 'By subject', 'Ըստ առարկաների')}</h3>
               <p className="text-xs text-muted-foreground">
-                Где ты активнее всего
+                {tr('Где ты активнее всего', 'Where you are most active', 'Որտեղ ես ամենաակտիվը')}
               </p>
             </div>
           </div>
@@ -1204,14 +1218,14 @@ export function DashboardView() {
           {subjectRows.length === 0 ? (
             <EmptyState
               icon={Sparkles}
-              title="Карта знаний пуста"
-              description="Выбери предмет и сделай первую запись в прогресс."
+              title={tr('Карта знаний пуста', 'Your knowledge map is empty', 'Գիտելիքի քարտեզը դատարկ է')}
+              description={tr('Выбери предмет и сделай первую запись в прогресс.', 'Choose a subject and record your first progress.', 'Ընտրիր առարկա և գրանցիր առաջին առաջընթացը։')}
               action={
                 <button
                   onClick={() => setView('subjects')}
                   className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
                 >
-                  К предметам <ChevronRight className="h-3.5 w-3.5" />
+                  {tr('К предметам', 'Browse subjects', 'Դիտել առարկաները')} <ChevronRight className="h-3.5 w-3.5" />
                 </button>
               }
             />
@@ -1256,9 +1270,9 @@ export function DashboardView() {
                 <Clock className="h-4 w-4" />
               </div>
               <div>
-                <h3 className="font-semibold">Недавняя активность</h3>
+                <h3 className="font-semibold">{tr('Недавняя активность', 'Recent activity', 'Վերջին ակտիվություն')}</h3>
                 <p className="text-xs text-muted-foreground">
-                  Хроника твоих шагов
+                  {tr('Хроника твоих шагов', 'A record of your progress', 'Քո քայլերի պատմությունը')}
                 </p>
               </div>
             </div>
@@ -1267,14 +1281,14 @@ export function DashboardView() {
           {recentFeed.length === 0 ? (
             <EmptyState
               icon={Sparkles}
-              title="История пуста"
-              description="Твои достижения и активности появятся здесь. Начни с первого урока или квиза."
+              title={tr('История пуста', 'No activity yet', 'Պատմությունը դատարկ է')}
+              description={tr('Твои достижения и активности появятся здесь. Начни с первого урока или квиза.', 'Your achievements and activity will appear here. Start with a lesson or quiz.', 'Քո ձեռքբերումներն ու ակտիվությունը կհայտնվեն այստեղ։ Սկսիր դասից կամ հարցաշարից։')}
               action={
                 <GradientButton
                   onClick={() => setView('tutor')}
                   className="px-4 py-2 text-sm"
                 >
-                  Спросить наставника
+                  {tr('Спросить наставника', 'Ask the tutor', 'Հարցնել ուսուցչին')}
                   <ArrowRight className="h-4 w-4" />
                 </GradientButton>
               }
@@ -1282,7 +1296,7 @@ export function DashboardView() {
           ) : (
             <ul className="space-y-2">
               {recentFeed.map((p, i) => {
-                const meta = getKindMeta(p.kind)
+                const meta = getKindMeta(p.kind, tr)
                 const Icon = meta.icon
                 const hasScore = p.total > 0
                 return (
@@ -1305,7 +1319,7 @@ export function DashboardView() {
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <span>{subjectLabel(p.subject)}</span>
+                        <span>{subjectLabel(p.subject, locale)}</span>
                         <span>·</span>
                         <span>{meta.label}</span>
                       </div>
@@ -1321,7 +1335,7 @@ export function DashboardView() {
                         </span>
                       )}
                       <span className="text-[11px] text-muted-foreground">
-                        {timeAgo(p.completedAt)}
+                        {timeAgo(p.completedAt, locale)}
                       </span>
                     </div>
                   </motion.li>
@@ -1339,9 +1353,9 @@ export function DashboardView() {
                 <Award className="h-4 w-4" />
               </div>
               <div>
-                <h3 className="font-semibold">Достижения</h3>
+                <h3 className="font-semibold">{tr('Достижения', 'Achievements', 'Ձեռքբերումներ')}</h3>
                 <p className="text-xs text-muted-foreground">
-                  Открыто {unlockedAchievements.length} из {ACHIEVEMENTS.length}
+                  {tr('Открыто', 'Unlocked', 'Բացված է')} {unlockedAchievements.length} {tr('из', 'of', 'ընդամենը')} {ACHIEVEMENTS.length}
                 </p>
               </div>
             </div>
@@ -1350,14 +1364,14 @@ export function DashboardView() {
           {unlockedAchievements.length === 0 ? (
             <EmptyState
               icon={Lock}
-              title="Сундук закрыт"
-              description="Первые награды уже ждут — сделай любой урок или квиз."
+              title={tr('Сундук закрыт', 'The reward chest is waiting', 'Պարգևների սնդուկը սպասում է')}
+              description={tr('Первые награды уже ждут — сделай любой урок или квиз.', 'Complete a lesson or quiz to unlock your first rewards.', 'Ավարտիր դաս կամ հարցաշար՝ առաջին պարգևները բացելու համար։')}
               action={
                 <button
                   onClick={() => setView('achievements')}
                   className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
                 >
-                  Все достижения <ChevronRight className="h-3.5 w-3.5" />
+                  {tr('Все достижения', 'All achievements', 'Բոլոր ձեռքբերումները')} <ChevronRight className="h-3.5 w-3.5" />
                 </button>
               }
             />
@@ -1369,6 +1383,7 @@ export function DashboardView() {
                     (x) => x.type === a.type
                   )
                   const Icon = ACHIEVEMENT_ICONS[a.type] || Sparkles
+                  const achievementCopy = def ? localizeAchievement(def, locale) : null
                   return (
                     <motion.div
                       key={a.type}
@@ -1376,12 +1391,12 @@ export function DashboardView() {
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.3, delay: i * 0.05 }}
                       className="group relative flex flex-col items-center gap-1 rounded-xl border border-primary/30 bg-gradient-to-br from-primary/10 to-fuchsia-500/5 p-3 text-center"
-                      title={def?.desc}
+                      title={achievementCopy?.desc}
                     >
                       <div className="absolute -right-5 -top-5 h-12 w-12 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 opacity-30 blur-xl transition-opacity group-hover:opacity-50" />
                       <div className="relative text-2xl">{def?.emoji || '🏆'}</div>
                       <div className="relative text-[10px] font-medium leading-tight text-foreground">
-                        {def?.title || a.type}
+                        {achievementCopy?.title || a.type}
                       </div>
                       <Icon className="relative h-3 w-3 text-primary/70" />
                     </motion.div>
@@ -1400,7 +1415,7 @@ export function DashboardView() {
                       <Lock className="h-4 w-4" />
                     </div>
                     <div className="text-[10px] text-muted-foreground/70">
-                      закрыто
+                      {tr('закрыто', 'locked', 'փակ է')}
                     </div>
                   </div>
                 ))}
@@ -1410,7 +1425,7 @@ export function DashboardView() {
                 onClick={() => setView('achievements')}
                 className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl border border-border/60 bg-card/60 px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-accent"
               >
-                Все достижения
+                {tr('Все достижения', 'All achievements', 'Բոլոր ձեռքբերումները')}
                 <ChevronRight className="h-4 w-4" />
               </button>
             </>
@@ -1432,7 +1447,9 @@ export function DashboardView() {
  * Helpers: pluralization
  * ============================================================ */
 
-function pluralDays(n: number) {
+function pluralDays(n: number, locale: Locale) {
+  if (locale === 'en') return n === 1 ? 'day' : 'days'
+  if (locale === 'hy') return 'օր'
   const mod10 = n % 10
   const mod100 = n % 100
   if (mod10 === 1 && mod100 !== 11) return 'день'

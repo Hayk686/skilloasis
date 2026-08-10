@@ -21,17 +21,18 @@ import {
   Terminal,
 } from 'lucide-react'
 import { useNav, useUI, ViewId } from '@/lib/store'
-import { SUBJECTS } from '@/lib/subjects'
+import { SUBJECTS, localizeSubject, localizeSubjectLevel } from '@/lib/subjects'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import ReactMarkdown from 'react-markdown'
+import { useTranslations } from '@/lib/i18n-client'
 
 interface CmdItem {
   id: string
   label: string
   hint?: string
   icon: React.ComponentType<{ className?: string }>
-  group: 'Навигация' | 'Действия' | 'Предметы'
+  group: string
   action: () => void
 }
 
@@ -46,6 +47,11 @@ export function CommandPalette() {
   const [explainResult, setExplainResult] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
+  const { locale, tr, t } = useTranslations()
+
+  const navigationGroup = t('navigation')
+  const actionsGroup = tr('Действия', 'Actions', 'Գործողություններ')
+  const subjectsGroup = t('navSubjects')
 
   // Open via ⌘K / Ctrl+K
   useEffect(() => {
@@ -87,39 +93,42 @@ export function CommandPalette() {
   )
 
   const items: CmdItem[] = [
-    { id: 'home', label: 'Главная', icon: Home, group: 'Навигация', action: () => goto('home') },
-    { id: 'dash', label: 'Дашборд', hint: 'Прогресс и XP', icon: LayoutDashboard, group: 'Навигация', action: () => goto('dashboard') },
-    { id: 'tutor', label: 'AI-наставник', hint: 'Чат', icon: MessagesSquare, group: 'Навигация', action: () => goto('tutor') },
-    { id: 'lessons', label: 'Уроки', hint: 'Интерактивные', icon: BookOpen, group: 'Навигация', action: () => goto('lessons') },
-    { id: 'quiz', label: 'Квиз-арена', hint: 'Проверь себя', icon: Trophy, group: 'Навигация', action: () => goto('quiz') },
-    { id: 'flash', label: 'Флешкарты', hint: 'Повторение', icon: Layers, group: 'Навигация', action: () => goto('flashcards') },
-    { id: 'paths', label: 'Маршруты', hint: 'Путь к цели', icon: Compass, group: 'Навигация', action: () => goto('paths') },
-    { id: 'subj', label: 'Предметы', hint: 'Все области', icon: Sparkles, group: 'Навигация', action: () => goto('subjects') },
-    { id: 'ach', label: 'Достижения', icon: Award, group: 'Навигация', action: () => goto('achievements') },
-    { id: 'mindmap', label: 'Карты знаний', hint: 'Концепт-карты', icon: Network, group: 'Навигация', action: () => goto('mindmap') },
-    { id: 'playground', label: 'Песочница кода', hint: 'JavaScript + AI', icon: Terminal, group: 'Навигация', action: () => goto('playground') },
+    { id: 'home', label: t('navHome'), icon: Home, group: navigationGroup, action: () => goto('home') },
+    { id: 'dash', label: t('navDashboard'), hint: tr('Прогресс и XP', 'Progress and XP', 'Առաջընթաց և XP'), icon: LayoutDashboard, group: navigationGroup, action: () => goto('dashboard') },
+    { id: 'tutor', label: t('navTutor'), hint: tr('Чат', 'Chat', 'Զրույց'), icon: MessagesSquare, group: navigationGroup, action: () => goto('tutor') },
+    { id: 'lessons', label: t('navLessons'), hint: tr('Интерактивные', 'Interactive', 'Ինտերակտիվ'), icon: BookOpen, group: navigationGroup, action: () => goto('lessons') },
+    { id: 'quiz', label: t('navQuiz'), hint: t('navQuizDesc'), icon: Trophy, group: navigationGroup, action: () => goto('quiz') },
+    { id: 'flash', label: t('navFlashcards'), hint: tr('Повторение', 'Review', 'Կրկնություն'), icon: Layers, group: navigationGroup, action: () => goto('flashcards') },
+    { id: 'paths', label: t('navPaths'), hint: t('navPathsDesc'), icon: Compass, group: navigationGroup, action: () => goto('paths') },
+    { id: 'subj', label: t('navSubjects'), hint: t('navSubjectsDesc'), icon: Sparkles, group: navigationGroup, action: () => goto('subjects') },
+    { id: 'ach', label: t('navAchievements'), icon: Award, group: navigationGroup, action: () => goto('achievements') },
+    { id: 'mindmap', label: t('navMindmap'), hint: tr('Концепт-карты', 'Concept maps', 'Հասկացությունների քարտեզներ'), icon: Network, group: navigationGroup, action: () => goto('mindmap') },
+    { id: 'playground', label: t('navPlayground'), hint: 'JavaScript + AI', icon: Terminal, group: navigationGroup, action: () => goto('playground') },
     {
       id: 'explain',
-      label: 'Объяснить концепцию…',
-      hint: 'AI объяснит просто',
+      label: tr('Объяснить концепцию…', 'Explain a concept…', 'Բացատրել հասկացությունը…'),
+      hint: tr('AI объяснит просто', 'AI will make it simple', 'AI-ը պարզ կբացատրի'),
       icon: Lightbulb,
-      group: 'Действия',
+      group: actionsGroup,
       action: () => {
         setMode('explain')
         setQuery('')
       },
     },
-    ...SUBJECTS.map((s) => ({
-      id: `subj-${s.id}`,
-      label: s.ru,
-      hint: s.level,
-      icon: Sparkles,
-      group: 'Предметы' as const,
-      action: () => {
-        openSubject(s.id)
-        setCommandOpen(false)
-      },
-    })),
+    ...SUBJECTS.map((s) => {
+      const subject = localizeSubject(s, locale)
+      return {
+        id: `subj-${s.id}`,
+        label: subject.name,
+        hint: localizeSubjectLevel(s.level, locale),
+        icon: Sparkles,
+        group: subjectsGroup,
+        action: () => {
+          openSubject(s.id)
+          setCommandOpen(false)
+        },
+      }
+    }),
   ]
 
   const filtered = query.trim()
@@ -167,7 +176,7 @@ export function CommandPalette() {
   async function runExplain() {
     const concept = query.trim() || explainText.trim()
     if (!concept) {
-      toast.error('Введите концепцию для объяснения')
+      toast.error(tr('Введите концепцию для объяснения', 'Enter a concept to explain', 'Մուտքագրեք բացատրության ենթակա հասկացությունը'))
       return
     }
     setExplainLoading(true)
@@ -182,7 +191,7 @@ export function CommandPalette() {
       if (!res.ok) throw new Error(data.error)
       setExplainResult(data.text)
     } catch {
-      toast.error('Не удалось объяснить. Попробуйте ещё раз.')
+      toast.error(tr('Не удалось объяснить. Попробуйте ещё раз.', 'Could not generate an explanation. Please try again.', 'Չհաջողվեց ստեղծել բացատրությունը։ Փորձեք կրկին։'))
     } finally {
       setExplainLoading(false)
     }
@@ -221,7 +230,7 @@ export function CommandPalette() {
                       setActiveIndex(0)
                     }}
                     onKeyDown={onKeyDown}
-                    placeholder="Найти раздел, предмет или объяснить концепцию…"
+                    placeholder={tr('Найти раздел, предмет или объяснить концепцию…', 'Find a section, subject, or explain a concept…', 'Գտնել բաժին, առարկա կամ բացատրել հասկացություն…')}
                     className="h-14 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                   />
                   <kbd className="hidden rounded border border-border/60 bg-muted/40 px-1.5 py-0.5 text-[10px] text-muted-foreground sm:block">
@@ -232,7 +241,7 @@ export function CommandPalette() {
                 <div ref={listRef} className="max-h-[55vh] overflow-y-auto p-2">
                   {flatFiltered.length === 0 && (
                     <div className="px-3 py-8 text-center text-sm text-muted-foreground">
-                      Ничего не найдено. Попробуйте «объяснить» для AI-разбора.
+                      {tr('Ничего не найдено. Попробуйте «объяснить» для AI-разбора.', 'Nothing found. Try “explain” for an AI explanation.', 'Ոչինչ չի գտնվել։ Փորձեք «բացատրել» AI վերլուծության համար։')}
                     </div>
                   )}
                   {Object.entries(groups).map(([group, arr]) => (
@@ -285,11 +294,11 @@ export function CommandPalette() {
                   <div className="flex items-center gap-3">
                     <span className="flex items-center gap-1">
                       <kbd className="rounded border border-border/60 bg-muted/40 px-1 py-0.5">↑↓</kbd>
-                      навигация
+                      {tr('навигация', 'navigate', 'նավարկում')}
                     </span>
                     <span className="flex items-center gap-1">
                       <kbd className="rounded border border-border/60 bg-muted/40 px-1 py-0.5">↵</kbd>
-                      выбор
+                      {tr('выбор', 'select', 'ընտրել')}
                     </span>
                   </div>
                   <span className="flex items-center gap-1">
@@ -311,7 +320,7 @@ export function CommandPalette() {
                       if (e.key === 'Enter') runExplain()
                       if (e.key === 'Escape') setMode('menu')
                     }}
-                    placeholder="Что объяснить? Например: «квантовая суперпозиция»"
+                    placeholder={tr('Что объяснить? Например: «квантовая суперпозиция»', 'What should I explain? For example: “quantum superposition”', 'Ի՞նչ բացատրել։ Օրինակ՝ «քվանտային սուպերպոզիցիա»')}
                     className="h-14 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                   />
                   <button
@@ -324,7 +333,7 @@ export function CommandPalette() {
                     ) : (
                       <Sparkles className="h-3.5 w-3.5" />
                     )}
-                    Объяснить
+                    {tr('Объяснить', 'Explain', 'Բացատրել')}
                   </button>
                 </div>
 
@@ -346,9 +355,9 @@ export function CommandPalette() {
                         <Lightbulb className="h-7 w-7" />
                       </div>
                       <div>
-                        <p className="font-medium">Объясни что угодно</p>
+                        <p className="font-medium">{tr('Объясни что угодно', 'Explain anything', 'Բացատրել ցանկացած բան')}</p>
                         <p className="mt-1 text-sm text-muted-foreground">
-                          Введите концепцию — AI объяснит её простыми словами с аналогией и примером.
+                          {tr('Введите концепцию — AI объяснит её простыми словами с аналогией и примером.', 'Enter a concept and AI will explain it simply with an analogy and example.', 'Մուտքագրեք հասկացությունը, և AI-ը այն պարզ կբացատրի համեմատությամբ ու օրինակով։')}
                         </p>
                       </div>
                     </div>
@@ -372,9 +381,9 @@ export function CommandPalette() {
                     }}
                     className="flex items-center gap-1 hover:text-foreground"
                   >
-                    <ArrowRight className="h-3 w-3 rotate-180" /> Назад
+                    <ArrowRight className="h-3 w-3 rotate-180" /> {tr('Назад', 'Back', 'Հետ')}
                   </button>
-                  <span>ESC — назад</span>
+                  <span>ESC — {tr('назад', 'back', 'հետ')}</span>
                 </div>
               </div>
             )}
@@ -388,16 +397,17 @@ export function CommandPalette() {
 /** Floating trigger button (bottom-right) for users who don't know ⌘K. */
 export function CommandTrigger() {
   const { setCommandOpen } = useUI()
+  const { tr } = useTranslations()
   return (
     <button
       onClick={() => setCommandOpen(true)}
-      aria-label="Командная палитра"
+      aria-label={tr('Командная палитра', 'Command palette', 'Հրամանների վահանակ')}
       className="group fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-full border border-border/60 bg-card/80 px-4 py-2.5 text-sm font-medium shadow-xl backdrop-blur-xl transition-all hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/20"
     >
       <div className="grid h-6 w-6 place-items-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white">
         <Sparkles className="h-3.5 w-3.5" />
       </div>
-      <span className="hidden sm:inline">Быстрый поиск</span>
+      <span className="hidden sm:inline">{tr('Быстрый поиск', 'Quick search', 'Արագ որոնում')}</span>
       <kbd className="hidden rounded border border-border/60 bg-muted/40 px-1.5 py-0.5 text-[10px] text-muted-foreground sm:block">
         ⌘K
       </kbd>

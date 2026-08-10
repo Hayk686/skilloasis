@@ -2,6 +2,8 @@
  * Subjects catalogue — single source of truth for the explorer, paths and home.
  * Each subject has: id, ru/en labels, gradient, icon (lucide name), topics, level.
  */
+import type { Locale } from '@/lib/i18n-config'
+
 export type SubjectLevel = "Новичок" | "Средний" | "Продвинутый" | "Любой"
 
 export interface Subject {
@@ -115,6 +117,68 @@ export const SUBJECTS: Subject[] = [
     topics: ["Этика", "Логика", "Метафизика", "Стоицизм", "Экзистенциализм"],
   },
 ]
+
+interface SubjectTranslation {
+  name: string
+  description: string
+  topics: string[]
+}
+
+const SUBJECT_TRANSLATIONS: Record<string, Record<'en' | 'hy', SubjectTranslation>> = {
+  programming: {
+    en: { name: 'Programming', description: 'From your first lines of code to system architecture. Python, JavaScript, algorithms, and patterns.', topics: ['Python from scratch', 'JavaScript basics', 'Algorithms and data structures', 'React', 'SQL', 'Git'] },
+    hy: { name: 'Ծրագրավորում', description: 'Կոդի առաջին տողերից մինչև համակարգերի ճարտարապետություն։ Python, JavaScript, ալգորիթմներ և ձևանմուշներ։', topics: ['Python զրոյից', 'JavaScript-ի հիմունքներ', 'Ալգորիթմներ և տվյալների կառուցվածքներ', 'React', 'SQL', 'Git'] },
+  },
+  math: {
+    en: { name: 'Mathematics', description: 'Algebra, geometry, calculus, and probability explained visually and step by step.', topics: ['Linear algebra', 'Calculus', 'Probability theory', 'Geometry', 'Combinatorics'] },
+    hy: { name: 'Մաթեմատիկա', description: 'Հանրահաշիվ, երկրաչափություն, անալիզ և հավանականությունների տեսություն՝ տեսողական ու քայլ առ քայլ։', topics: ['Գծային հանրահաշիվ', 'Մաթեմատիկական անալիզ', 'Հավանականությունների տեսություն', 'Երկրաչափություն', 'Կոմբինատորիկա'] },
+  },
+  science: {
+    en: { name: 'Natural sciences', description: 'Physics, chemistry, biology, and astronomy—discover how the world works.', topics: ['Physics', 'Chemistry', 'Biology', 'Astronomy', 'Quantum mechanics'] },
+    hy: { name: 'Բնական գիտություններ', description: 'Ֆիզիկա, քիմիա, կենսաբանություն և աստղագիտություն՝ բացահայտիր, թե ինչպես է կառուցված աշխարհը։', topics: ['Ֆիզիկա', 'Քիմիա', 'Կենսաբանություն', 'Աստղագիտություն', 'Քվանտային մեխանիկա'] },
+  },
+  languages: {
+    en: { name: 'Languages', description: 'English, Spanish, Japanese, and more. Grammar, vocabulary, and practice.', topics: ['English', 'Spanish', 'Japanese', 'German', 'French'] },
+    hy: { name: 'Լեզուներ', description: 'Անգլերեն, իսպաներեն, ճապոներեն և այլ լեզուներ։ Քերականություն, բառապաշար և գործնական վարժություններ։', topics: ['Անգլերեն', 'Իսպաներեն', 'Ճապոներեն', 'Գերմաներեն', 'Ֆրանսերեն'] },
+  },
+  history: {
+    en: { name: 'History', description: 'Ancient civilizations, wars, revolutions, and culture. Lessons from the past.', topics: ['Ancient world', 'Middle Ages', 'Modern era', '20th century', 'History of Russia'] },
+    hy: { name: 'Պատմություն', description: 'Հին քաղաքակրթություններ, պատերազմներ, հեղափոխություններ և մշակույթ։ Դասեր անցյալից։', topics: ['Հին աշխարհ', 'Միջնադար', 'Նոր ժամանակներ', '20-րդ դար', 'Ռուսաստանի պատմություն'] },
+  },
+  art: {
+    en: { name: 'Art', description: 'Painting, music, literature, and film. Style, composition, and history.', topics: ['Painting', 'Music', 'Literature', 'Film', 'Design'] },
+    hy: { name: 'Արվեստ', description: 'Գեղանկարչություն, երաժշտություն, գրականություն և կինո։ Ոճ, կոմպոզիցիա և պատմություն։', topics: ['Գեղանկարչություն', 'Երաժշտություն', 'Գրականություն', 'Կինո', 'Դիզայն'] },
+  },
+  business: {
+    en: { name: 'Business and finance', description: 'Management, marketing, investing, economics, and startups.', topics: ['Management', 'Marketing', 'Investing', 'Economics', 'Startups'] },
+    hy: { name: 'Բիզնես և ֆինանսներ', description: 'Կառավարում, մարքեթինգ, ներդրումներ, տնտեսագիտություն և ստարտափներ։', topics: ['Կառավարում', 'Մարքեթինգ', 'Ներդրումներ', 'Տնտեսագիտություն', 'Ստարտափներ'] },
+  },
+  philosophy: {
+    en: { name: 'Philosophy', description: 'Ethics, logic, and metaphysics. Great thinkers and big questions.', topics: ['Ethics', 'Logic', 'Metaphysics', 'Stoicism', 'Existentialism'] },
+    hy: { name: 'Փիլիսոփայություն', description: 'Էթիկա, տրամաբանություն և մետաֆիզիկա։ Մեծ մտածողներ և մեծ հարցեր։', topics: ['Էթիկա', 'Տրամաբանություն', 'Մետաֆիզիկա', 'Ստոիցիզմ', 'Էքզիստենցիալիզմ'] },
+  },
+}
+
+export function localizeSubject(subject: Subject, locale: Locale): SubjectTranslation {
+  if (locale === 'ru') {
+    return { name: subject.ru, description: subject.description, topics: subject.topics }
+  }
+  return SUBJECT_TRANSLATIONS[subject.id]?.[locale] ?? {
+    name: locale === 'en' ? subject.en : subject.ru,
+    description: subject.description,
+    topics: subject.topics,
+  }
+}
+
+export function localizeSubjectLevel(level: SubjectLevel, locale: Locale): string {
+  const labels: Record<SubjectLevel, Record<Locale, string>> = {
+    'Новичок': { ru: 'Новичок', en: 'Beginner', hy: 'Սկսնակ' },
+    'Средний': { ru: 'Средний', en: 'Intermediate', hy: 'Միջին' },
+    'Продвинутый': { ru: 'Продвинутый', en: 'Advanced', hy: 'Առաջադեմ' },
+    'Любой': { ru: 'Любой', en: 'Any level', hy: 'Ցանկացած մակարդակ' },
+  }
+  return labels[level][locale]
+}
 
 export const SUBJECT_MAP: Record<string, Subject> = Object.fromEntries(
   SUBJECTS.map((s) => [s.id, s])

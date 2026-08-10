@@ -14,8 +14,14 @@ export const LANGUAGE_NAMES: Record<Locale, string> = {
   hy: 'Հայերեն',
 }
 
+export const SITE_TITLES: Record<Locale, string> = {
+  ru: 'Lumina — Учись всему. Бесплатно. Навсегда.',
+  en: 'Lumina — Learn anything. Free. Forever.',
+  hy: 'Lumina — Սովորիր ամեն ինչ։ Անվճար։ Ընդմիշտ։',
+}
+
 export const LANGUAGE_INSTRUCTIONS: Record<Locale, string> = {
-  ru: 'Всегда отвечай на русском языке, если пользователь явно не попросил другой язык.',
-  en: 'Always answer in English unless the user explicitly requests another language.',
-  hy: 'Միշտ պատասխանիր գրական հայերենով, եթե օգտատերը հստակ չի խնդրել այլ լեզու։',
+  ru: 'Write all natural-language output in Russian.',
+  en: 'Write all natural-language output in English.',
+  hy: 'Write all natural-language output in fluent literary Armenian.',
 }

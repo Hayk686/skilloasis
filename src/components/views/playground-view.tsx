@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import ReactMarkdown from 'react-markdown'
+import { useTranslations, type LocalizedText } from '@/lib/i18n-client'
 
 interface LogEntry {
   type: 'log' | 'warn' | 'error' | 'info'
@@ -29,13 +30,15 @@ interface LogEntry {
 
 interface Challenge {
   id: string
-  title: string
-  desc: string
+  title: LocalizedText
+  desc: LocalizedText
   code: string
-  hint: string
+  hint: LocalizedText
 }
 
-const STARTER = `// Добро пожаловать в песочницу Lumina 🚀
+const localized = (ru: string, en: string, hy: string): LocalizedText => ({ ru, en, hy })
+
+const STARTERS = localized(`// Добро пожаловать в песочницу Lumina 🚀
 // Пиши JavaScript и нажми «Запустить» (Ctrl+Enter)
 
 function greet(name) {
@@ -49,13 +52,41 @@ const nums = [1, 2, 3, 4, 5]
 const sum = nums.reduce((a, b) => a + b, 0)
 console.log('Сумма:', sum)
 console.log('Среднее:', sum / nums.length)
-`
+`, `// Welcome to the Lumina playground 🚀
+// Write JavaScript and press Run (Ctrl+Enter)
+
+function greet(name) {
+  return \`Hello, \${name}! Welcome to Lumina.\`
+}
+
+console.log(greet('friend'))
+
+// Try working with arrays:
+const nums = [1, 2, 3, 4, 5]
+const sum = nums.reduce((a, b) => a + b, 0)
+console.log('Sum:', sum)
+console.log('Average:', sum / nums.length)
+`, `// Բարի գալուստ Lumina-ի կոդի փորձադաշտ 🚀
+// Գրիր JavaScript և սեղմիր «Գործարկել» (Ctrl+Enter)
+
+function greet(name) {
+  return \`Ողջույն, \${name}։ Բարի գալուստ Lumina։\`
+}
+
+console.log(greet('ընկեր'))
+
+// Փորձիր աշխատել զանգվածների հետ․
+const nums = [1, 2, 3, 4, 5]
+const sum = nums.reduce((a, b) => a + b, 0)
+console.log('Գումար՝', sum)
+console.log('Միջին՝', sum / nums.length)
+`)
 
 const CHALLENGES: Challenge[] = [
   {
     id: 'fizzbuzz',
-    title: 'FizzBuzz',
-    desc: 'Выведи числа 1-20, заменяя кратные 3 на Fizz, 5 на Buzz, 15 на FizzBuzz',
+    title: localized('FizzBuzz', 'FizzBuzz', 'FizzBuzz'),
+    desc: localized('Выведи числа 1-20, заменяя кратные 3 на Fizz, 5 на Buzz, 15 на FizzBuzz', 'Print 1–20, replacing multiples of 3 with Fizz, 5 with Buzz, and 15 with FizzBuzz', 'Տպիր 1–20 թվերը՝ 3-ի բազմապատիկները փոխարինելով Fizz-ով, 5-ինը՝ Buzz-ով, իսկ 15-ինը՝ FizzBuzz-ով'),
     code: `// FizzBuzz: 1..20
 for (let i = 1; i <= 20; i++) {
   let out = ''
@@ -63,12 +94,12 @@ for (let i = 1; i <= 20; i++) {
   if (i % 5 === 0) out += 'Buzz'
   console.log(out || i)
 }`,
-    hint: 'Используй оператор % (остаток от деления) и конкатенацию строк.',
+    hint: localized('Используй оператор % (остаток от деления) и конкатенацию строк.', 'Use the % remainder operator and string concatenation.', 'Օգտագործիր % մնացորդի օպերատորը և տողերի միացումը։'),
   },
   {
     id: 'fib',
-    title: 'Числа Фибоначчи',
-    desc: 'Выведи первые 10 чисел последовательности Фибоначчи',
+    title: localized('Числа Фибоначчи', 'Fibonacci numbers', 'Ֆիբոնաչիի թվեր'),
+    desc: localized('Выведи первые 10 чисел последовательности Фибоначчи', 'Print the first ten Fibonacci numbers', 'Տպիր Ֆիբոնաչիի հաջորդականության առաջին տասը թվերը'),
     code: `// Первые 10 чисел Фибоначчи
 let a = 0, b = 1
 const fib = [a, b]
@@ -79,12 +110,12 @@ for (let i = 2; i < 10; i++) {
   b = next
 }
 console.log('Фибоначчи:', fib.join(', '))`,
-    hint: 'Каждое следующее число = сумма двух предыдущих.',
+    hint: localized('Каждое следующее число = сумма двух предыдущих.', 'Each number is the sum of the previous two.', 'Յուրաքանչյուր հաջորդ թիվը նախորդ երկուսի գումարն է։'),
   },
   {
     id: 'palindrome',
-    title: 'Палиндром',
-    desc: 'Проверь, является ли строка палиндромом',
+    title: localized('Палиндром', 'Palindrome', 'Պալինդրոմ'),
+    desc: localized('Проверь, является ли строка палиндромом', 'Check whether a string is a palindrome', 'Ստուգիր՝ արդյոք տողը պալինդրոմ է'),
     code: `// Проверка палиндрома
 function isPalindrome(str) {
   const clean = str.toLowerCase().replace(/[^a-zа-я0-9]/gi, '')
@@ -93,12 +124,12 @@ function isPalindrome(str) {
 
 console.log(isPalindrome('А роза упала на лапу Азора')) // ?
 console.log(isPalindrome('привет')) // ?`,
-    hint: 'Очисти строку от пробелов и регистра, затем сравни с перевёрнутой.',
+    hint: localized('Очисти строку от пробелов и регистра, затем сравни с перевёрнутой.', 'Remove spaces and letter casing, then compare with the reversed string.', 'Հեռացրու բացատներն ու տառաչափի տարբերությունը, ապա համեմատիր շրջված տողի հետ։'),
   },
   {
     id: 'sort',
-    title: 'Сортировка объектов',
-    desc: 'Отсортируй пользователей по возрасту (по убыванию)',
+    title: localized('Сортировка объектов', 'Sorting objects', 'Օբյեկտների տեսակավորում'),
+    desc: localized('Отсортируй пользователей по возрасту (по убыванию)', 'Sort users by age in descending order', 'Տեսակավորիր օգտատերերին ըստ տարիքի՝ նվազման կարգով'),
     code: `// Сортировка массива объектов
 const users = [
   { name: 'Аня', age: 28 },
@@ -111,7 +142,7 @@ const sorted = [...users].sort((a, b) => b.age - a.age)
 console.log('По возрасту (убыв.):')
 sorted.forEach((u, i) => console.log(\`\${i + 1}. \${u.name}, \${u.age} лет\`))
 // ↑ попробуй попросить AI-подсказку для разбора!`,
-    hint: 'Передай компаратор в sort(): (a, b) => b.age - a.age для убывания. Сделай копию через [...users], чтобы не менять оригинал.',
+    hint: localized('Передай компаратор в sort(): (a, b) => b.age - a.age для убывания. Сделай копию через [...users], чтобы не менять оригинал.', 'Pass (a, b) => b.age - a.age to sort(). Copy with [...users] so the original is unchanged.', 'sort()-ին փոխանցիր (a, b) => b.age - a.age համեմատիչը։ [...users]-ով պատճեն ստեղծիր, որպեսզի բնօրինակը չփոխվի։'),
   },
 ]
 
@@ -153,7 +184,8 @@ function buildSandboxDoc(): string {
 }
 
 export function PlaygroundView() {
-  const [code, setCode] = useState(STARTER)
+  const { tr, localize } = useTranslations()
+  const [code, setCode] = useState(() => localize(STARTERS))
   const [logs, setLogs] = useState<LogEntry[]>([])
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<string | null>(null)
@@ -222,11 +254,11 @@ export function PlaygroundView() {
   }, [])
 
   const resetCode = useCallback(() => {
-    setCode(STARTER)
+    setCode(localize(STARTERS))
     setActiveChallenge(null)
     clearOutput()
-    toast('Код сброшен', { icon: <RotateCcw className="h-4 w-4" /> })
-  }, [clearOutput])
+    toast(tr('Код сброшен', 'Code reset', 'Կոդը վերականգնված է'), { icon: <RotateCcw className="h-4 w-4" /> })
+  }, [clearOutput, localize, tr])
 
   const askHint = useCallback(async () => {
     setHintLoading(true)
@@ -240,26 +272,26 @@ export function PlaygroundView() {
         body: JSON.stringify({
           code,
           error,
-          task: challenge ? `${challenge.title}: ${challenge.desc}` : null,
+          task: challenge ? `${localize(challenge.title)}: ${localize(challenge.desc)}` : null,
         }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       setHint(data.hint)
-      toast.success('AI-наставник ответил', { icon: <Sparkles className="h-4 w-4" /> })
+      toast.success(tr('AI-наставник ответил', 'AI tutor responded', 'AI ուսուցիչը պատասխանեց'), { icon: <Sparkles className="h-4 w-4" /> })
     } catch {
-      toast.error('Не удалось получить подсказку')
+      toast.error(tr('Не удалось получить подсказку', 'Could not get a hint', 'Չհաջողվեց հուշում ստանալ'))
     } finally {
       setHintLoading(false)
     }
-  }, [code, error, activeChallenge])
+  }, [code, error, activeChallenge, localize, tr])
 
   const loadChallenge = useCallback((c: Challenge) => {
     setCode(c.code)
     setActiveChallenge(c.id)
     clearOutput()
-    toast(`Загружено: ${c.title}`, { icon: <Code2 className="h-4 w-4" /> })
-  }, [clearOutput])
+    toast(`${tr('Загружено:', 'Loaded:', 'Բեռնված է՝')} ${localize(c.title)}`, { icon: <Code2 className="h-4 w-4" /> })
+  }, [clearOutput, localize, tr])
 
   // Keyboard: Ctrl+Enter to run
   useEffect(() => {
@@ -301,8 +333,8 @@ export function PlaygroundView() {
   return (
     <PageSection>
       <SectionHeader
-        title="Песочница кода"
-        subtitle="Пиши JavaScript, запускай в безопасной песочнице и получай подсказки от AI"
+        title={tr('Песочница кода', 'Code playground', 'Կոդի փորձադաշտ')}
+        subtitle={tr('Пиши JavaScript, запускай в безопасной песочнице и получай подсказки от AI', 'Write JavaScript, run it safely, and get hints from AI', 'Գրիր JavaScript, անվտանգ գործարկիր այն և ստացիր AI հուշումներ')}
         icon={Terminal}
         action={
           <div className="hidden items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3 py-1.5 text-xs text-muted-foreground sm:flex">
@@ -322,29 +354,29 @@ export function PlaygroundView() {
           className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/20 hover:from-emerald-600 hover:to-teal-600"
         >
           {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-          Запустить
+          {tr('Запустить', 'Run', 'Գործարկել')}
         </Button>
         <Button variant="outline" onClick={askHint} disabled={hintLoading}>
           {hintLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lightbulb className="h-4 w-4 text-amber-400" />}
-          AI-подсказка
+          {tr('AI-подсказка', 'AI hint', 'AI հուշում')}
         </Button>
         <Button variant="ghost" onClick={clearOutput} disabled={!hasOutput}>
           <Trash2 className="h-4 w-4" />
-          Очистить
+          {tr('Очистить', 'Clear', 'Մաքրել')}
         </Button>
         <Button variant="ghost" onClick={resetCode}>
           <RotateCcw className="h-4 w-4" />
-          Сброс
+          {tr('Сброс', 'Reset', 'Վերականգնել')}
         </Button>
         <Button
           variant="ghost"
           onClick={() => {
             navigator.clipboard.writeText(code)
-            toast.success('Код скопирован', { icon: <Copy className="h-4 w-4" /> })
+            toast.success(tr('Код скопирован', 'Code copied', 'Կոդը պատճենված է'), { icon: <Copy className="h-4 w-4" /> })
           }}
         >
           <Copy className="h-4 w-4" />
-          Копировать
+          {tr('Копировать', 'Copy', 'Պատճենել')}
         </Button>
       </div>
 
@@ -361,7 +393,7 @@ export function PlaygroundView() {
               </div>
               <span className="ml-2 font-mono text-xs text-muted-foreground">script.js</span>
             </div>
-            <span className="font-mono text-[11px] text-muted-foreground">{lineCount} строк</span>
+            <span className="font-mono text-[11px] text-muted-foreground">{lineCount} {tr('строк', 'lines', 'տող')}</span>
           </div>
           <div className="relative flex" style={{ height: '460px' }}>
             {/* Line numbers gutter */}
@@ -388,7 +420,7 @@ export function PlaygroundView() {
               autoCapitalize="off"
               autoCorrect="off"
               className="flex-1 resize-none bg-transparent p-3 font-mono text-xs leading-[1.5] text-foreground outline-none"
-              placeholder="// Пиши код здесь..."
+              placeholder={tr('// Пиши код здесь...', '// Write code here...', '// Գրիր կոդն այստեղ...')}
             />
           </div>
         </GlassCard>
@@ -407,7 +439,7 @@ export function PlaygroundView() {
               )}
             >
               <Terminal className="h-3.5 w-3.5" />
-              Консоль
+              {tr('Консоль', 'Console', 'Վահանակ')}
               {logs.length > 0 && (
                 <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[10px] text-emerald-400">
                   {logs.length}
@@ -424,7 +456,7 @@ export function PlaygroundView() {
               )}
             >
               <Lightbulb className="h-3.5 w-3.5 text-amber-400" />
-              AI-наставник
+              {tr('AI-наставник', 'AI tutor', 'AI ուսուցիչ')}
               {hint && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
             </button>
           </div>
@@ -435,13 +467,13 @@ export function PlaygroundView() {
               {running && (
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Выполняется...
+                  {tr('Выполняется...', 'Running...', 'Գործարկվում է...')}
                 </div>
               )}
               {!hasOutput && !running && (
                 <div className="flex h-full flex-col items-center justify-center gap-2 text-center text-muted-foreground">
                   <Terminal className="h-8 w-8 opacity-30" />
-                  <p className="text-xs">Нажми «Запустить» — вывод появится здесь</p>
+                  <p className="text-xs">{tr('Нажми «Запустить» — вывод появится здесь', 'Press “Run” and the output will appear here', 'Սեղմիր «Գործարկել», և արդյունքը կհայտնվի այստեղ')}</p>
                 </div>
               )}
               <div className="space-y-1">
@@ -469,7 +501,7 @@ export function PlaygroundView() {
                 <div className="mt-2 flex items-start gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-rose-300">
                   <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
                   <div>
-                    <p className="font-semibold">Ошибка выполнения</p>
+                    <p className="font-semibold">{tr('Ошибка выполнения', 'Runtime error', 'Կատարման սխալ')}</p>
                     <p className="mt-0.5 break-all text-rose-200/80">{error}</p>
                   </div>
                 </div>
@@ -477,7 +509,7 @@ export function PlaygroundView() {
               {result !== null && !error && (
                 <div className="mt-2 flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-emerald-300">
                   <CheckCircle2 className="h-4 w-4 shrink-0" />
-                  <span className="break-all">Результат: {result}</span>
+                  <span className="break-all">{tr('Результат:', 'Result:', 'Արդյունք։')} {result}</span>
                 </div>
               )}
             </div>
@@ -503,10 +535,9 @@ export function PlaygroundView() {
                     <Lightbulb className="h-7 w-7" />
                   </div>
                   <div>
-                    <p className="font-medium">AI-наставник по коду</p>
+                    <p className="font-medium">{tr('AI-наставник по коду', 'AI coding tutor', 'AI ծրագրավորման ուսուցիչ')}</p>
                     <p className="mt-1 max-w-xs text-sm text-muted-foreground">
-                      Нажми «AI-подсказка» — наставник разберёт твой код, объяснит ошибки и
-                      подскажет, как улучшить.
+                      {tr('Нажми «AI-подсказка» — наставник разберёт твой код, объяснит ошибки и подскажет, как улучшить.', 'Press “AI hint” and the tutor will review your code, explain errors, and suggest improvements.', 'Սեղմիր «AI հուշում», և ուսուցիչը կվերլուծի կոդդ, կբացատրի սխալները ու կառաջարկի բարելավումներ։')}
                     </p>
                   </div>
                 </div>
@@ -529,8 +560,8 @@ export function PlaygroundView() {
       <div className="mt-8">
         <div className="mb-3 flex items-center gap-2">
           <Zap className="h-4 w-4 text-primary" />
-          <h3 className="text-sm font-semibold">Упражнения для разминки</h3>
-          <span className="text-xs text-muted-foreground">— кликни, чтобы загрузить</span>
+          <h3 className="text-sm font-semibold">{tr('Упражнения для разминки', 'Warm-up exercises', 'Նախավարժանքներ')}</h3>
+          <span className="text-xs text-muted-foreground">— {tr('кликни, чтобы загрузить', 'click to load', 'սեղմիր բեռնելու համար')}</span>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {CHALLENGES.map((c) => {
@@ -551,8 +582,8 @@ export function PlaygroundView() {
                     ✓
                   </div>
                 )}
-                <p className="text-sm font-semibold">{c.title}</p>
-                <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{c.desc}</p>
+                <p className="text-sm font-semibold">{localize(c.title)}</p>
+                <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{localize(c.desc)}</p>
               </button>
             )
           })}
