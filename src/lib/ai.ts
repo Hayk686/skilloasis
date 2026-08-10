@@ -126,7 +126,10 @@ export async function complete(
 ): Promise<string> {
   const locale = await getRequestLocale()
   const targetLanguageInstruction = LANGUAGE_INSTRUCTIONS[locale]
-  const generationLanguageInstruction = locale === 'hy'
+  const qwenPartnerConfigured = locale === 'hy' && Boolean(
+    process.env.NVIDIA_QWEN_BASE_URL && process.env.NVIDIA_QWEN_API_KEY
+  )
+  const generationLanguageInstruction = qwenPartnerConfigured
     ? `${LANGUAGE_INSTRUCTIONS.en} This is the source draft for a separate Armenian translator, so do not translate it into Armenian.`
     : targetLanguageInstruction
   const outputLanguageRule = `OUTPUT LANGUAGE — HIGHEST PRIORITY:
@@ -155,66 +158,78 @@ Return only the final user-facing answer. Do not expose analysis, hidden reasoni
 
     const invalidJson = Boolean(opts.json) && tryJsonParse(content) === null
     if (locale === 'hy') {
-      const translationFormatRule = opts.json
-        ? `Return exactly one valid JSON value and nothing else. Preserve every property name, array, number, boolean, ID, type value, code block, programming-language name, formula, URL, and emoji. Translate only natural-language string values. Preserve the values easy, medium, and hard when they are structural quiz difficulty values.`
-        : `Preserve Markdown structure, code fences, inline code, formulas, URLs, and proper names. Return only the translated content with no introduction or notes.`
-      const translationMessages: CompletionMessage[] = [
-        {
-          role: 'system',
-          content: `You are a professional translator and editor specializing in modern literary Eastern Armenian. Translate the complete source into fluent Eastern Armenian written in the Armenian alphabet. Use standard Armenian educational terminology and natural grammar. Do not leave Russian, Persian, Arabic, English, or Latin-transliterated prose. Latin characters may remain only in code, formulas, SI units, URLs, IDs, and proper names with no standard Armenian form. Preserve all facts and meaning. Never shorten, summarize, omit, or add content.\n\n${translationFormatRule}`,
-        },
-        {
-          role: 'user',
-          content: `${opts.json ? `Required JSON schema and content rules:\n${system}\n\n` : ''}Translate this complete Nemotron source into Armenian${invalidJson ? ' and repair its JSON syntax' : ''}:\n${content}`,
-        },
-      ]
-      const qwenPartnerConfigured = Boolean(
-        process.env.NVIDIA_QWEN_BASE_URL && process.env.NVIDIA_QWEN_API_KEY
-      )
-      let translatorModel = qwenPartnerConfigured
-        ? ARMENIAN_TRANSLATOR_MODEL
-        : NEMOTRON_MODEL
-      try {
-        content = await nvidiaCompletion(translationMessages, {
-          model: translatorModel,
-          temperature: 0.7,
-          maxTokens: 4096,
-          timeoutMs: remainingTimeout(42_000),
-        })
-      } catch (error) {
-        if (!(error instanceof AIServiceError) || translatorModel !== ARMENIAN_TRANSLATOR_MODEL) {
-          throw error
-        }
-        console.warn(
-          `[ai.complete] Qwen Armenian translator unavailable (${error.code}); using Nemotron fallback`
-        )
-        translatorModel = NEMOTRON_MODEL
-        content = await nvidiaCompletion(translationMessages, {
-          model: translatorModel,
-          temperature: 0.7,
-          maxTokens: 4096,
-          timeoutMs: remainingTimeout(38_000),
-        })
-      }
-      if (opts.json) content = extractJson(content)
-
-      const translatedInvalidJson = Boolean(opts.json) && tryJsonParse(content) === null
-      const translatedLanguageLeak = hasArmenianLanguageLeak(content, Boolean(opts.json))
-      const remaining = completionDeadline - Date.now()
-      if ((translatedInvalidJson || translatedLanguageLeak) && remaining >= 12_000) {
-        content = await nvidiaCompletion([
+      if (qwenPartnerConfigured) {
+        const translationFormatRule = opts.json
+          ? `Return exactly one valid JSON value and nothing else. Preserve every property name, array, number, boolean, ID, type value, code block, programming-language name, formula, URL, and emoji. Translate only natural-language string values. Preserve the values easy, medium, and hard when they are structural quiz difficulty values.`
+          : `Preserve Markdown structure, code fences, inline code, formulas, URLs, and proper names. Return only the translated content with no introduction or notes.`
+        const translationMessages: CompletionMessage[] = [
           {
             role: 'system',
-            content: `You are the final Eastern Armenian quality editor. Return only the corrected ${opts.json ? 'valid JSON' : 'content'}. Keep structure, keys, facts, code, formulas, URLs, IDs, and emojis unchanged. Rewrite every natural-language phrase in fluent Eastern Armenian using Armenian letters. Remove foreign-script and transliterated prose.`,
+            content: `You are a professional translator and editor specializing in modern literary Eastern Armenian. Translate the complete source into fluent Eastern Armenian written in the Armenian alphabet. Use standard Armenian educational terminology and natural grammar. Do not leave Russian, Persian, Arabic, English, or Latin-transliterated prose. Latin characters may remain only in code, formulas, SI units, URLs, IDs, and proper names with no standard Armenian form. Preserve all facts and meaning. Never shorten, summarize, omit, or add content.\n\n${translationFormatRule}`,
           },
-          { role: 'user', content },
-        ], {
-          model: translatorModel,
-          temperature: 0.7,
-          maxTokens: 4096,
-          timeoutMs: remainingTimeout(30_000),
-        })
+          {
+            role: 'user',
+            content: `${opts.json ? `Required JSON schema and content rules:\n${system}\n\n` : ''}Translate this complete Nemotron source into Armenian${invalidJson ? ' and repair its JSON syntax' : ''}:\n${content}`,
+          },
+        ]
+        let translatorModel = ARMENIAN_TRANSLATOR_MODEL
+        try {
+          content = await nvidiaCompletion(translationMessages, {
+            model: translatorModel,
+            temperature: 0.7,
+            maxTokens: 4096,
+            timeoutMs: remainingTimeout(42_000),
+          })
+        } catch (error) {
+          if (!(error instanceof AIServiceError)) throw error
+          console.warn(
+            `[ai.complete] Qwen Armenian translator unavailable (${error.code}); using Nemotron fallback`
+          )
+          translatorModel = NEMOTRON_MODEL
+          content = await nvidiaCompletion(translationMessages, {
+            model: translatorModel,
+            temperature: 0.7,
+            maxTokens: 4096,
+            timeoutMs: remainingTimeout(38_000),
+          })
+        }
         if (opts.json) content = extractJson(content)
+
+        const translatedInvalidJson = Boolean(opts.json) && tryJsonParse(content) === null
+        const translatedLanguageLeak = hasArmenianLanguageLeak(content, Boolean(opts.json))
+        const remaining = completionDeadline - Date.now()
+        if ((translatedInvalidJson || translatedLanguageLeak) && remaining >= 12_000) {
+          content = await nvidiaCompletion([
+            {
+              role: 'system',
+              content: `You are the final Eastern Armenian quality editor. Return only the corrected ${opts.json ? 'valid JSON' : 'content'}. Keep structure, keys, facts, code, formulas, URLs, IDs, and emojis unchanged. Rewrite every natural-language phrase in fluent Eastern Armenian using Armenian letters. Remove foreign-script and transliterated prose.`,
+            },
+            { role: 'user', content },
+          ], {
+            model: translatorModel,
+            temperature: 0.7,
+            maxTokens: 4096,
+            timeoutMs: remainingTimeout(30_000),
+          })
+          if (opts.json) content = extractJson(content)
+        }
+      } else {
+        const invalidArmenian = hasArmenianLanguageLeak(content, Boolean(opts.json))
+        if (invalidJson || invalidArmenian) {
+          const armenianRepairMessages: CompletionMessage[] = [
+            {
+              role: 'system',
+              content: `You are a strict Eastern Armenian quality editor. Return only the corrected ${opts.json ? 'valid JSON' : 'content'}. Preserve structure, keys, facts, code, formulas, URLs, IDs, and emojis. Rewrite all natural-language text in fluent Eastern Armenian using Armenian letters. Remove Russian, Persian, Arabic, English, and transliterated prose.`,
+            },
+            { role: 'user', content },
+          ]
+          content = await nvidiaCompletion(armenianRepairMessages, {
+            temperature: 0.7,
+            maxTokens: 4096,
+            timeoutMs: remainingTimeout(38_000),
+          })
+          if (opts.json) content = extractJson(content)
+        }
       }
     } else if (invalidJson) {
       if (opts.json) {
