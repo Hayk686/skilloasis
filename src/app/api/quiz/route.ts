@@ -8,7 +8,7 @@ import { parseJsonBody, shortText } from '@/lib/request'
 import { scoreQuiz } from '@/lib/quiz-scoring'
 
 export const dynamic = 'force-dynamic'
-export const maxDuration = 120
+export const maxDuration = 300
 
 const createQuizSchema = z.object({
   topic: shortText(200),

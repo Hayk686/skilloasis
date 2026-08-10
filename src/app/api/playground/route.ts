@@ -5,7 +5,7 @@ import { parseJsonBody } from '@/lib/request'
 import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
-export const maxDuration = 120
+export const maxDuration = 300
 
 const playgroundSchema = z.object({
   code: z.string().trim().min(1).max(20_000),

@@ -131,14 +131,14 @@ Return only the final user-facing answer. Do not expose analysis, hidden reasoni
     { role: 'system', content: `${system}\n\n${outputLanguageRule}\n\n${responseRule}` },
     ...messages,
   ]
-  const completionDeadline = Date.now() + 110_000
+  const completionDeadline = Date.now() + 280_000
   const remainingTimeout = (maximum: number) =>
     Math.max(1_000, Math.min(maximum, completionDeadline - Date.now()))
   try {
     let content = await nvidiaCompletion(messagesWithSystem, {
       temperature: opts.temperature,
       maxTokens: opts.json ? 3072 : 4096,
-      timeoutMs: remainingTimeout(needsArmenianTranslation ? 70_000 : 105_000),
+      timeoutMs: remainingTimeout(needsArmenianTranslation ? 105_000 : 120_000),
     })
     if (opts.json) {
       content = extractJson(content)
@@ -165,10 +165,11 @@ Return only the final user-facing answer. Do not expose analysis, hidden reasoni
           model: translatorModel,
           temperature: 1,
           maxTokens: 4096,
-          timeoutMs: remainingTimeout(42_000),
+          timeoutMs: remainingTimeout(150_000),
         })
       } catch (error) {
         if (!(error instanceof AIServiceError)) throw error
+        if (error.code === 'AI_TIMEOUT') throw error
         console.warn(
           `[ai.complete] GPT-OSS Armenian translator unavailable (${error.code}); using Nemotron fallback`
         )
@@ -177,7 +178,7 @@ Return only the final user-facing answer. Do not expose analysis, hidden reasoni
           model: translatorModel,
           temperature: 0.7,
           maxTokens: 4096,
-          timeoutMs: remainingTimeout(38_000),
+          timeoutMs: remainingTimeout(90_000),
         })
       }
       if (opts.json) content = extractJson(content)
@@ -196,7 +197,7 @@ Return only the final user-facing answer. Do not expose analysis, hidden reasoni
           model: translatorModel,
           temperature: translatorModel === ARMENIAN_TRANSLATOR_MODEL ? 1 : 0.7,
           maxTokens: 4096,
-          timeoutMs: remainingTimeout(30_000),
+          timeoutMs: remainingTimeout(60_000),
         })
         if (opts.json) content = extractJson(content)
       }
@@ -215,7 +216,7 @@ Return only the final user-facing answer. Do not expose analysis, hidden reasoni
         content = extractJson(await nvidiaCompletion(repairMessages, {
           temperature: 0.2,
           maxTokens: 4096,
-          timeoutMs: remainingTimeout(38_000),
+          timeoutMs: remainingTimeout(60_000),
         }))
       }
     }

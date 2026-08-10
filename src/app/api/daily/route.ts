@@ -4,7 +4,7 @@ import { generateDailyChallenge } from '@/lib/ai'
 import { awardXpOnce, getOrCreateUser, setUserIdCookie } from '@/lib/gamify'
 
 export const dynamic = 'force-dynamic'
-export const maxDuration = 120
+export const maxDuration = 300
 
 const DAILY_XP = 30
 

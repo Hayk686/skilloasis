@@ -6,7 +6,7 @@ import { parseJsonBody, shortText } from '@/lib/request'
 import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
-export const maxDuration = 120
+export const maxDuration = 300
 
 const chatSchema = z.object({
   message: shortText(8000),
