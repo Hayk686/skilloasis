@@ -64,17 +64,6 @@ export function HomeView() {
         <Particles count={24} />
         <PageSection className="relative py-16 sm:py-24">
           <div className="mx-auto max-w-3xl text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <Pill className="mx-auto mb-6 border-primary/30 bg-primary/10 text-primary">
-                <Sparkles className="h-3 w-3" />
-                {tr('100% бесплатно · без регистрации · без лимитов', '100% free · no sign-up · no limits', '100% անվճար · առանց գրանցման · առանց սահմանափակումների')}
-              </Pill>
-            </motion.div>
-
             <motion.h1
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}

@@ -99,11 +99,15 @@ export function TutorView() {
   const [loadingThread, setLoadingThread] = useState(false)
   const [listOpen, setListOpen] = useState(false) // mobile sheet
 
-  const bottomRef = useRef<HTMLDivElement>(null)
+  const messagesAreaRef = useRef<HTMLDivElement>(null)
 
-  // auto-scroll to bottom when messages change / typing
+  // Keep chat scrolling inside its own viewport instead of moving the whole page.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (messages.length === 0 && !sending) return
+    const viewport = messagesAreaRef.current?.querySelector<HTMLElement>(
+      '[data-slot="scroll-area-viewport"]'
+    )
+    viewport?.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' })
   }, [messages, sending])
 
   // ---------- data fns ----------
@@ -368,7 +372,7 @@ export function TutorView() {
           </div>
 
           {/* messages area */}
-          <div className="relative flex-1 overflow-hidden">
+          <div ref={messagesAreaRef} className="relative flex-1 overflow-hidden">
             <ScrollArea className="h-full">
               <div className="space-y-4 px-4 py-4 sm:px-6">
                 {loadingThread ? (
@@ -390,7 +394,7 @@ export function TutorView() {
 
                 {sending && <TypingBubble />}
 
-                <div ref={bottomRef} className="h-1" />
+                <div className="h-1" />
               </div>
             </ScrollArea>
           </div>

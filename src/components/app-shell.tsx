@@ -96,6 +96,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [authOpen, setAuthOpen] = useState(false)
   const displayName = localizeUserName(name, locale)
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' })
+  }, [view])
+
   return (
     <div className="relative flex min-h-screen flex-col">
       <AuroraBackground />
@@ -183,9 +187,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <div className="mx-auto flex w-full max-w-[1600px] flex-1">
         {/* Sidebar (desktop) */}
-        <aside className="sticky top-16 hidden h-[calc(100dvh-4rem)] w-64 shrink-0 overflow-hidden border-r border-border/40 bg-background/40 px-3 py-6 backdrop-blur-sm lg:block">
-          <SidebarContent active={view} onSelect={setView} />
-        </aside>
+        <div className="hidden w-64 shrink-0 lg:block">
+          <aside className="fixed top-16 z-30 h-[calc(100dvh-4rem)] w-64 overflow-hidden border-r border-border/40 bg-background/80 px-3 py-6 backdrop-blur-xl">
+            <SidebarContent active={view} onSelect={setView} />
+          </aside>
+        </div>
 
         {/* Sidebar (mobile drawer) */}
         <AnimatePresence>

@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SkillOasis — Учись всему. Бесплатно. Навсегда.",
+  title: "SkillOasis",
   description:
     "SkillOasis — бесплатная AI-платформа для обучения чему угодно. Интерактивные уроки, AI-наставник, адаптивные квизы и флешкарты. Полностью бесплатно, навсегда.",
   keywords: [
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     icon: "/logo.svg",
   },
   openGraph: {
-    title: "SkillOasis — Учись всему. Бесплатно.",
+    title: "SkillOasis",
     description: "AI-наставник, интерактивные уроки, квизы и флешкарты. Бесплатно навсегда.",
     type: "website",
   },
