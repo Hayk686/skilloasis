@@ -150,7 +150,10 @@ Return only the final user-facing answer. Do not expose analysis, hidden reasoni
   try {
     let content = await nvidiaCompletion(messagesWithSystem, {
       temperature: opts.temperature,
-      timeoutMs: remainingTimeout(locale === 'hy' ? 70_000 : 95_000),
+      maxTokens: opts.json ? 3072 : 4096,
+      timeoutMs: remainingTimeout(
+        locale === 'hy' && qwenPartnerConfigured ? 70_000 : 105_000
+      ),
     })
     if (opts.json) {
       content = extractJson(content)
@@ -215,7 +218,8 @@ Return only the final user-facing answer. Do not expose analysis, hidden reasoni
         }
       } else {
         const invalidArmenian = hasArmenianLanguageLeak(content, Boolean(opts.json))
-        if (invalidJson || invalidArmenian) {
+        const remaining = completionDeadline - Date.now()
+        if ((invalidJson || invalidArmenian) && remaining >= 15_000) {
           const armenianRepairMessages: CompletionMessage[] = [
             {
               role: 'system',
