@@ -2,21 +2,23 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getOrCreateUser, setUserIdCookie, grantXp, unlockAchievement, recordProgress } from '@/lib/gamify'
 import { tutorChat, ChatTurn } from '@/lib/ai'
+import { parseJsonBody, shortText } from '@/lib/request'
+import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
+
+const chatSchema = z.object({
+  message: shortText(8000),
+  subject: shortText(64).default('general'),
+  sessionId: z.string().cuid().optional(),
+})
 
 export async function POST(req: Request) {
   try {
     const user = await getOrCreateUser()
-    const body = await req.json().catch(() => ({}))
-    const message: string = (body.message ?? '').toString().trim()
-    const subject: string = (body.subject ?? 'general').toString()
-    const sessionId: string | undefined = body.sessionId
-    const history: ChatTurn[] = Array.isArray(body.history) ? body.history : []
-
-    if (!message) {
-      return NextResponse.json({ error: 'Сообщение обязательно' }, { status: 400 })
-    }
+    const parsed = await parseJsonBody(req, chatSchema)
+    if (!parsed.success) return parsed.response
+    const { message, subject, sessionId } = parsed.data
 
     // Persist session + messages
     let session = sessionId

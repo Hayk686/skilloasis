@@ -20,6 +20,7 @@ import {
   Search,
   Network,
   Terminal,
+  Languages,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useNav, useUI, useUser, ViewId } from '@/lib/store'
@@ -28,22 +29,24 @@ import { useEffect, useState } from 'react'
 import { AuroraBackground } from '@/components/aurora'
 import { Footer } from '@/components/footer'
 import { CommandPalette, CommandTrigger } from '@/components/command-palette'
+import { useLocaleSync, useTranslations, type TranslationKey } from '@/lib/i18n-client'
 
-const NAV_ITEMS: { id: ViewId; label: string; icon: typeof Home; desc: string }[] = [
-  { id: 'home', label: 'Главная', icon: Home, desc: 'Стартовая страница' },
-  { id: 'dashboard', label: 'Дашборд', icon: LayoutDashboard, desc: 'Ваш прогресс' },
-  { id: 'tutor', label: 'AI-наставник', icon: MessagesSquare, desc: 'Чат с наставником' },
-  { id: 'lessons', label: 'Уроки', icon: BookOpen, desc: 'Интерактивные уроки' },
-  { id: 'quiz', label: 'Квиз-арена', icon: Trophy, desc: 'Проверь себя' },
-  { id: 'flashcards', label: 'Флешкарты', icon: Layers, desc: 'Интервальное повторение' },
-  { id: 'paths', label: 'Маршруты', icon: Compass, desc: 'Путь к цели' },
-  { id: 'mindmap', label: 'Карты знаний', icon: Network, desc: 'Визуальные концепт-карты' },
-  { id: 'playground', label: 'Песочница кода', icon: Terminal, desc: 'JavaScript + AI-наставник' },
-  { id: 'subjects', label: 'Предметы', icon: Sparkles, desc: 'Все области' },
-  { id: 'achievements', label: 'Достижения', icon: Award, desc: 'Награды' },
+const NAV_ITEMS: { id: ViewId; label: TranslationKey; icon: typeof Home; desc: TranslationKey }[] = [
+  { id: 'home', label: 'navHome', icon: Home, desc: 'navHomeDesc' },
+  { id: 'dashboard', label: 'navDashboard', icon: LayoutDashboard, desc: 'navDashboardDesc' },
+  { id: 'tutor', label: 'navTutor', icon: MessagesSquare, desc: 'navTutorDesc' },
+  { id: 'lessons', label: 'navLessons', icon: BookOpen, desc: 'navLessonsDesc' },
+  { id: 'quiz', label: 'navQuiz', icon: Trophy, desc: 'navQuizDesc' },
+  { id: 'flashcards', label: 'navFlashcards', icon: Layers, desc: 'navFlashcardsDesc' },
+  { id: 'paths', label: 'navPaths', icon: Compass, desc: 'navPathsDesc' },
+  { id: 'mindmap', label: 'navMindmap', icon: Network, desc: 'navMindmapDesc' },
+  { id: 'playground', label: 'navPlayground', icon: Terminal, desc: 'navPlaygroundDesc' },
+  { id: 'subjects', label: 'navSubjects', icon: Sparkles, desc: 'navSubjectsDesc' },
+  { id: 'achievements', label: 'navAchievements', icon: Award, desc: 'navAchievementsDesc' },
 ]
 
 function ThemeToggle() {
+  const { t } = useTranslations()
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   useEffect(() => {
@@ -56,7 +59,7 @@ function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
-      aria-label="Сменить тему"
+      aria-label={t('theme')}
       className="grid h-9 w-9 place-items-center rounded-lg border border-border/60 text-muted-foreground hover:text-foreground hover:border-border transition-colors"
     >
       {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -75,6 +78,8 @@ function StatPill({ icon: Icon, value, label }: { icon: typeof Flame; value: str
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
+  useLocaleSync()
+  const { locale, locales, languageNames, setLocale, t } = useTranslations()
   const { view, setView } = useNav()
   const { sidebarOpen, setSidebar, setCommandOpen } = useUI()
   const { xp, level, streak, name } = useUser()
@@ -89,7 +94,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <button
             onClick={() => setSidebar(!sidebarOpen)}
             className="grid h-9 w-9 place-items-center rounded-lg border border-border/60 text-muted-foreground hover:text-foreground lg:hidden"
-            aria-label="Меню"
+            aria-label={t('menu')}
           >
             {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
@@ -105,27 +110,40 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="text-left">
               <p className="text-base font-bold leading-none tracking-tight">Lumina</p>
               <p className="text-[10px] text-muted-foreground leading-none mt-0.5">
-                учись всему
+                {t('tagline')}
               </p>
             </div>
           </button>
 
           <div className="ml-auto flex items-center gap-2">
             <div className="hidden items-center gap-2 sm:flex">
-              <StatPill icon={Flame} value={streak} label="дней" />
+              <StatPill icon={Flame} value={streak} label={t('days')} />
               <StatPill icon={Zap} value={xp} label="XP" />
-              <StatPill icon={Sparkles} value={level} label="ур." />
+              <StatPill icon={Sparkles} value={level} label={t('levelShort')} />
             </div>
             <button
               onClick={() => setCommandOpen(true)}
-              aria-label="Поиск"
+              aria-label={t('search')}
               className="hidden h-9 items-center gap-2 rounded-lg border border-border/60 bg-card/40 px-3 text-xs text-muted-foreground transition-colors hover:text-foreground md:flex"
             >
               <Search className="h-3.5 w-3.5" />
-              <span>Поиск</span>
+              <span>{t('search')}</span>
               <kbd className="rounded border border-border/60 bg-muted/40 px-1 py-0.5 text-[10px]">⌘K</kbd>
             </button>
             <ThemeToggle />
+            <label className="hidden items-center gap-1 rounded-lg border border-border/60 bg-card/40 px-2 md:flex">
+              <Languages className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="sr-only">Language</span>
+              <select
+                value={locale}
+                onChange={(event) => setLocale(event.target.value as typeof locale)}
+                className="h-8 bg-transparent text-xs outline-none"
+              >
+                {locales.map((item) => (
+                  <option key={item} value={item}>{languageNames[item]}</option>
+                ))}
+              </select>
+            </label>
             <div className="hidden h-9 items-center gap-2 rounded-full border border-border/60 bg-card/60 px-2 pr-3 sm:flex">
               <div className="grid h-6 w-6 place-items-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-[10px] font-bold text-white">
                 {name.charAt(0).toUpperCase()}
@@ -204,10 +222,11 @@ function SidebarContent({
   active: ViewId
   onSelect: (v: ViewId) => void
 }) {
+  const { t } = useTranslations()
   return (
     <nav className="flex h-full flex-col gap-1">
       <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        Навигация
+        {t('navigation')}
       </p>
       {NAV_ITEMS.map((item) => {
         const Icon = item.icon
@@ -240,17 +259,17 @@ function SidebarContent({
               <Icon className="h-4 w-4" />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-medium leading-tight">{item.label}</p>
-              <p className="truncate text-[11px] text-muted-foreground">{item.desc}</p>
+              <p className="text-sm font-medium leading-tight">{t(item.label)}</p>
+              <p className="truncate text-[11px] text-muted-foreground">{t(item.desc)}</p>
             </div>
           </button>
         )
       })}
 
       <div className="mt-auto rounded-xl border border-border/60 bg-gradient-to-br from-primary/5 to-fuchsia-500/5 p-3">
-        <p className="text-xs font-semibold">100% бесплатно</p>
+        <p className="text-xs font-semibold">{t('freeTitle')}</p>
         <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
-          Никаких подписок и платных функций. Знания принадлежат всем.
+          {t('freeDescription')}
         </p>
       </div>
     </nav>

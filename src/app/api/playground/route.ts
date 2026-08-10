@@ -1,8 +1,16 @@
 import { NextResponse } from 'next/server'
 import { getOrCreateUser, setUserIdCookie, grantXp, unlockAchievement } from '@/lib/gamify'
 import { complete } from '@/lib/ai'
+import { parseJsonBody } from '@/lib/request'
+import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
+
+const playgroundSchema = z.object({
+  code: z.string().trim().min(1).max(20_000),
+  error: z.string().trim().max(5_000).nullable().optional(),
+  task: z.string().trim().max(1_000).nullable().optional(),
+})
 
 const PLAYGROUND_SYSTEM = `Ты — дружелюбный AI-наставник по программированию в платформе Lumina.
 Пользователь пишет JavaScript-код в песочнице и просит помощи.
@@ -21,14 +29,9 @@ const PLAYGROUND_SYSTEM = `Ты — дружелюбный AI-наставник
 export async function POST(req: Request) {
   try {
     const user = await getOrCreateUser()
-    const body = await req.json().catch(() => ({}))
-    const code: string = (body.code ?? '').toString().trim()
-    const error: string | null = body.error ? String(body.error).trim() : null
-    const task: string | null = body.task ? String(body.task).trim() : null
-
-    if (!code) {
-      return NextResponse.json({ error: 'Нет кода для разбора' }, { status: 400 })
-    }
+    const parsed = await parseJsonBody(req, playgroundSchema)
+    if (!parsed.success) return parsed.response
+    const { code, error = null, task = null } = parsed.data
 
     const userMessage = `Вот мой код:
 \`\`\`js

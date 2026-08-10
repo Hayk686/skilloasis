@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Volume2, Square, Loader2, ImageIcon, X, RefreshCw } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Volume2, Loader2, ImageIcon, X, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 

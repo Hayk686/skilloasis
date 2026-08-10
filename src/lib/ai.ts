@@ -1,4 +1,5 @@
 import ZAI from 'z-ai-web-dev-sdk'
+import { getLanguageInstruction } from '@/lib/locale-server'
 
 let _zai: Awaited<ReturnType<typeof ZAI.create>> | null = null
 
@@ -14,6 +15,45 @@ export interface ChatTurn {
   content: string
 }
 
+interface CompletionMessage {
+  role: 'system' | 'user' | 'assistant'
+  content: string
+}
+
+async function openAICompatibleCompletion(
+  messages: CompletionMessage[],
+  temperature: number,
+  json: boolean
+): Promise<string> {
+  const baseUrl = process.env.AI_BASE_URL?.replace(/\/$/, '')
+  const apiKey = process.env.AI_API_KEY
+  const model = process.env.AI_MODEL
+  if (!baseUrl || !apiKey || !model) {
+    throw new Error('AI_BASE_URL, AI_API_KEY and AI_MODEL are required')
+  }
+  const response = await fetch(`${baseUrl}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model,
+      messages,
+      temperature,
+      ...(json ? { response_format: { type: 'json_object' } } : {}),
+    }),
+    signal: AbortSignal.timeout(60_000),
+  })
+  if (!response.ok) {
+    throw new Error(`AI provider returned ${response.status}`)
+  }
+  const payload = await response.json() as {
+    choices?: Array<{ message?: { content?: string } }>
+  }
+  return payload.choices?.[0]?.message?.content ?? ''
+}
+
 /**
  * Core chat completion with a system prompt + history.
  */
@@ -22,17 +62,28 @@ export async function complete(
   messages: ChatTurn[],
   opts: { temperature?: number; json?: boolean } = {}
 ): Promise<string> {
-  const zai = await getAI()
+  const languageInstruction = await getLanguageInstruction()
+  const messagesWithSystem: CompletionMessage[] = [
+    { role: 'system', content: `${system}\n\n${languageInstruction}` },
+    ...messages,
+  ]
   try {
-    const completion = await zai.chat.completions.create({
-      messages: [
-        { role: 'system', content: system },
-        ...messages.map((m) => ({ role: m.role, content: m.content })),
-      ],
-      thinking: { type: 'disabled' },
-      temperature: opts.temperature ?? 0.7,
-    })
-    let content = completion.choices[0]?.message?.content ?? ''
+    let content: string
+    if (process.env.AI_PROVIDER === 'openai-compatible') {
+      content = await openAICompatibleCompletion(
+        messagesWithSystem,
+        opts.temperature ?? 0.7,
+        Boolean(opts.json)
+      )
+    } else {
+      const zai = await getAI()
+      const completion = await zai.chat.completions.create({
+        messages: messagesWithSystem,
+        thinking: { type: 'disabled' },
+        temperature: opts.temperature ?? 0.7,
+      })
+      content = completion.choices[0]?.message?.content ?? ''
+    }
     if (opts.json) {
       content = extractJson(content)
     }

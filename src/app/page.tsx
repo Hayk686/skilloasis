@@ -9,6 +9,7 @@ import { SubjectsView } from '@/components/views/subjects-view'
 import { PathsView } from '@/components/views/paths-view'
 import { AchievementsView } from '@/components/views/achievements-view'
 import { LoadingState } from '@/components/ui-blocks'
+import { useTranslations } from '@/lib/i18n-client'
 
 const DashboardView = lazy(() =>
   import('@/components/views/dashboard-view').then((m) => ({ default: m.DashboardView }))
@@ -38,7 +39,7 @@ function ViewFallback({ label }: { label: string }) {
 
 /** Error boundary that catches render errors in individual views */
 class ViewErrorBoundary extends Component<
-  { children: ReactNode },
+  { children: ReactNode; title: string; fallback: string; retry: string },
   { hasError: boolean; error: Error | null }
 > {
   state = { hasError: false, error: null as Error | null }
@@ -51,15 +52,15 @@ class ViewErrorBoundary extends Component<
     if (this.state.hasError) {
       return (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <p className="text-lg font-semibold">Что-то пошло не так</p>
+          <p className="text-lg font-semibold">{this.props.title}</p>
           <p className="mt-2 text-sm text-muted-foreground">
-            {this.state.error?.message || 'Не удалось загрузить раздел'}
+            {this.state.error?.message || this.props.fallback}
           </p>
           <button
             onClick={() => this.setState({ hasError: false, error: null })}
             className="mt-4 rounded-xl bg-primary px-5 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
           >
-            Попробовать снова
+            {this.props.retry}
           </button>
         </div>
       )
@@ -69,6 +70,7 @@ class ViewErrorBoundary extends Component<
 }
 
 export default function Home() {
+  const { t } = useTranslations()
   const { view } = useNav()
   const { hydrated } = useUser()
   useUserSync()
@@ -83,41 +85,41 @@ export default function Home() {
   return (
     <AppShell>
       {!hydrated ? (
-        <ViewFallback label="Загружаем твой профиль..." />
+        <ViewFallback label={t('loadProfile')} />
       ) : (
         <>
           {view === 'home' && <HomeView />}
           {view === 'dashboard' && (
-            <Suspense fallback={<ViewFallback label="Открываем дашборд..." />}>
-              <ViewErrorBoundary>
+            <Suspense fallback={<ViewFallback label={t('loadDashboard')} />}>
+              <ViewErrorBoundary title={t('errorTitle')} fallback={t('errorFallback')} retry={t('retry')}>
                 <DashboardView />
               </ViewErrorBoundary>
             </Suspense>
           )}
           {view === 'tutor' && (
-            <Suspense fallback={<ViewFallback label="Подключаем наставника..." />}>
-              <ViewErrorBoundary>
+            <Suspense fallback={<ViewFallback label={t('loadTutor')} />}>
+              <ViewErrorBoundary title={t('errorTitle')} fallback={t('errorFallback')} retry={t('retry')}>
                 <TutorView />
               </ViewErrorBoundary>
             </Suspense>
           )}
           {view === 'lessons' && (
-            <Suspense fallback={<ViewFallback label="Готовим урок..." />}>
-              <ViewErrorBoundary>
+            <Suspense fallback={<ViewFallback label={t('loadLesson')} />}>
+              <ViewErrorBoundary title={t('errorTitle')} fallback={t('errorFallback')} retry={t('retry')}>
                 <LessonsView />
               </ViewErrorBoundary>
             </Suspense>
           )}
           {view === 'quiz' && (
-            <Suspense fallback={<ViewFallback label="Готовим квиз..." />}>
-              <ViewErrorBoundary>
+            <Suspense fallback={<ViewFallback label={t('loadQuiz')} />}>
+              <ViewErrorBoundary title={t('errorTitle')} fallback={t('errorFallback')} retry={t('retry')}>
                 <QuizView />
               </ViewErrorBoundary>
             </Suspense>
           )}
           {view === 'flashcards' && (
-            <Suspense fallback={<ViewFallback label="Готовим флешкарты..." />}>
-              <ViewErrorBoundary>
+            <Suspense fallback={<ViewFallback label={t('loadFlashcards')} />}>
+              <ViewErrorBoundary title={t('errorTitle')} fallback={t('errorFallback')} retry={t('retry')}>
                 <FlashcardsView />
               </ViewErrorBoundary>
             </Suspense>
@@ -126,15 +128,15 @@ export default function Home() {
           {view === 'subjects' && <SubjectsView />}
           {view === 'achievements' && <AchievementsView />}
           {view === 'mindmap' && (
-            <Suspense fallback={<ViewFallback label="Строим карту знаний..." />}>
-              <ViewErrorBoundary>
+            <Suspense fallback={<ViewFallback label={t('loadMindmap')} />}>
+              <ViewErrorBoundary title={t('errorTitle')} fallback={t('errorFallback')} retry={t('retry')}>
                 <MindMapView />
               </ViewErrorBoundary>
             </Suspense>
           )}
           {view === 'playground' && (
-            <Suspense fallback={<ViewFallback label="Открываем песочницу..." />}>
-              <ViewErrorBoundary>
+            <Suspense fallback={<ViewFallback label={t('loadPlayground')} />}>
+              <ViewErrorBoundary title={t('errorTitle')} fallback={t('errorFallback')} retry={t('retry')}>
                 <PlaygroundView />
               </ViewErrorBoundary>
             </Suspense>

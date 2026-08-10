@@ -1,17 +1,19 @@
 import { NextResponse } from 'next/server'
 import { getOrCreateUser, setUserIdCookie } from '@/lib/gamify'
 import { explainConcept } from '@/lib/ai'
+import { parseJsonBody, shortText } from '@/lib/request'
+import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
+
+const explainSchema = z.object({ concept: shortText(300) })
 
 export async function POST(req: Request) {
   try {
     const user = await getOrCreateUser()
-    const body = await req.json().catch(() => ({}))
-    const concept: string = (body.concept ?? '').toString().trim()
-    if (!concept) {
-      return NextResponse.json({ error: 'Укажите концепцию' }, { status: 400 })
-    }
+    const parsed = await parseJsonBody(req, explainSchema)
+    if (!parsed.success) return parsed.response
+    const { concept } = parsed.data
     const text = await explainConcept(concept)
     const res = NextResponse.json({ text, concept })
     setUserIdCookie(res, user.id)

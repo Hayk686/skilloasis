@@ -2,20 +2,23 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getOrCreateUser, setUserIdCookie, grantXp, unlockAchievement, recordProgress } from '@/lib/gamify'
 import { generateLesson } from '@/lib/ai'
+import { parseJsonBody, shortText } from '@/lib/request'
+import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
+
+const lessonSchema = z.object({
+  topic: shortText(200),
+  subject: shortText(64).default('general'),
+  level: z.string().trim().max(64).optional(),
+})
 
 export async function POST(req: Request) {
   try {
     const user = await getOrCreateUser()
-    const body = await req.json().catch(() => ({}))
-    const topic: string = (body.topic ?? '').toString().trim()
-    const subject: string = (body.subject ?? 'general').toString()
-    const level: string | undefined = body.level
-
-    if (!topic) {
-      return NextResponse.json({ error: 'Укажите тему' }, { status: 400 })
-    }
+    const parsed = await parseJsonBody(req, lessonSchema)
+    if (!parsed.success) return parsed.response
+    const { topic, subject, level } = parsed.data
 
     const lesson = await generateLesson(topic, level)
 

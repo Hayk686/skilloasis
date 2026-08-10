@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles, ArrowRight, Check, BookOpen, Trophy, Layers, MessagesSquare, ChevronRight } from 'lucide-react'
+import { Sparkles, ArrowRight, BookOpen, Trophy, Layers, MessagesSquare, ChevronRight } from 'lucide-react'
 import { SUBJECTS, Subject } from '@/lib/subjects'
 import { useNav } from '@/lib/store'
-import { PageSection, SectionHeader, GlassCard, Pill, StaggerGroup, StaggerItem, GradientButton } from '@/components/ui-blocks'
+import { PageSection, SectionHeader, Pill, StaggerGroup, StaggerItem } from '@/components/ui-blocks'
 
 export function SubjectsView() {
   const { activeSubject, setSubject, setView } = useNav()

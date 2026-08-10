@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getOrCreateUser, setUserIdCookie, grantXp, unlockAchievement } from '@/lib/gamify'
 import { getAI } from '@/lib/ai'
+import { parseJsonBody } from '@/lib/request'
+import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -32,11 +34,16 @@ const ART_STYLES = [
   },
 ]
 
+const shareArtSchema = z.object({
+  style: z.enum(['cosmic', 'aurora', 'geometric', 'fluid']).default('cosmic'),
+})
+
 export async function POST(req: Request) {
   try {
     const user = await getOrCreateUser()
-    const body = await req.json().catch(() => ({}))
-    const styleId: string = (body.style ?? 'cosmic').toString()
+    const parsed = await parseJsonBody(req, shareArtSchema)
+    if (!parsed.success) return parsed.response
+    const styleId = parsed.data.style
     const style = ART_STYLES.find((s) => s.id === styleId) ?? ART_STYLES[0]
 
     const zai = await getAI()

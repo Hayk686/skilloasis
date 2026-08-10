@@ -24,7 +24,6 @@ import {
   PageSection,
   SectionHeader,
   GlassCard,
-  LoadingState,
   EmptyState,
   GradientButton,
   Pill,
@@ -38,7 +37,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
-import { cn } from '@/lib/utils'
+import { cn, seededFraction } from '@/lib/utils'
 
 // ---------- types & constants ----------
 
@@ -48,8 +47,8 @@ interface QuizQuestion {
   id: string | number
   question: string
   options: string[]
-  correctIndex: number
-  explanation: string
+  correctIndex?: number
+  explanation?: string
   difficulty: string
 }
 
@@ -127,6 +126,7 @@ export function QuizView() {
   const [count, setCount] = useState<number>(5)
   const [level, setLevel] = useState<string>('Любой')
   const [questions, setQuestions] = useState<QuizQuestion[]>([])
+  const [attemptId, setAttemptId] = useState<string | null>(null)
   const [answers, setAnswers] = useState<(number | null | undefined)[]>([])
   const [currentIdx, setCurrentIdx] = useState(0)
   const [revealed, setRevealed] = useState(false)
@@ -201,6 +201,8 @@ export function QuizView() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       if (!data.questions?.length) throw new Error('Нет вопросов')
+      if (!data.attemptId) throw new Error('Нет идентификатора квиза')
+      setAttemptId(data.attemptId)
       setQuestions(data.questions)
       setAnswers(Array(data.questions.length).fill(undefined))
       setCurrentIdx(0)
@@ -221,20 +223,46 @@ export function QuizView() {
     setAnswers(next)
   }
 
-  function handleCheck() {
-    if (answers[currentIdx] === undefined || answers[currentIdx] === null) {
-      toast.error('Выбери вариант ответа')
-      return
-    }
+  async function submitAnswer(selectedIndex: number | null) {
+    if (!attemptId) return
+    const res = await fetch('/api/quiz', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ attemptId, questionIndex: currentIdx, selectedIndex }),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error)
+    setQuestions((current) => current.map((question, index) =>
+      index === currentIdx
+        ? { ...question, correctIndex: data.correctIndex, explanation: data.explanation }
+        : question
+    ))
     setRevealed(true)
   }
 
-  function handleSkip() {
+  async function handleCheck() {
+    const selected = answers[currentIdx]
+    if (selected === undefined || selected === null) {
+      toast.error('Выбери вариант ответа')
+      return
+    }
+    try {
+      await submitAnswer(selected)
+    } catch {
+      toast.error('Не удалось проверить ответ')
+    }
+  }
+
+  async function handleSkip() {
     if (revealed) return
     const next = [...answers]
     next[currentIdx] = null
     setAnswers(next)
-    setRevealed(true)
+    try {
+      await submitAnswer(null)
+    } catch {
+      toast.error('Не удалось пропустить вопрос')
+    }
   }
 
   async function handleNext() {
@@ -247,22 +275,14 @@ export function QuizView() {
   }
 
   async function finishQuiz() {
-    const correct = questions.reduce(
-      (acc, q, i) => acc + (answers[i] === q.correctIndex ? 1 : 0),
-      0
-    )
+    if (!attemptId) return
     setPhase('results')
     setSubmitting(true)
     try {
       const res = await fetch('/api/quiz', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          subject,
-          topic,
-          total: questions.length,
-          correct,
-        }),
+        body: JSON.stringify({ attemptId }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
@@ -281,6 +301,7 @@ export function QuizView() {
   function resetToSetup(clearTopic = true) {
     setPhase('setup')
     setQuestions([])
+    setAttemptId(null)
     setAnswers([])
     setCurrentIdx(0)
     setRevealed(false)
@@ -625,7 +646,8 @@ function QuizPhase({
   isLast: boolean
 }) {
   const diff = difficultyMeta(question.difficulty)
-  const isCorrect = revealed && selected === question.correctIndex
+  const correctIndex = question.correctIndex ?? -1
+  const isCorrect = revealed && selected === correctIndex
   const options = question.options ?? []
 
   return (
@@ -695,7 +717,7 @@ function QuizPhase({
                   text={opt}
                   index={i}
                   selected={selected === i}
-                  correct={question.correctIndex}
+                  correct={correctIndex}
                   revealed={revealed}
                   onClick={() => onSelect(i)}
                 />
@@ -716,8 +738,8 @@ function QuizPhase({
                 <ExplanationCard
                   isCorrect={!!isCorrect}
                   skipped={selected === null || selected === undefined}
-                  explanation={question.explanation}
-                  correctText={options[question.correctIndex]}
+                  explanation={question.explanation ?? ''}
+                  correctText={options[correctIndex]}
                 />
               </motion.div>
             )}
@@ -1025,7 +1047,8 @@ function ResultsPhase({
               <Accordion type="single" collapsible>
                 {questions.map((q, i) => {
                   const ans = answers[i]
-                  const wasCorrect = ans === q.correctIndex
+                  const correctIndex = q.correctIndex ?? -1
+                  const wasCorrect = ans === correctIndex
                   const wasSkipped = ans === null || ans === undefined
                   const qOptions = q.options ?? []
                   return (
@@ -1069,7 +1092,7 @@ function ResultsPhase({
                               Правильный ответ
                             </p>
                             <p className="mt-1 text-foreground">
-                              {qOptions[q.correctIndex] ?? '—'}
+                              {qOptions[correctIndex] ?? '—'}
                             </p>
                           </div>
                         </div>
@@ -1119,10 +1142,10 @@ function Confetti({ run }: { run: boolean }) {
     () =>
       Array.from({ length: 70 }, (_, i) => ({
         id: i,
-        left: Math.random() * 100,
-        delay: Math.random() * 0.5,
-        duration: 1.8 + Math.random() * 1.6,
-        rotate: Math.random() * 720 - 360,
+        left: seededFraction(i * 17 + 1) * 100,
+        delay: seededFraction(i * 29 + 2) * 0.5,
+        duration: 1.8 + seededFraction(i * 37 + 3) * 1.6,
+        rotate: seededFraction(i * 43 + 4) * 720 - 360,
         color: [
           'bg-violet-400',
           'bg-fuchsia-400',
@@ -1131,8 +1154,8 @@ function Confetti({ run }: { run: boolean }) {
           'bg-emerald-300',
           'bg-rose-300',
         ][i % 6],
-        size: 6 + Math.random() * 8,
-        rounded: Math.random() > 0.5,
+        size: 6 + seededFraction(i * 53 + 5) * 8,
+        rounded: seededFraction(i * 61 + 6) > 0.5,
       })),
     []
   )

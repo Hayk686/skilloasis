@@ -3,8 +3,6 @@
 import * as Icons from 'lucide-react'
 import { LucideProps } from 'lucide-react'
 
-type IconName = keyof typeof Icons
-
 export function DynIcon({
   name,
   ...props

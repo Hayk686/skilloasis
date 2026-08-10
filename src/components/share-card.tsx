@@ -8,10 +8,6 @@ import {
   Sparkles,
   Loader2,
   Wand2,
-  Shuffle,
-  Flame,
-  Zap,
-  Award,
   Trophy,
   RefreshCw,
 } from 'lucide-react'

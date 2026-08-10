@@ -1,8 +1,21 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { getOrCreateUser, setUserIdCookie, grantXp, unlockAchievement } from '@/lib/gamify'
+import { awardXpOnce, getOrCreateUser, setUserIdCookie, unlockAchievement } from '@/lib/gamify'
+import { parseJsonBody, shortText } from '@/lib/request'
+import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
+
+const bookmarkSchema = z.object({
+  topic: shortText(200),
+  subject: shortText(64).default('general'),
+  lessonJson: z.union([
+    z.string().max(200_000),
+    z.record(z.string(), z.unknown()),
+  ]),
+})
+
+const deleteBookmarkSchema = z.object({ topic: shortText(200) })
 
 /** Get all bookmarks for the current user. */
 export async function GET() {
@@ -20,14 +33,12 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const user = await getOrCreateUser()
-    const body = await req.json().catch(() => ({}))
-    const topic: string = (body.topic ?? '').toString().trim()
-    const subject: string = (body.subject ?? 'general').toString()
-    const lessonJson: string = typeof body.lessonJson === 'string' ? body.lessonJson : JSON.stringify(body.lessonJson ?? {})
-
-    if (!topic) {
-      return NextResponse.json({ error: 'Укажите тему' }, { status: 400 })
-    }
+    const parsed = await parseJsonBody(req, bookmarkSchema)
+    if (!parsed.success) return parsed.response
+    const { topic, subject } = parsed.data
+    const lessonJson = typeof parsed.data.lessonJson === 'string'
+      ? parsed.data.lessonJson
+      : JSON.stringify(parsed.data.lessonJson)
 
     const bookmark = await db.bookmark.upsert({
       where: { userId_topic: { userId: user.id, topic } },
@@ -36,9 +47,20 @@ export async function POST(req: Request) {
     })
 
     await unlockAchievement(user.id, 'first_lesson') // reuse; could add dedicated bookmark achievement
-    const updated = await grantXp(user.id, 3)
+    const xpResult = await awardXpOnce(
+      user.id,
+      3,
+      'bookmark',
+      `${subject}:${topic.toLocaleLowerCase()}`
+    )
+    const updated = xpResult.user ?? user
 
-    const res = NextResponse.json({ bookmark, xp: updated?.xp ?? user.xp, level: updated?.level ?? user.level })
+    const res = NextResponse.json({
+      bookmark,
+      xpGain: xpResult.awarded,
+      xp: updated.xp,
+      level: updated.level,
+    })
     setUserIdCookie(res, user.id)
     return res
   } catch (err) {
@@ -51,11 +73,9 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   try {
     const user = await getOrCreateUser()
-    const body = await req.json().catch(() => ({}))
-    const topic: string = (body.topic ?? '').toString().trim()
-    if (!topic) {
-      return NextResponse.json({ error: 'Укажите тему' }, { status: 400 })
-    }
+    const parsed = await parseJsonBody(req, deleteBookmarkSchema)
+    if (!parsed.success) return parsed.response
+    const { topic } = parsed.data
     await db.bookmark.deleteMany({ where: { userId: user.id, topic } })
     const res = NextResponse.json({ ok: true })
     setUserIdCookie(res, user.id)

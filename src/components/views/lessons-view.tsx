@@ -99,6 +99,7 @@ export function LessonsView() {
       }, 60)
     }
     // Mount-only effect: picks up handoff topic from sessionStorage.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Sync subject from nav when it changes

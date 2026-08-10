@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { getOrCreateUser, setUserIdCookie, grantXp } from '@/lib/gamify'
+import { awardXpOnce, getOrCreateUser, setUserIdCookie } from '@/lib/gamify'
+import { parseJsonBody } from '@/lib/request'
+import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
+
+const reviewSchema = z.object({
+  quality: z.enum(['again', 'hard', 'good', 'easy']),
+})
 
 /** Update a card based on SM-2-style feedback: "again" | "hard" | "good" | "easy". */
 export async function PATCH(
@@ -11,12 +17,16 @@ export async function PATCH(
 ) {
   const user = await getOrCreateUser()
   const { id } = await params
-  const body = await req.json().catch(() => ({}))
-  const quality: 'again' | 'hard' | 'good' | 'easy' = body.quality || 'good'
+  const parsed = await parseJsonBody(req, reviewSchema)
+  if (!parsed.success) return parsed.response
+  const { quality } = parsed.data
 
   const card = await db.flashcard.findFirst({ where: { id, userId: user.id } })
   if (!card) {
     return NextResponse.json({ error: 'Не найдено' }, { status: 404 })
+  }
+  if (card.dueAt.getTime() > Date.now()) {
+    return NextResponse.json({ error: 'Карточка ещё не готова к повторению' }, { status: 409 })
   }
 
   // SM-2 simplified
@@ -42,12 +52,17 @@ export async function PATCH(
   let xpGain = 0
   if (quality === 'good' || quality === 'easy') xpGain = 3
   if (quality === 'easy') xpGain = 5
-  const updatedUser = xpGain ? await grantXp(user.id, xpGain) : user
+  const reviewId = `${card.id}:${card.repetitions}:${card.dueAt.toISOString()}`
+  const xpResult = xpGain
+    ? await awardXpOnce(user.id, xpGain, 'flashcard-review', reviewId)
+    : { user, awarded: 0 }
+  const updatedUser = xpResult.user ?? user
 
   const res = NextResponse.json({
     card: updated,
-    xp: updatedUser?.xp ?? user.xp,
-    level: updatedUser?.level ?? user.level,
+    xpGain: xpResult.awarded,
+    xp: updatedUser.xp,
+    level: updatedUser.level,
   })
   setUserIdCookie(res, user.id)
   return res

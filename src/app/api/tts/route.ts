@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import ZAI from 'z-ai-web-dev-sdk'
 import { getOrCreateUser, setUserIdCookie, grantXp, unlockAchievement } from '@/lib/gamify'
+import { parseJsonBody } from '@/lib/request'
+import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
+
+const ttsSchema = z.object({
+  text: z.string().trim().min(1).max(1000),
+  voice: z.string().trim().regex(/^[a-zA-Z0-9_-]+$/).max(32).default('tongtong'),
+  speed: z.number().min(0.5).max(2).default(1),
+})
 
 /**
  * POST /api/tts
@@ -21,17 +29,9 @@ export const maxDuration = 60
 export async function POST(req: NextRequest) {
   try {
     const user = await getOrCreateUser()
-    const body = await req.json().catch(() => ({}))
-    const text: string = (body.text ?? '').toString().trim()
-    const voice: string = (body.voice ?? 'tongtong').toString()
-    const speed: number = Math.min(2, Math.max(0.5, Number(body.speed) || 1))
-
-    if (!text) {
-      return NextResponse.json({ error: 'Текст обязателен' }, { status: 400 })
-    }
-
-    // Truncate to API limit (1024). The client already chunks, so this is a safety net.
-    const input = text.slice(0, 1000)
+    const parsed = await parseJsonBody(req, ttsSchema)
+    if (!parsed.success) return parsed.response
+    const { text: input, voice, speed } = parsed.data
 
     const zai = await ZAI.create()
     const response = await zai.audio.tts.create({

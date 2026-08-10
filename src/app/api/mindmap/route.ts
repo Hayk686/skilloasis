@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server'
 import { getOrCreateUser, setUserIdCookie, grantXp, unlockAchievement, recordProgress } from '@/lib/gamify'
 import { complete, safeJsonParse } from '@/lib/ai'
+import { parseJsonBody, shortText } from '@/lib/request'
+import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
+
+const mindMapSchema = z.object({ topic: shortText(200) })
 
 interface MindMapNode {
   id: string
@@ -47,11 +51,9 @@ const MINDMAP_SYSTEM = `Ты — генератор концептуальных
 export async function POST(req: Request) {
   try {
     const user = await getOrCreateUser()
-    const body = await req.json().catch(() => ({}))
-    const topic: string = (body.topic ?? '').toString().trim()
-    if (!topic) {
-      return NextResponse.json({ error: 'Укажите тему' }, { status: 400 })
-    }
+    const parsed = await parseJsonBody(req, mindMapSchema)
+    if (!parsed.success) return parsed.response
+    const { topic } = parsed.data
 
     const raw = await complete(MINDMAP_SYSTEM, [
       { role: 'user', content: `Создай карту знаний по теме: "${topic}"` },

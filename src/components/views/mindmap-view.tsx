@@ -6,15 +6,12 @@ import {
   Network,
   Sparkles,
   Loader2,
-  ArrowRight,
-  RotateCcw,
   ZoomIn,
   ZoomOut,
   Maximize2,
   BookOpen,
   ChevronDown,
   ChevronRight,
-  Lightbulb,
 } from 'lucide-react'
 import { useNav, useUser } from '@/lib/store'
 import { SUBJECTS } from '@/lib/subjects'
@@ -23,11 +20,8 @@ import {
   SectionHeader,
   GlassCard,
   GradientButton,
-  Pill,
   LoadingState,
   EmptyState,
-  StaggerGroup,
-  StaggerItem,
 } from '@/components/ui-blocks'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'

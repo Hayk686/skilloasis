@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getOrCreateUser, setUserIdCookie, touchStreak, levelFromXp } from '@/lib/gamify'
+import { parseJsonBody, shortText } from '@/lib/request'
+import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
+
+const updateUserSchema = z.object({ name: shortText(32) })
 
 export async function GET() {
   const user = await getOrCreateUser()
@@ -37,12 +41,12 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
   const user = await getOrCreateUser()
-  const body = await req.json().catch(() => ({}))
-  const data: { name?: string } = {}
-  if (typeof body.name === 'string' && body.name.trim()) {
-    data.name = body.name.trim().slice(0, 32)
-  }
-  const updated = await db.user.update({ where: { id: user.id }, data })
+  const parsed = await parseJsonBody(req, updateUserSchema)
+  if (!parsed.success) return parsed.response
+  const updated = await db.user.update({
+    where: { id: user.id },
+    data: { name: parsed.data.name },
+  })
   const res = NextResponse.json({ user: updated })
   setUserIdCookie(res, user.id)
   return res

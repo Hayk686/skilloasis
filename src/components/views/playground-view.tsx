@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
   Terminal,
   Play,
@@ -25,12 +25,6 @@ import ReactMarkdown from 'react-markdown'
 interface LogEntry {
   type: 'log' | 'warn' | 'error' | 'info'
   args: string[]
-}
-
-interface RunResult {
-  logs: LogEntry[]
-  error: string | null
-  result: string | null
 }
 
 interface Challenge {

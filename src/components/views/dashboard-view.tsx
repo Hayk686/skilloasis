@@ -47,8 +47,9 @@ import {
 import { toast } from 'sonner'
 import { useNav, useUser } from '@/lib/store'
 import { ShareCard } from '@/components/share-card'
-import { SUBJECTS, getSubject } from '@/lib/subjects'
+import { getSubject } from '@/lib/subjects'
 import { levelProgress, ACHIEVEMENTS } from '@/lib/gamify-client'
+import { seededFraction } from '@/lib/utils'
 import {
   PageSection,
   GlassCard,
@@ -214,28 +215,6 @@ function build7DaySeries(byDay: Record<string, number>): DaySeriesItem[] {
   return days
 }
 
-function dailyDoneKey(date: string) {
-  return `lumina:daily-done-${date}`
-}
-
-function isDailyDone(date: string): boolean {
-  if (typeof window === 'undefined') return false
-  try {
-    return window.localStorage.getItem(dailyDoneKey(date)) === '1'
-  } catch {
-    return false
-  }
-}
-
-function markDailyDone(date: string) {
-  if (typeof window === 'undefined') return
-  try {
-    window.localStorage.setItem(dailyDoneKey(date), '1')
-  } catch {
-    // ignore
-  }
-}
-
 const ACHIEVEMENT_ICONS: Record<
   string,
   React.ComponentType<{ className?: string }>
@@ -324,15 +303,17 @@ function ConfettiBurst({ burst }: { burst: number }) {
   const particles = useMemo(() => {
     if (burst === 0) return []
     return Array.from({ length: 28 }, (_, i) => {
-      const angle = (i / 28) * Math.PI * 2 + Math.random() * 0.4
-      const distance = 90 + Math.random() * 110
+      const randomA = seededFraction(burst * 101 + i * 17)
+      const randomB = seededFraction(burst * 211 + i * 29)
+      const angle = (i / 28) * Math.PI * 2 + randomA * 0.4
+      const distance = 90 + randomB * 110
       return {
         id: `${burst}-${i}`,
         x: Math.cos(angle) * distance,
         y: Math.sin(angle) * distance,
-        delay: Math.random() * 0.12,
+        delay: seededFraction(burst * 307 + i * 31) * 0.12,
         emoji: ['🎉', '✨', '⭐', '🔥', '💫', '🌟'][i % 6],
-        rotate: (Math.random() - 0.5) * 540,
+        rotate: (seededFraction(burst * 401 + i * 43) - 0.5) * 540,
       }
     })
   }, [burst])
@@ -534,7 +515,7 @@ export function DashboardView() {
         if (pJson) setProgressData(pJson)
         if (dJson?.challenge) {
           setChallenge(dJson.challenge)
-          setDailyDone(isDailyDone(dJson.challenge.date))
+          setDailyDone(Boolean(dJson.completed))
         }
       } catch {
         // ignore
@@ -595,8 +576,6 @@ export function DashboardView() {
     try {
       const res = await fetch('/api/daily', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ xpReward: challenge.xpReward }),
       })
       if (!res.ok) throw new Error('fail')
       const data = await res.json()
@@ -609,7 +588,6 @@ export function DashboardView() {
         prev ? { ...prev, xp: data.xp, level: data.level } : prev
       )
       setDailyDone(true)
-      markDailyDone(challenge.date)
       setConfettiBurst((b) => b + 1)
       toast.success(`+${data.xpGain} XP за вызов!`, {
         description: 'Так держать — каждый шаг приближает к мечте 🚀',

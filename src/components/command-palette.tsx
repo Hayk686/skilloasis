@@ -18,9 +18,6 @@ import {
   Loader2,
   ArrowRight,
   CornerDownLeft,
-  Volume2,
-  ImageIcon,
-  X,
   Terminal,
 } from 'lucide-react'
 import { useNav, useUI, ViewId } from '@/lib/store'
@@ -138,7 +135,7 @@ export function CommandPalette() {
   for (const it of filtered) {
     ;(groups[it.group] ||= []).push(it)
   }
-  const flatFiltered = Object.entries(groups).flatMap(([g, arr]) => arr)
+  const flatFiltered = Object.values(groups).flatMap((itemsInGroup) => itemsInGroup)
 
   // keep active index in range
   useEffect(() => {

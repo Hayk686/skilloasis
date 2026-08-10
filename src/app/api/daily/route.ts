@@ -1,46 +1,100 @@
 import { NextResponse } from 'next/server'
-import { getOrCreateUser, setUserIdCookie, grantXp } from '@/lib/gamify'
+import { db } from '@/lib/db'
 import { generateDailyChallenge } from '@/lib/ai'
+import { awardXpOnce, getOrCreateUser, setUserIdCookie } from '@/lib/gamify'
 
 export const dynamic = 'force-dynamic'
+
+const DAILY_XP = 30
+
+function today() {
+  const date = new Date().toISOString().slice(0, 10)
+  return { date, value: new Date(`${date}T00:00:00.000Z`) }
+}
 
 export async function GET() {
   try {
     const user = await getOrCreateUser()
-    // Deterministic seed from date so it's stable per day
-    const now = new Date()
-    const seed = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`
-    const challenge = await generateDailyChallenge(seed)
-    // Ensure date is a proper, stable per-day ISO date string (YYYY-MM-DD)
-    // so client Date parsing and localStorage "done" keys work consistently.
-    const isoDate = now.toISOString().slice(0, 10)
-    challenge.date = isoDate
-    const res = NextResponse.json({ challenge })
+    const current = today()
+    const [challenge, completion] = await Promise.all([
+      generateDailyChallenge(current.date),
+      db.dailyCompletion.findUnique({
+        where: {
+          userId_challengeDate: {
+            userId: user.id,
+            challengeDate: current.value,
+          },
+        },
+      }),
+    ])
+    challenge.date = current.date
+    challenge.xpReward = DAILY_XP
+    const res = NextResponse.json({ challenge, completed: Boolean(completion) })
     setUserIdCookie(res, user.id)
     return res
-  } catch (err) {
-    console.error('[api/daily] error', err)
+  } catch (error) {
+    console.error('[api/daily] error', error)
     return NextResponse.json({ error: 'Не удалось получить вызов' }, { status: 500 })
   }
 }
 
-/** Mark daily done — grants xp */
-export async function POST(req: Request) {
+/** Complete today's challenge once. The reward is always decided by the server. */
+export async function POST() {
   try {
     const user = await getOrCreateUser()
-    const body = await req.json().catch(() => ({}))
-    const xpReward: number = Number(body.xpReward) || 30
-    const updated = await grantXp(user.id, xpReward)
+    const current = today()
+    const existing = await db.dailyCompletion.findUnique({
+      where: {
+        userId_challengeDate: {
+          userId: user.id,
+          challengeDate: current.value,
+        },
+      },
+    })
+    if (existing) {
+      const res = NextResponse.json({
+        ok: true,
+        alreadyCompleted: true,
+        xp: user.xp,
+        level: user.level,
+        xpGain: 0,
+      })
+      setUserIdCookie(res, user.id)
+      return res
+    }
+
+    const result = await awardXpOnce(user.id, DAILY_XP, 'daily', current.date)
+    await db.dailyCompletion
+      .create({
+        data: {
+          userId: user.id,
+          challengeDate: current.value,
+          xpAwarded: result.awarded,
+        },
+      })
+      .catch((error: unknown) => {
+        if (
+          typeof error !== 'object' ||
+          error === null ||
+          !('code' in error) ||
+          error.code !== 'P2002'
+        ) {
+          throw error
+        }
+      })
+
+    const updated = result.user ?? user
     const res = NextResponse.json({
       ok: true,
-      xp: updated?.xp ?? user.xp,
-      level: updated?.level ?? user.level,
-      xpGain: xpReward,
+      alreadyCompleted: result.awarded === 0,
+      xp: updated.xp,
+      level: updated.level,
+      xpGain: result.awarded,
     })
     setUserIdCookie(res, user.id)
     return res
-  } catch (err) {
-    console.error('[api/daily submit] error', err)
+  } catch (error) {
+    console.error('[api/daily submit] error', error)
     return NextResponse.json({ error: 'Ошибка' }, { status: 500 })
   }
 }

@@ -1,7 +1,11 @@
+'use client'
+
 import Link from 'next/link'
 import { Heart, Github, Sparkles } from 'lucide-react'
+import { useTranslations } from '@/lib/i18n-client'
 
 export function Footer() {
+  const { t } = useTranslations()
   return (
     <footer className="mt-auto border-t border-border/60 bg-background/60 backdrop-blur-sm">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -13,23 +17,23 @@ export function Footer() {
             <div>
               <p className="text-sm font-semibold leading-tight">Lumina</p>
               <p className="text-xs text-muted-foreground leading-tight">
-                Бесплатно. Навсегда.
+                {t('footerFree')}
               </p>
             </div>
           </div>
 
           <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
             <Link href="#" className="hover:text-foreground transition-colors">
-              О проекте
+              {t('footerAbout')}
             </Link>
             <Link href="#" className="hover:text-foreground transition-colors">
-              Предметы
+              {t('footerSubjects')}
             </Link>
             <Link href="#" className="hover:text-foreground transition-colors">
-              Сообщество
+              {t('footerCommunity')}
             </Link>
             <Link href="#" className="hover:text-foreground transition-colors">
-              Конфиденциальность
+              {t('footerPrivacy')}
             </Link>
           </nav>
 
@@ -42,13 +46,13 @@ export function Footer() {
               <Github className="h-4 w-4" />
             </a>
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              Сделано с <Heart className="h-3.5 w-3.5 fill-rose-500 text-rose-500" /> для знаний
+              {t('footerMade')} <Heart className="h-3.5 w-3.5 fill-rose-500 text-rose-500" /> {t('footerForKnowledge')}
             </span>
           </div>
         </div>
 
         <div className="mt-6 border-t border-border/40 pt-4 text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Lumina. Все знания — общее достояние.
+          © {new Date().getFullYear()} Lumina. {t('footerCopyright')}
         </div>
       </div>
     </footer>

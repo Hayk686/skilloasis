@@ -2,20 +2,23 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getOrCreateUser, setUserIdCookie, grantXp, unlockAchievement } from '@/lib/gamify'
 import { generateFlashcards } from '@/lib/ai'
+import { parseJsonBody, shortText } from '@/lib/request'
+import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
+
+const flashcardsSchema = z.object({
+  topic: shortText(200),
+  subject: shortText(64).default('general'),
+  count: z.number().int().min(3).max(20).default(8),
+})
 
 export async function POST(req: Request) {
   try {
     const user = await getOrCreateUser()
-    const body = await req.json().catch(() => ({}))
-    const topic: string = (body.topic ?? '').toString().trim()
-    const subject: string = (body.subject ?? 'general').toString()
-    const count: number = Math.min(20, Math.max(3, Number(body.count) || 8))
-
-    if (!topic) {
-      return NextResponse.json({ error: 'Укажите тему' }, { status: 400 })
-    }
+    const parsed = await parseJsonBody(req, flashcardsSchema)
+    if (!parsed.success) return parsed.response
+    const { topic, subject, count } = parsed.data
 
     const cards = await generateFlashcards(topic, count)
     // Persist cards

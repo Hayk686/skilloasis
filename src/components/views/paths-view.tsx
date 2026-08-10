@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Compass, Sparkles, Clock, Target, ArrowRight, Loader2, Route, CheckCircle2 } from 'lucide-react'
+import { Compass, Sparkles, Clock, Target, ArrowRight, Loader2, Route } from 'lucide-react'
 import { PageSection, SectionHeader, GlassCard, GradientButton, Pill, EmptyState } from '@/components/ui-blocks'
 import { useNav } from '@/lib/store'
 import { toast } from 'sonner'
@@ -51,7 +51,7 @@ export function PathsView() {
       if (!res.ok) throw new Error(data.error)
       setPath(data.path)
       toast.success('Маршрут построен!')
-    } catch (e) {
+    } catch {
       toast.error('Не удалось построить маршрут. Попробуй ещё раз.')
     } finally {
       setLoading(false)

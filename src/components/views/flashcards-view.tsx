@@ -337,7 +337,7 @@ export function FlashcardsView() {
         return next
       })
       setFlipped(false)
-    } catch (e) {
+    } catch {
       toast.error('Не удалось удалить карточку')
     } finally {
       setDeleting(false)
@@ -667,7 +667,6 @@ function ReviewSession({
 }) {
   const card = cards[index]
   const total = cards.length
-  const progress = total > 0 ? ((index + (flipped ? 0.5 : 0)) / total) * 100 : 0
   const subjectInfo = card?.subject ? getSubject(card.subject) : undefined
 
   const variants = {

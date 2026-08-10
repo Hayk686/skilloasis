@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import ZAI from 'z-ai-web-dev-sdk'
 import { getOrCreateUser, setUserIdCookie, grantXp } from '@/lib/gamify'
+import { parseJsonBody, shortText } from '@/lib/request'
+import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -15,6 +17,11 @@ const SUPPORTED_SIZES = [
   '720x1440',
 ] as const
 
+const imageSchema = z.object({
+  prompt: shortText(1000),
+  size: z.enum(SUPPORTED_SIZES).default('1024x1024'),
+})
+
 /**
  * POST /api/image
  * Body: { prompt, size? }
@@ -23,15 +30,9 @@ const SUPPORTED_SIZES = [
 export async function POST(req: NextRequest) {
   try {
     const user = await getOrCreateUser()
-    const body = await req.json().catch(() => ({}))
-    const prompt: string = (body.prompt ?? '').toString().trim()
-    const size: string = SUPPORTED_SIZES.includes(body.size)
-      ? body.size
-      : '1024x1024'
-
-    if (!prompt) {
-      return NextResponse.json({ error: 'Опишите изображение' }, { status: 400 })
-    }
+    const parsed = await parseJsonBody(req, imageSchema)
+    if (!parsed.success) return parsed.response
+    const { prompt, size } = parsed.data
 
     // Enrich the prompt for an educational illustration style
     const enriched = `${prompt}, educational illustration, vibrant, cosmic gradient background with violet and fuchsia tones, modern digital art, high quality, detailed`
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
     const zai = await ZAI.create()
     const response = await zai.images.generations.create({
       prompt: enriched,
-      size: size as (typeof SUPPORTED_SIZES)[number],
+      size,
     })
 
     const imageBase64 = response.data?.[0]?.base64
