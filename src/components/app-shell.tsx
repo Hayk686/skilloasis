@@ -250,49 +250,54 @@ function SidebarContent({
   onSelect: (v: ViewId) => void
 }) {
   const { t } = useTranslations()
+  const renderNavItem = (item: (typeof NAV_ITEMS)[number]) => {
+    const Icon = item.icon
+    const isActive = active === item.id
+    return (
+      <button
+        key={item.id}
+        onClick={() => onSelect(item.id)}
+        className={cn(
+          'group relative flex w-full shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all',
+          isActive
+            ? 'bg-primary/10 text-foreground'
+            : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+        )}
+      >
+        {isActive && (
+          <motion.div
+            layoutId="nav-active"
+            className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-gradient-to-b from-violet-500 to-fuchsia-500"
+          />
+        )}
+        <div
+          className={cn(
+            'grid h-8 w-8 shrink-0 place-items-center rounded-lg transition-colors',
+            isActive
+              ? 'bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white shadow-md shadow-fuchsia-500/20'
+              : 'bg-muted/60 text-muted-foreground group-hover:text-foreground'
+          )}
+        >
+          <Icon className="h-4 w-4" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-medium leading-tight">{t(item.label)}</p>
+          <p className="truncate text-[11px] text-muted-foreground">{t(item.desc)}</p>
+        </div>
+      </button>
+    )
+  }
+
   return (
     <nav className="flex h-full min-h-0 flex-col" aria-label={t('navigation')}>
       <p className="shrink-0 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
         {t('navigation')}
       </p>
+      <div className="-mx-1 shrink-0 space-y-1 px-1 pb-1">
+        {NAV_ITEMS.slice(0, 2).map(renderNavItem)}
+      </div>
       <div className="-mx-1 min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain px-1 pb-3">
-        {NAV_ITEMS.map((item) => {
-          const Icon = item.icon
-          const isActive = active === item.id
-          return (
-            <button
-              key={item.id}
-              onClick={() => onSelect(item.id)}
-              className={cn(
-                'group relative flex w-full shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all',
-                isActive
-                  ? 'bg-primary/10 text-foreground'
-                  : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
-              )}
-            >
-              {isActive && (
-                <motion.div
-                  layoutId="nav-active"
-                  className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-gradient-to-b from-violet-500 to-fuchsia-500"
-                />
-              )}
-              <div
-                className={cn(
-                  'grid h-8 w-8 shrink-0 place-items-center rounded-lg transition-colors',
-                  isActive
-                    ? 'bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white shadow-md shadow-fuchsia-500/20'
-                    : 'bg-muted/60 text-muted-foreground group-hover:text-foreground'
-                )}
-              >
-                <Icon className="h-4 w-4" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-medium leading-tight">{t(item.label)}</p>
-                <p className="truncate text-[11px] text-muted-foreground">{t(item.desc)}</p>
-              </div>
-            </button>
-          )
-        })}
+        {NAV_ITEMS.slice(2).map(renderNavItem)}
       </div>
 
       <div className="mt-3 shrink-0 rounded-xl border border-border/60 bg-gradient-to-br from-primary/5 to-fuchsia-500/5 p-3">
