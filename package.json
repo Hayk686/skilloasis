@@ -5,7 +5,7 @@
   "packageManager": "bun@1.3.4",
   "scripts": {
     "dev": "next dev -p 3000",
-    "build": "next build && node scripts/prepare-standalone.mjs",
+    "build": "node scripts/deploy-database.mjs && next build && node scripts/prepare-standalone.mjs",
     "start": "node .next/standalone/server.js",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",

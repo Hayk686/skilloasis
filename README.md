@@ -32,6 +32,7 @@ bun run dev
 
 The initial migration creates all application tables. The old local SQLite
 database was development-only and is not part of the Supabase migration.
+Vercel builds automatically run `prisma migrate deploy` before compiling the app.
 
 ## NVIDIA AI
 
