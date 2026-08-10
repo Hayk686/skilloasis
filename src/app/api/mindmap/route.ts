@@ -15,38 +15,38 @@ interface MindMapNode {
   children?: MindMapNode[]
 }
 
-const MINDMAP_SYSTEM = `Ты — генератор концептуальных карт знаний (mind maps).
-Создавай карту в СТРОГОМ JSON формате — иерархию узлов:
+const MINDMAP_SYSTEM = `Create a knowledge mind map as a strict JSON node hierarchy:
 {
   "root": {
     "id": "root",
-    "label": "Название темы",
+    "label": "Topic name",
     "children": [
       {
         "id": "c1",
-        "label": "Подтема 1",
+        "label": "Subtopic 1",
         "children": [
-          { "id": "c1-1", "label": "Деталь 1.1" },
-          { "id": "c1-2", "label": "Деталь 1.2" }
+          { "id": "c1-1", "label": "Detail 1.1" },
+          { "id": "c1-2", "label": "Detail 1.2" }
         ]
       },
       {
         "id": "c2",
-        "label": "Подтема 2",
+        "label": "Subtopic 2",
         "children": [
-          { "id": "c2-1", "label": "Деталь 2.1" },
-          { "id": "c2-2", "label": "Деталь 2.2" }
+          { "id": "c2-1", "label": "Detail 2.1" },
+          { "id": "c2-2", "label": "Detail 2.2" }
         ]
       }
     ]
   }
 }
-Правила:
-- 4-7 подтем на первом уровне, каждая с 2-4 дочерними.
-- Глубина — максимум 3 уровня.
-- Яркие, короткие подписи (1-4 слова).
-- Покрывай ключевые аспекты темы.
-- id — уникальные строки (напр. "c1", "c1-1").`
+Rules:
+- Create 4-7 first-level subtopics with 2-4 children each.
+- Use at most three levels.
+- Use vivid labels of 1-4 words.
+- Cover the topic's key aspects.
+- Use unique string IDs such as "c1" and "c1-1".
+- Localize every label into the required output language.`
 
 export async function POST(req: Request) {
   try {
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
     const { topic } = parsed.data
 
     const raw = await complete(MINDMAP_SYSTEM, [
-      { role: 'user', content: `Создай карту знаний по теме: "${topic}"` },
+      { role: 'user', content: `Create a knowledge map about: "${topic}"` },
     ], { temperature: 0.7, json: true })
 
     const map = safeJsonParse<{ root: MindMapNode }>(raw, {

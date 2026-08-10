@@ -1,4 +1,4 @@
-import { getLanguageInstruction } from '@/lib/locale-server'
+import { getLanguageInstruction, getRequestLocale } from '@/lib/locale-server'
 
 const NVIDIA_BASE_URL = 'https://integrate.api.nvidia.com/v1'
 const NVIDIA_MODEL = 'nvidia/nemotron-3-super-120b-a12b'
@@ -29,7 +29,16 @@ interface CompletionMessage {
   content: string
 }
 
-async function nvidiaCompletion(messages: CompletionMessage[]): Promise<string> {
+interface CompletionOptions {
+  temperature?: number
+  maxTokens?: number
+  timeoutMs?: number
+}
+
+async function nvidiaCompletion(
+  messages: CompletionMessage[],
+  options: CompletionOptions = {}
+): Promise<string> {
   const baseUrl = (process.env.NVIDIA_BASE_URL || NVIDIA_BASE_URL).replace(/\/$/, '')
   const apiKey = process.env.NVIDIA_API_KEY
   if (!apiKey) {
@@ -47,15 +56,13 @@ async function nvidiaCompletion(messages: CompletionMessage[]): Promise<string> 
       body: JSON.stringify({
         model: NVIDIA_MODEL,
         messages,
-        temperature: 1,
+        temperature: options.temperature ?? 1,
         top_p: 0.95,
-        max_tokens: 8192,
-        chat_template_kwargs: {
-          enable_thinking: false,
-        },
+        max_tokens: options.maxTokens ?? 8192,
+        reasoning_effort: 'none',
         stream: false,
       }),
-      signal: AbortSignal.timeout(90_000),
+      signal: AbortSignal.timeout(options.timeoutMs ?? 55_000),
     })
   } catch (error) {
     if (error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError')) {
@@ -105,9 +112,27 @@ Return only the final user-facing answer. Do not expose analysis, hidden reasoni
     ...messages,
   ]
   try {
-    let content = await nvidiaCompletion(messagesWithSystem)
+    let content = await nvidiaCompletion(messagesWithSystem, {
+      temperature: opts.temperature,
+    })
     if (opts.json) {
       content = extractJson(content)
+      if (tryJsonParse(content) === null) {
+        const repairMessages: CompletionMessage[] = [
+          {
+            role: 'system',
+            content: `You are a strict JSON repair engine. Return exactly one valid JSON value and nothing else. Preserve the intended data, satisfy the requested schema, and keep every natural-language string in the required output language. Never use Markdown fences, comments, ellipses, or trailing commas.\n\n${outputLanguageRule}`,
+          },
+          {
+            role: 'user',
+            content: `Required schema and content rules:\n${system}\n\nRepair this model response into valid JSON:\n${content}`,
+          },
+        ]
+        content = extractJson(await nvidiaCompletion(repairMessages, {
+          temperature: 0.2,
+          maxTokens: 8192,
+        }))
+      }
     }
     return content
   } catch (err) {
@@ -158,7 +183,7 @@ export function extractJson(text: string): string {
   return t.slice(start)
 }
 
-export function safeJsonParse<T>(raw: string, fallback: T): T {
+function tryJsonParse<T = unknown>(raw: string): T | null {
   const candidates = [
     raw,
     // repair trailing commas
@@ -173,24 +198,28 @@ export function safeJsonParse<T>(raw: string, fallback: T): T {
       // try next
     }
   }
-  return fallback
+  return null
+}
+
+export function safeJsonParse<T>(raw: string, fallback: T): T {
+  return tryJsonParse<T>(raw) ?? fallback
 }
 
 /* ===================== TUTOR ===================== */
 
-const TUTOR_SYSTEM = `Ты — Lumina, тёплый, мудрый и воодушевляющий AI-наставник.
-Принципы:
-- Объясняй СЛОЖНОЕ ПРОСТО: используй аналогии из жизни, короткие примеры, шаги.
-- Будь лаконичным, но не сухим. Используй Markdown: заголовки ##, списки, **жирный**, \`код\`, цитаты.
-- Если уместно — задавай проверочный вопрос в конце, чтобы ученик думал дальше.
-- Никогда не выдумывай факты. Если не уверен — скажи честно.
-- Поддерживай и хвали за прогресс, но не льсти без повода.
-- По математике/физике показывай ход решения по шагам.
-- По программированию давай короткие рабочие примеры в коде.`
+const TUTOR_SYSTEM = `You are Lumina, a warm, wise, and encouraging AI tutor.
+Principles:
+- Make difficult ideas simple with everyday analogies, short examples, and clear steps.
+- Be concise but helpful. Use Markdown headings, lists, emphasis, code, and quotes when useful.
+- When appropriate, end with one short check-for-understanding question.
+- Never invent facts. State uncertainty honestly.
+- Encourage real progress without empty flattery.
+- Show step-by-step reasoning for mathematics and physics without exposing hidden chain-of-thought.
+- Give short, working code examples for programming topics.`
 
 export async function tutorChat(history: ChatTurn[], subject?: string): Promise<string> {
   const sys = subject
-    ? `${TUTOR_SYSTEM}\n\nТекущая тема обучения: ${subject}. Помогай именно в этой области, но не отказывайся от смежных вопросов.`
+    ? `${TUTOR_SYSTEM}\n\nCurrent learning subject: ${subject}. Focus on this area while still answering closely related questions.`
     : TUTOR_SYSTEM
   return complete(sys, history, { temperature: 0.7 })
 }
@@ -216,51 +245,60 @@ export interface Lesson {
   nextTopic: string
 }
 
-const LESSON_SYSTEM = `Ты — мастер создания увлекательных обучающих уроков.
-Создавай урок в СТРОГОМ JSON формате (без markdown вокруг), со структурой:
+const LESSON_SYSTEM = `Create an engaging educational lesson as strict JSON using this exact structure:
 {
   "title": string,
-  "emoji": string (один эмодзи),
-  "summary": string (1-2 предложения, цепляющее введение),
+  "emoji": string (one emoji),
+  "summary": string (an engaging 1-2 sentence introduction),
   "durationMin": number (5-20),
-  "difficulty": string (Лёгкий|Средний|Сложный),
+  "difficulty": string,
   "blocks": [
     { "type": "heading", "text": "..." },
     { "type": "paragraph", "text": "..." },
-    { "type": "analogy", "text": "Аналогия: ..." },
-    { "type": "example", "text": "Пример: ..." },
-    { "type": "callout", "text": "Важно: ..." },
+    { "type": "analogy", "text": "..." },
+    { "type": "example", "text": "..." },
+    { "type": "callout", "text": "..." },
     { "type": "code", "code": "...", "lang": "python" },
-    { "type": "steps", "items": ["Шаг 1...", "Шаг 2..."] },
+    { "type": "steps", "items": ["...", "..."] },
     { "type": "quote", "text": "..." }
   ],
   "keyTakeaways": ["...", "..."],
-  "nextTopic": "что изучить дальше"
+  "nextTopic": string
 }
-Правила:
-- 8-14 блоков, логичный ритм: объяснение -> пример -> аналогия -> шаги.
-- Текст блоков живой и понятный, без академической сухости.
-- Для программирования включай блоки code.`
+Rules:
+- Produce 8-12 useful blocks in a logical teaching sequence.
+- Write lively, accurate, easy-to-understand content.
+- Include code blocks only for programming topics.
+- Localize difficulty and every other natural-language value into the required output language.
+- Do not leave placeholder values such as "..." in the response.`
 
 export async function generateLesson(topic: string, level?: string): Promise<Lesson> {
-  const prompt = `Создай урок по теме: "${topic}"${level ? ` для уровня: ${level}` : ''}.
-Сделай его по-настоящему интересным и понятным.`
+  const prompt = `Create a complete lesson about: "${topic}"${level ? `. Learner level: ${level}` : ''}. Make it genuinely interesting and easy to understand.`
   const raw = await complete(LESSON_SYSTEM, [{ role: 'user', content: prompt }], {
     temperature: 0.8,
     json: true,
   })
-  return safeJsonParse<Lesson>(raw, {
+  const parsed = safeJsonParse<Lesson | null>(raw, null)
+  if (parsed?.title && Array.isArray(parsed.blocks) && parsed.blocks.length > 0) return parsed
+
+  const locale = await getRequestLocale()
+  const fallback = {
+    ru: { summary: `Урок по теме: ${topic}`, difficulty: 'Средний' },
+    en: { summary: `Lesson about: ${topic}`, difficulty: 'Medium' },
+    hy: { summary: `Դաս թեմայով՝ ${topic}`, difficulty: 'Միջին' },
+  }[locale]
+  return {
     title: topic,
     emoji: '✨',
-    summary: 'Урок по теме: ' + topic,
+    summary: fallback.summary,
     durationMin: 10,
-    difficulty: 'Средний',
+    difficulty: fallback.difficulty,
     blocks: [
       { type: 'paragraph', text: raw.slice(0, 400) },
     ],
     keyTakeaways: [],
     nextTopic: topic,
-  })
+  }
 }
 
 /* ===================== QUIZ GENERATION ===================== */
@@ -274,8 +312,7 @@ export interface QuizQuestion {
   difficulty: string // easy | medium | hard
 }
 
-const QUIZ_SYSTEM = `Ты — генератор адаптивных квизов.
-Создавай квиз в СТРОГОМ JSON формате:
+const QUIZ_SYSTEM = `Create an adaptive quiz as strict JSON:
 {
   "questions": [
     {
@@ -283,24 +320,25 @@ const QUIZ_SYSTEM = `Ты — генератор адаптивных квизо
       "question": "string",
       "options": ["A","B","C","D"],
       "correctIndex": 0-3,
-      "explanation": "почему правильный ответ именно такой, кратко",
+      "explanation": "a concise explanation of the correct answer",
       "difficulty": "easy|medium|hard"
     }
   ]
 }
-Правила:
-- Ровно {N} вопросов.
-- 4 варианта ответа, только один правильный.
-- Вопросы проверяют понимание, а не зубрёжку.
-- Объяснение к каждому ответу.
-- Сложность прогрессирует: первые легче, последние сложнее.`
+Rules:
+- Return exactly {N} questions.
+- Give four options and exactly one correct answer.
+- Test understanding instead of memorization.
+- Explain every correct answer.
+- Progress from easier to harder questions.
+- Localize question, options, and explanation into the required output language.`
 
 export async function generateQuiz(
   topic: string,
   count = 5,
   level?: string
 ): Promise<QuizQuestion[]> {
-  const prompt = `Создай ${count} вопросов по теме "${topic}"${level ? `, уровень ${level}` : ''}.`
+  const prompt = `Create ${count} questions about "${topic}"${level ? ` for learner level ${level}` : ''}.`
   const raw = await complete(QUIZ_SYSTEM.replace('{N}', String(count)), [
     { role: 'user', content: prompt },
   ], { temperature: 0.7, json: true })
@@ -315,24 +353,24 @@ export interface FlashcardPair {
   back: string
 }
 
-const FLASH_SYSTEM = `Ты — генератор флешкарт для интервального повторения.
-Создавай карты в СТРОГОМ JSON формате:
+const FLASH_SYSTEM = `Create spaced-repetition flashcards as strict JSON:
 {
   "cards": [
-    { "front": "короткий вопрос/термин", "back": "чёткий ответ 1-2 предложения" }
+    { "front": "short question or term", "back": "clear 1-2 sentence answer" }
   ]
 }
-Правила:
-- {N} карт по теме.
-- front — вопрос или термин (коротко).
-- back — ответ ёмкий и точный.
-- Покрывай ключевые концепции темы.`
+Rules:
+- Return exactly {N} cards about the topic.
+- Keep the front short.
+- Make the back concise and accurate.
+- Cover the topic's key concepts.
+- Localize both sides into the required output language.`
 
 export async function generateFlashcards(
   topic: string,
   count = 8
 ): Promise<FlashcardPair[]> {
-  const prompt = `Создай ${count} флешкарт по теме "${topic}".`
+  const prompt = `Create ${count} flashcards about "${topic}".`
   const raw = await complete(FLASH_SYSTEM.replace('{N}', String(count)), [
     { role: 'user', content: prompt },
   ], { temperature: 0.7, json: true })
@@ -342,12 +380,12 @@ export async function generateFlashcards(
 
 /* ===================== EXPLAIN (concept) ===================== */
 
-const EXPLAIN_SYSTEM = `Ты — мастер простых объяснений. Объясни концепцию так,
-чтобы понял подросток. Используй Markdown, аналогии, примеры из жизни.
-Длина — 150-300 слов. Структура: краткое определение, аналогия, пример, почему это важно.`
+const EXPLAIN_SYSTEM = `Explain the concept so a teenager can understand it. Use Markdown,
+an analogy, and an everyday example. Write 150-300 words with this structure:
+a short definition, analogy, example, and why it matters.`
 
 export async function explainConcept(concept: string): Promise<string> {
-  return complete(EXPLAIN_SYSTEM, [{ role: 'user', content: `Объясни: ${concept}` }], {
+  return complete(EXPLAIN_SYSTEM, [{ role: 'user', content: `Explain: ${concept}` }], {
     temperature: 0.7,
   })
 }
@@ -364,22 +402,21 @@ export interface DailyChallenge {
   xpReward: number
 }
 
-const DAILY_SYSTEM = `Ты — генератор ежедневных интеллектуальных вызовов.
-Верни ОДИН вызов в СТРОГОМ JSON формате:
+const DAILY_SYSTEM = `Create one daily intellectual challenge as strict JSON:
 {
-  "subject": "название предмета",
-  "emoji": "один эмодзи",
-  "title": "короткое название вызова",
-  "prompt": "что нужно сделать/решить/объяснить — 1-3 предложения",
-  "hint": "подсказка, не дающая прямой ответ",
+  "subject": "subject name",
+  "emoji": "one emoji",
+  "title": "short challenge title",
+  "prompt": "the task in 1-3 sentences",
+  "hint": "a useful hint that does not reveal the answer",
   "xpReward": 30
 }
-Вызовы должны быть разнообразными: задача, загадка, вопрос на размышление, творческое задание.
-xpReward от 20 до 50.`
+Vary the type between a problem, riddle, reflection question, and creative task.
+Set xpReward from 20 to 50. Localize every natural-language value.`
 
 export async function generateDailyChallenge(seed: string): Promise<DailyChallenge> {
   const raw = await complete(DAILY_SYSTEM, [
-    { role: 'user', content: `Сгенерируй вызов на сегодня (seed: ${seed}). Сделай его нестандартным и воодушевляющим.` },
+    { role: 'user', content: `Create today's challenge (seed: ${seed}). Make it original and encouraging.` },
   ], { temperature: 0.9, json: true })
   return safeJsonParse<DailyChallenge>(raw, {
     date: seed,
@@ -407,25 +444,25 @@ export interface LearningPath {
   steps: PathStep[]
 }
 
-const PATH_SYSTEM = `Ты — проектировщик образовательных маршрутов.
-Создай персональный путь обучения в СТРОГОМ JSON формате:
+const PATH_SYSTEM = `Create a personalized learning path as strict JSON:
 {
-  "goal": "главная цель",
-  "emoji": "один эмодзи",
-  "duration": "например: 4 недели",
-  "level": "Новичок|Средний|Продвинутый",
+  "goal": "main goal",
+  "emoji": "one emoji",
+  "duration": "for example: 4 weeks",
+  "level": "learner level",
   "steps": [
-    { "title": "название этапа", "description": "что изучать и зачем" }
+    { "title": "stage title", "description": "what to learn and why" }
   ]
 }
-Правила:
-- 6-10 шагов, от простого к сложному.
-- Каждый шаг — конкретная тема с обоснованием.
-- Реалистичная длительность.`
+Rules:
+- Produce 6-10 steps from fundamentals to advanced material.
+- Make every step a concrete topic with a reason.
+- Give a realistic duration.
+- Localize every natural-language value into the required output language.`
 
 export async function generatePath(goal: string, level?: string): Promise<LearningPath> {
   const raw = await complete(PATH_SYSTEM, [
-    { role: 'user', content: `Создай путь к цели: "${goal}"${level ? `, уровень: ${level}` : ''}.` },
+    { role: 'user', content: `Create a learning path for this goal: "${goal}"${level ? `. Learner level: ${level}` : ''}.` },
   ], { temperature: 0.8, json: true })
   return safeJsonParse<LearningPath>(raw, {
     goal,
