@@ -220,15 +220,26 @@ Return only the final user-facing answer. Do not expose analysis, hidden reasoni
         const invalidArmenian = hasArmenianLanguageLeak(content, Boolean(opts.json))
         const remaining = completionDeadline - Date.now()
         if ((invalidJson || invalidArmenian) && remaining >= 15_000) {
-          const armenianRepairMessages: CompletionMessage[] = [
-            {
-              role: 'system',
-              content: `You are a strict Eastern Armenian quality editor. Return only the corrected ${opts.json ? 'valid JSON' : 'content'}. Preserve structure, keys, facts, code, formulas, URLs, IDs, and emojis. Rewrite all natural-language text in fluent Eastern Armenian using Armenian letters. Remove Russian, Persian, Arabic, English, and transliterated prose.`,
-            },
-            { role: 'user', content },
-          ]
+          const armenianRepairMessages: CompletionMessage[] = opts.json
+            ? [
+                {
+                  role: 'system',
+                  content: `You are a strict JSON repair and Eastern Armenian quality editor. Return exactly one valid JSON value and nothing else. Preserve all facts and satisfy the requested schema. Keep property names, structural enum values, code, formulas, URLs, IDs, and emojis unchanged. Rewrite every natural-language string in fluent Eastern Armenian using Armenian letters. Never use Markdown fences, comments, ellipses, trailing commas, Russian, Persian, Arabic, English, or transliterated prose.`,
+                },
+                {
+                  role: 'user',
+                  content: `Required JSON schema and content rules:\n${system}\n\nRepair this response completely:\n${content}`,
+                },
+              ]
+            : [
+                {
+                  role: 'system',
+                  content: `You are a strict Eastern Armenian quality editor. Return only the corrected content. Preserve facts, Markdown, code, formulas, URLs, IDs, and emojis. Rewrite all natural-language text in fluent Eastern Armenian using Armenian letters. Remove Russian, Persian, Arabic, English, and transliterated prose.`,
+                },
+                { role: 'user', content },
+              ]
           content = await nvidiaCompletion(armenianRepairMessages, {
-            temperature: 0.7,
+            temperature: 0.2,
             maxTokens: 4096,
             timeoutMs: remainingTimeout(38_000),
           })
