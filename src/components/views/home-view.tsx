@@ -128,7 +128,7 @@ export function HomeView() {
               {[
                 { v: '8+', l: tr('предметов', 'subjects', 'առարկա') },
                 { v: '∞', l: tr('тем для изучения', 'topics to explore', 'ուսումնասիրվող թեմա') },
-                { v: '0₽', l: tr('стоимость', 'cost', 'արժեք') },
+                { v: '0$', l: tr('стоимость', 'cost', 'արժեք') },
               ].map((s) => (
                 <div key={s.l} className="rounded-2xl border border-border/40 bg-card/40 px-4 py-3 backdrop-blur-sm">
                   <div className="text-2xl font-bold text-gradient sm:text-3xl">{s.v}</div>
