@@ -65,9 +65,7 @@ async function nvidiaCompletion(
         temperature: options.temperature ?? (isArmenianTranslator ? 0.7 : 1),
         top_p: isArmenianTranslator ? 0.8 : 0.95,
         max_tokens: options.maxTokens ?? 4096,
-        ...(isArmenianTranslator
-          ? { top_k: 20, min_p: 0 }
-          : { reasoning_effort: 'none' }),
+        ...(!isArmenianTranslator && { reasoning_effort: 'none' }),
         stream: false,
       }),
       signal: AbortSignal.timeout(options.timeoutMs ?? 90_000),
