@@ -190,14 +190,14 @@ Return only the final user-facing answer. Do not expose analysis, hidden reasoni
         content = await nvidiaCompletion([
           {
             role: 'system',
-            content: `You are the final Eastern Armenian quality editor. Return only the corrected ${opts.json ? 'valid JSON' : 'content'}. Keep structure, keys, facts, code, formulas, URLs, IDs, and emojis unchanged. Rewrite every natural-language phrase in fluent Eastern Armenian using Armenian letters. Remove foreign-script and transliterated prose.`,
+            content: `You are the final Eastern Armenian quality editor. Return only the corrected ${opts.json ? 'valid JSON' : 'content'}. Keep structure, keys, facts, code, formulas, URLs, IDs, and emojis unchanged. Rewrite every natural-language phrase in clear, fluent, native Eastern Armenian using Armenian letters. Correct mistranslated or invented Armenian words and unnatural grammar. Remove every foreign-script and transliterated prose fragment.`,
           },
           { role: 'user', content },
         ], {
-          model: translatorModel,
-          temperature: translatorModel === ARMENIAN_TRANSLATOR_MODEL ? 1 : 0.7,
+          model: NEMOTRON_MODEL,
+          temperature: 0.2,
           maxTokens: 4096,
-          timeoutMs: remainingTimeout(60_000),
+          timeoutMs: remainingTimeout(90_000),
         })
         if (opts.json) content = extractJson(content)
       }
