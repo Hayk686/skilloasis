@@ -29,7 +29,7 @@ import { cn } from '@/lib/utils'
 import { useEffect, useState } from 'react'
 import { AuroraBackground } from '@/components/aurora'
 import { Footer } from '@/components/footer'
-import { CommandPalette, CommandTrigger } from '@/components/command-palette'
+import { CommandPalette } from '@/components/command-palette'
 import { useLocaleSync, useTranslations, type TranslationKey } from '@/lib/i18n-client'
 import { AuthDialog } from '@/components/auth-dialog'
 import {
@@ -136,11 +136,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <button
               onClick={() => setCommandOpen(true)}
               aria-label={t('search')}
-              className="hidden h-9 items-center gap-2 rounded-lg border border-border/60 bg-card/40 px-3 text-xs text-muted-foreground transition-colors hover:text-foreground md:flex"
+              className="hidden h-9 w-9 items-center justify-center rounded-lg border border-border/60 bg-card/40 text-muted-foreground transition-colors hover:border-border hover:text-foreground md:flex"
             >
-              <Search className="h-3.5 w-3.5" />
-              <span>{t('search')}</span>
-              <kbd className="rounded border border-border/60 bg-muted/40 px-1 py-0.5 text-[10px]">⌘K</kbd>
+              <Search className="h-4 w-4" />
             </button>
             <ThemeToggle />
             <DropdownMenu>
@@ -235,11 +233,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </main>
       </div>
 
-      <Footer />
+      {view === 'home' && <Footer />}
 
-      {/* Global command palette + floating trigger */}
+      {/* Global command palette */}
       <CommandPalette />
-      <CommandTrigger />
       <AuthDialog open={authOpen} onOpenChange={setAuthOpen} />
     </div>
   )

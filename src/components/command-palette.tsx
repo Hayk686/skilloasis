@@ -393,20 +393,3 @@ export function CommandPalette() {
     </AnimatePresence>
   )
 }
-
-/** Compact floating trigger button for the command palette. */
-export function CommandTrigger() {
-  const { setCommandOpen } = useUI()
-  const { tr } = useTranslations()
-  return (
-    <button
-      onClick={() => setCommandOpen(true)}
-      aria-label={tr('Командная палитра', 'Command palette', 'Հրամանների վահանակ')}
-      className="group fixed bottom-5 right-5 z-50 grid h-11 w-11 place-items-center rounded-full border border-border/60 bg-card/80 shadow-xl backdrop-blur-xl transition-all hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/20"
-    >
-      <div className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white">
-        <Sparkles className="h-4 w-4" />
-      </div>
-    </button>
-  )
-}
