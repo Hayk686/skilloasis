@@ -105,7 +105,10 @@ export function AuthDialog({
       const supabase = createClient()
       const { error: authError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: { prompt: 'select_account' },
+        },
       })
       if (authError) throw authError
     } catch (authError) {
