@@ -217,12 +217,32 @@ export function HomeView() {
           </div>
 
           <StaggerGroup className="relative mx-auto grid max-w-5xl gap-4 sm:grid-cols-2">
-            {FEATURES.map((f) => {
+            {FEATURES.map((f, index) => {
               const Icon = f.icon
               return (
                 <StaggerItem key={localize(f.title)}>
                   <article className={`group relative h-full min-h-48 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br ${f.gradient} p-6 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:shadow-2xl sm:p-7`}>
-                    <div className={`pointer-events-none absolute -right-14 -top-14 h-40 w-40 rounded-full ${f.glow} opacity-10 blur-3xl transition-opacity duration-300 group-hover:opacity-20`} />
+                    <motion.div
+                      aria-hidden
+                      className={`pointer-events-none absolute -left-20 -top-20 h-56 w-56 rounded-full ${f.glow} opacity-20 blur-3xl motion-reduce:hidden`}
+                      animate={{
+                        x: index % 2 === 0 ? ['0%', '115%', '35%', '0%'] : ['105%', '10%', '80%', '105%'],
+                        y: ['0%', '55%', '95%', '0%'],
+                        scale: [0.9, 1.15, 0.8, 0.9],
+                      }}
+                      transition={{
+                        duration: 11 + index * 1.5,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                        delay: index * 0.7,
+                      }}
+                    />
+                    <motion.div
+                      aria-hidden
+                      className="pointer-events-none absolute -bottom-24 -right-16 h-48 w-48 rounded-full bg-white opacity-[0.07] blur-3xl motion-reduce:hidden"
+                      animate={{ x: ['0%', '-80%', '-20%', '0%'], y: ['0%', '-45%', '15%', '0%'] }}
+                      transition={{ duration: 14 + index, repeat: Infinity, ease: 'easeInOut', delay: index }}
+                    />
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent opacity-60" />
                     <div className="relative">
                       <div className={`mb-7 inline-grid h-11 w-11 place-items-center rounded-xl border border-white/15 bg-white/10 ${f.iconColor} shadow-inner shadow-white/5 backdrop-blur-sm`}>
