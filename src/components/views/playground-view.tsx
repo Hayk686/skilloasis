@@ -36,12 +36,14 @@ interface LogEntry {
 }
 
 interface Challenge {
-  id: string
+  id: ChallengeId
   title: LocalizedText
   desc: LocalizedText
   code: LocalizedText
   hint: LocalizedText
 }
+
+type ChallengeId = 'fizzbuzz' | 'fib' | 'palindrome' | 'sort'
 
 const localized = (ru: string, en: string, hy: string): LocalizedText => ({ ru, en, hy })
 
@@ -522,6 +524,428 @@ sorted.forEach((u, i) => console.log(\`\${i + 1}. \${u.name}, \${u.age} տարե
   },
 ]
 
+const sharedCode = (code: string): LocalizedText => ({ ru: code, en: code, hy: code })
+
+const ALGORITHM_CHALLENGE_CODE: Record<
+  Exclude<PlaygroundLanguage, 'javascript' | 'html'>,
+  Record<ChallengeId, string>
+> = {
+  typescript: {
+    fizzbuzz: `const values: Array<string | number> = []
+for (let i = 1; i <= 20; i++) {
+  let value = ''
+  if (i % 3 === 0) value += 'Fizz'
+  if (i % 5 === 0) value += 'Buzz'
+  values.push(value || i)
+}
+console.log(values.join(', '))`,
+    fib: `const fibonacci: number[] = [0, 1]
+while (fibonacci.length < 10) {
+  const last = fibonacci.at(-1) ?? 0
+  const previous = fibonacci.at(-2) ?? 0
+  fibonacci.push(last + previous)
+}
+console.log(fibonacci.join(', '))`,
+    palindrome: `function isPalindrome(value: string): boolean {
+  const clean = value.toLowerCase().replace(/[^\\p{L}\\p{N}]/gu, '')
+  return clean === [...clean].reverse().join('')
+}
+
+console.log(isPalindrome('Never odd or even'))
+console.log(isPalindrome('SkillOasis'))`,
+    sort: `interface User {
+  name: string
+  age: number
+}
+
+const users: User[] = [
+  { name: 'Anna', age: 28 },
+  { name: 'Ben', age: 19 },
+  { name: 'Victoria', age: 35 },
+]
+
+const sorted = [...users].sort((a, b) => b.age - a.age)
+sorted.forEach((user) => console.log(user.name, user.age))`,
+  },
+  python: {
+    fizzbuzz: `values = []
+for number in range(1, 21):
+    value = ""
+    if number % 3 == 0:
+        value += "Fizz"
+    if number % 5 == 0:
+        value += "Buzz"
+    values.append(value or str(number))
+
+print(", ".join(values))`,
+    fib: `fibonacci = [0, 1]
+while len(fibonacci) < 10:
+    fibonacci.append(fibonacci[-1] + fibonacci[-2])
+
+print(*fibonacci, sep=", ")`,
+    palindrome: `def is_palindrome(value: str) -> bool:
+    clean = "".join(char.lower() for char in value if char.isalnum())
+    return clean == clean[::-1]
+
+print(is_palindrome("Never odd or even"))
+print(is_palindrome("SkillOasis"))`,
+    sort: `users = [
+    {"name": "Anna", "age": 28},
+    {"name": "Ben", "age": 19},
+    {"name": "Victoria", "age": 35},
+]
+
+for user in sorted(users, key=lambda item: item["age"], reverse=True):
+    print(user["name"], user["age"])`,
+  },
+  java: {
+    fizzbuzz: `class Main {
+  public static void main(String[] args) {
+    for (int number = 1; number <= 20; number++) {
+      String value = "";
+      if (number % 3 == 0) value += "Fizz";
+      if (number % 5 == 0) value += "Buzz";
+      System.out.println(value.isEmpty() ? number : value);
+    }
+  }
+}`,
+    fib: `import java.util.ArrayList;
+import java.util.List;
+
+class Main {
+  public static void main(String[] args) {
+    List<Integer> fibonacci = new ArrayList<>(List.of(0, 1));
+    while (fibonacci.size() < 10) {
+      int size = fibonacci.size();
+      fibonacci.add(fibonacci.get(size - 1) + fibonacci.get(size - 2));
+    }
+    System.out.println(fibonacci);
+  }
+}`,
+    palindrome: `class Main {
+  static boolean isPalindrome(String value) {
+    String clean = value.toLowerCase().replaceAll("[^\\p{L}\\p{N}]", "");
+    return clean.contentEquals(new StringBuilder(clean).reverse());
+  }
+
+  public static void main(String[] args) {
+    System.out.println(isPalindrome("Never odd or even"));
+    System.out.println(isPalindrome("SkillOasis"));
+  }
+}`,
+    sort: `import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
+class Main {
+  static class User {
+    final String name;
+    final int age;
+    User(String name, int age) { this.name = name; this.age = age; }
+  }
+
+  public static void main(String[] args) {
+    List<User> users = new ArrayList<>(List.of(
+      new User("Anna", 28), new User("Ben", 19), new User("Victoria", 35)
+    ));
+    users.sort(Comparator.comparingInt((User user) -> user.age).reversed());
+    users.forEach(user -> System.out.println(user.name + " " + user.age));
+  }
+}`,
+  },
+  cpp: {
+    fizzbuzz: `#include <iostream>
+#include <string>
+
+int main() {
+  for (int number = 1; number <= 20; ++number) {
+    std::string value;
+    if (number % 3 == 0) value += "Fizz";
+    if (number % 5 == 0) value += "Buzz";
+    std::cout << (value.empty() ? std::to_string(number) : value) << '\\n';
+  }
+}`,
+    fib: `#include <iostream>
+#include <vector>
+
+int main() {
+  std::vector<long long> fibonacci{0, 1};
+  while (fibonacci.size() < 10) {
+    fibonacci.push_back(fibonacci[fibonacci.size() - 1] + fibonacci[fibonacci.size() - 2]);
+  }
+  for (long long value : fibonacci) std::cout << value << ' ';
+  std::cout << '\\n';
+}`,
+    palindrome: `#include <algorithm>
+#include <cctype>
+#include <iostream>
+#include <string>
+
+bool isPalindrome(const std::string& value) {
+  std::string clean;
+  for (unsigned char character : value) {
+    if (std::isalnum(character)) clean += static_cast<char>(std::tolower(character));
+  }
+  return std::equal(clean.begin(), clean.begin() + clean.size() / 2, clean.rbegin());
+}
+
+int main() {
+  std::cout << std::boolalpha << isPalindrome("Never odd or even") << '\\n';
+  std::cout << isPalindrome("SkillOasis") << '\\n';
+}`,
+    sort: `#include <algorithm>
+#include <iostream>
+#include <string>
+#include <vector>
+
+struct User { std::string name; int age; };
+
+int main() {
+  std::vector<User> users{{"Anna", 28}, {"Ben", 19}, {"Victoria", 35}};
+  std::sort(users.begin(), users.end(), [](const User& a, const User& b) {
+    return a.age > b.age;
+  });
+  for (const auto& user : users) std::cout << user.name << ' ' << user.age << '\\n';
+}`,
+  },
+  csharp: {
+    fizzbuzz: `using System;
+
+public class Program {
+  public static void Main() {
+    for (int number = 1; number <= 20; number++) {
+      string value = "";
+      if (number % 3 == 0) value += "Fizz";
+      if (number % 5 == 0) value += "Buzz";
+      Console.WriteLine(value.Length == 0 ? number.ToString() : value);
+    }
+  }
+}`,
+    fib: `using System;
+using System.Collections.Generic;
+
+public class Program {
+  public static void Main() {
+    var fibonacci = new List<int> { 0, 1 };
+    while (fibonacci.Count < 10) {
+      fibonacci.Add(fibonacci[^1] + fibonacci[^2]);
+    }
+    Console.WriteLine(string.Join(", ", fibonacci));
+  }
+}`,
+    palindrome: `using System;
+using System.Linq;
+
+public class Program {
+  static bool IsPalindrome(string value) {
+    string clean = string.Concat(value.Where(char.IsLetterOrDigit)).ToLowerInvariant();
+    return clean.SequenceEqual(clean.Reverse());
+  }
+
+  public static void Main() {
+    Console.WriteLine(IsPalindrome("Never odd or even"));
+    Console.WriteLine(IsPalindrome("SkillOasis"));
+  }
+}`,
+    sort: `using System;
+using System.Linq;
+
+public class Program {
+  record User(string Name, int Age);
+
+  public static void Main() {
+    var users = new[] { new User("Anna", 28), new User("Ben", 19), new User("Victoria", 35) };
+    foreach (var user in users.OrderByDescending(user => user.Age)) {
+      Console.WriteLine($"{user.Name} {user.Age}");
+    }
+  }
+}`,
+  },
+  go: {
+    fizzbuzz: `package main
+
+import "fmt"
+
+func main() {
+  for number := 1; number <= 20; number++ {
+    value := ""
+    if number%3 == 0 { value += "Fizz" }
+    if number%5 == 0 { value += "Buzz" }
+    if value == "" { fmt.Println(number) } else { fmt.Println(value) }
+  }
+}`,
+    fib: `package main
+
+import "fmt"
+
+func main() {
+  fibonacci := []int{0, 1}
+  for len(fibonacci) < 10 {
+    size := len(fibonacci)
+    fibonacci = append(fibonacci, fibonacci[size-1]+fibonacci[size-2])
+  }
+  fmt.Println(fibonacci)
+}`,
+    palindrome: `package main
+
+import (
+  "fmt"
+  "unicode"
+)
+
+func isPalindrome(value string) bool {
+  clean := []rune{}
+  for _, character := range []rune(value) {
+    if unicode.IsLetter(character) || unicode.IsDigit(character) {
+      clean = append(clean, unicode.ToLower(character))
+    }
+  }
+  for left, right := 0, len(clean)-1; left < right; left, right = left+1, right-1 {
+    if clean[left] != clean[right] { return false }
+  }
+  return true
+}
+
+func main() {
+  fmt.Println(isPalindrome("Never odd or even"))
+  fmt.Println(isPalindrome("SkillOasis"))
+}`,
+    sort: `package main
+
+import (
+  "fmt"
+  "sort"
+)
+
+type User struct { Name string; Age int }
+
+func main() {
+  users := []User{{"Anna", 28}, {"Ben", 19}, {"Victoria", 35}}
+  sort.Slice(users, func(i, j int) bool { return users[i].Age > users[j].Age })
+  for _, user := range users { fmt.Println(user.Name, user.Age) }
+}`,
+  },
+  rust: {
+    fizzbuzz: `fn main() {
+    for number in 1..=20 {
+        let mut value = String::new();
+        if number % 3 == 0 { value.push_str("Fizz"); }
+        if number % 5 == 0 { value.push_str("Buzz"); }
+        if value.is_empty() { println!("{number}"); } else { println!("{value}"); }
+    }
+}`,
+    fib: `fn main() {
+    let mut fibonacci = vec![0_i64, 1];
+    while fibonacci.len() < 10 {
+        let size = fibonacci.len();
+        fibonacci.push(fibonacci[size - 1] + fibonacci[size - 2]);
+    }
+    println!("{:?}", fibonacci);
+}`,
+    palindrome: `fn is_palindrome(value: &str) -> bool {
+    let clean: Vec<char> = value
+        .chars()
+        .filter(|character| character.is_alphanumeric())
+        .flat_map(char::to_lowercase)
+        .collect();
+    clean.iter().eq(clean.iter().rev())
+}
+
+fn main() {
+    println!("{}", is_palindrome("Never odd or even"));
+    println!("{}", is_palindrome("SkillOasis"));
+}`,
+    sort: `#[derive(Debug)]
+struct User { name: &'static str, age: u8 }
+
+fn main() {
+    let mut users = vec![
+        User { name: "Anna", age: 28 },
+        User { name: "Ben", age: 19 },
+        User { name: "Victoria", age: 35 },
+    ];
+    users.sort_by(|a, b| b.age.cmp(&a.age));
+    for user in users { println!("{} {}", user.name, user.age); }
+}`,
+  },
+}
+
+const htmlDocument = (lang: 'ru' | 'en' | 'hy', body: string, css: string) => `<!doctype html>
+<html lang="${lang}">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; padding: 32px; font-family: system-ui; background: #12091d; color: white; }
+    ${css}
+  </style>
+</head>
+<body>${body}</body>
+</html>`
+
+const HTML_CHALLENGES: Challenge[] = [
+  {
+    id: 'fizzbuzz',
+    title: localized('Карточка профиля', 'Profile card', 'Պրոֆիլի քարտ'),
+    desc: localized('Создай аккуратную карточку с аватаром, именем и описанием', 'Build a polished card with an avatar, name, and description', 'Ստեղծիր կոկիկ քարտ՝ ավատարով, անունով և նկարագրությամբ'),
+    hint: localized('Используй flex, gap, border-radius и мягкую тень.', 'Use flex, gap, border-radius, and a soft shadow.', 'Օգտագործիր flex, gap, border-radius և մեղմ ստվեր։'),
+    code: localized(
+      htmlDocument('ru', '<article class="profile"><div class="avatar">S</div><div><h1>Ученик SkillOasis</h1><p>Изучаю веб-разработку шаг за шагом.</p></div></article>', '.profile { max-width: 520px; display: flex; gap: 20px; align-items: center; padding: 28px; border: 1px solid #6d3a86; border-radius: 24px; background: #241331; box-shadow: 0 24px 60px #0008; } .avatar { display: grid; place-items: center; width: 72px; aspect-ratio: 1; border-radius: 20px; background: linear-gradient(135deg, #8b5cf6, #ec4899); font-size: 28px; font-weight: 800; } h1 { margin: 0 0 8px; } p { margin: 0; color: #c8b9d3; }'),
+      htmlDocument('en', '<article class="profile"><div class="avatar">S</div><div><h1>SkillOasis learner</h1><p>Learning web development one step at a time.</p></div></article>', '.profile { max-width: 520px; display: flex; gap: 20px; align-items: center; padding: 28px; border: 1px solid #6d3a86; border-radius: 24px; background: #241331; box-shadow: 0 24px 60px #0008; } .avatar { display: grid; place-items: center; width: 72px; aspect-ratio: 1; border-radius: 20px; background: linear-gradient(135deg, #8b5cf6, #ec4899); font-size: 28px; font-weight: 800; } h1 { margin: 0 0 8px; } p { margin: 0; color: #c8b9d3; }'),
+      htmlDocument('hy', '<article class="profile"><div class="avatar">S</div><div><h1>SkillOasis-ի սովորող</h1><p>Քայլ առ քայլ սովորում եմ վեբ մշակում։</p></div></article>', '.profile { max-width: 520px; display: flex; gap: 20px; align-items: center; padding: 28px; border: 1px solid #6d3a86; border-radius: 24px; background: #241331; box-shadow: 0 24px 60px #0008; } .avatar { display: grid; place-items: center; width: 72px; aspect-ratio: 1; border-radius: 20px; background: linear-gradient(135deg, #8b5cf6, #ec4899); font-size: 28px; font-weight: 800; } h1 { margin: 0 0 8px; } p { margin: 0; color: #c8b9d3; }')
+    ),
+  },
+  {
+    id: 'fib',
+    title: localized('Адаптивная сетка', 'Responsive grid', 'Հարմարվող ցանց'),
+    desc: localized('Собери сетку, которая меняет число колонок на узком экране', 'Create a grid that changes columns on smaller screens', 'Ստեղծիր ցանց, որը փոքր էկրանին փոխում է սյունակների քանակը'),
+    hint: localized('Используй CSS Grid, minmax() и auto-fit.', 'Use CSS Grid, minmax(), and auto-fit.', 'Օգտագործիր CSS Grid, minmax() և auto-fit։'),
+    code: localized(
+      htmlDocument('ru', '<main><h1>Темы для изучения</h1><section class="grid"><article>HTML</article><article>CSS</article><article>JavaScript</article><article>Доступность</article></section></main>', 'main { max-width: 900px; margin: auto; } .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; } article { min-height: 140px; display: grid; place-items: center; border: 1px solid #644077; border-radius: 20px; background: linear-gradient(145deg, #281438, #172637); font-weight: 700; }'),
+      htmlDocument('en', '<main><h1>Topics to learn</h1><section class="grid"><article>HTML</article><article>CSS</article><article>JavaScript</article><article>Accessibility</article></section></main>', 'main { max-width: 900px; margin: auto; } .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; } article { min-height: 140px; display: grid; place-items: center; border: 1px solid #644077; border-radius: 20px; background: linear-gradient(145deg, #281438, #172637); font-weight: 700; }'),
+      htmlDocument('hy', '<main><h1>Սովորելու թեմաներ</h1><section class="grid"><article>HTML</article><article>CSS</article><article>JavaScript</article><article>Մատչելիություն</article></section></main>', 'main { max-width: 900px; margin: auto; } .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; } article { min-height: 140px; display: grid; place-items: center; border: 1px solid #644077; border-radius: 20px; background: linear-gradient(145deg, #281438, #172637); font-weight: 700; }')
+    ),
+  },
+  {
+    id: 'palindrome',
+    title: localized('Интерактивная кнопка', 'Interactive button', 'Ինտերակտիվ կոճակ'),
+    desc: localized('Добавь плавные состояния hover, focus и active', 'Add smooth hover, focus, and active states', 'Ավելացրու սահուն hover, focus և active վիճակներ'),
+    hint: localized('Не забудь :focus-visible для клавиатурной навигации.', 'Remember :focus-visible for keyboard navigation.', 'Մի մոռացիր :focus-visible-ը՝ ստեղնաշարային նավարկման համար։'),
+    code: localized(
+      htmlDocument('ru', '<button>Начать обучение <span>→</span></button>', 'body { display: grid; place-items: center; } button { border: 0; border-radius: 16px; padding: 16px 24px; color: white; background: linear-gradient(135deg, #7c3aed, #ec4899); font: 700 18px system-ui; cursor: pointer; box-shadow: 0 12px 32px #a855f766; transition: transform .2s, box-shadow .2s; } button:hover { transform: translateY(-3px); box-shadow: 0 18px 42px #ec489977; } button:active { transform: translateY(0); } button:focus-visible { outline: 3px solid #67e8f9; outline-offset: 5px; } span { margin-left: 8px; }'),
+      htmlDocument('en', '<button>Start learning <span>→</span></button>', 'body { display: grid; place-items: center; } button { border: 0; border-radius: 16px; padding: 16px 24px; color: white; background: linear-gradient(135deg, #7c3aed, #ec4899); font: 700 18px system-ui; cursor: pointer; box-shadow: 0 12px 32px #a855f766; transition: transform .2s, box-shadow .2s; } button:hover { transform: translateY(-3px); box-shadow: 0 18px 42px #ec489977; } button:active { transform: translateY(0); } button:focus-visible { outline: 3px solid #67e8f9; outline-offset: 5px; } span { margin-left: 8px; }'),
+      htmlDocument('hy', '<button>Սկսել ուսուցումը <span>→</span></button>', 'body { display: grid; place-items: center; } button { border: 0; border-radius: 16px; padding: 16px 24px; color: white; background: linear-gradient(135deg, #7c3aed, #ec4899); font: 700 18px system-ui; cursor: pointer; box-shadow: 0 12px 32px #a855f766; transition: transform .2s, box-shadow .2s; } button:hover { transform: translateY(-3px); box-shadow: 0 18px 42px #ec489977; } button:active { transform: translateY(0); } button:focus-visible { outline: 3px solid #67e8f9; outline-offset: 5px; } span { margin-left: 8px; }')
+    ),
+  },
+  {
+    id: 'sort',
+    title: localized('Форма входа', 'Sign-in form', 'Մուտքի ձև'),
+    desc: localized('Оформи доступную форму с подписями и состояниями фокуса', 'Style an accessible form with labels and focus states', 'Ձևավորիր մատչելի ձև՝ պիտակներով և focus վիճակներով'),
+    hint: localized('Свяжи label и input через атрибуты for и id.', 'Connect each label and input with for and id.', 'label-ն ու input-ը կապիր for և id հատկանիշներով։'),
+    code: localized(
+      htmlDocument('ru', '<form><h1>С возвращением</h1><label for="email">Эл. почта</label><input id="email" type="email" placeholder="you@example.com"><label for="password">Пароль</label><input id="password" type="password"><button>Войти</button></form>', 'form { width: min(100%, 420px); margin: auto; display: grid; gap: 12px; padding: 28px; border: 1px solid #624174; border-radius: 24px; background: #21122d; } h1 { margin: 0 0 10px; } label { font-size: 14px; color: #d8c5e2; } input { width: 100%; padding: 14px; border: 1px solid #624174; border-radius: 12px; background: #130b1b; color: white; outline: none; } input:focus { border-color: #d946ef; box-shadow: 0 0 0 4px #d946ef22; } button { margin-top: 8px; padding: 14px; border: 0; border-radius: 12px; background: #a855f7; color: white; font-weight: 700; }'),
+      htmlDocument('en', '<form><h1>Welcome back</h1><label for="email">Email</label><input id="email" type="email" placeholder="you@example.com"><label for="password">Password</label><input id="password" type="password"><button>Sign in</button></form>', 'form { width: min(100%, 420px); margin: auto; display: grid; gap: 12px; padding: 28px; border: 1px solid #624174; border-radius: 24px; background: #21122d; } h1 { margin: 0 0 10px; } label { font-size: 14px; color: #d8c5e2; } input { width: 100%; padding: 14px; border: 1px solid #624174; border-radius: 12px; background: #130b1b; color: white; outline: none; } input:focus { border-color: #d946ef; box-shadow: 0 0 0 4px #d946ef22; } button { margin-top: 8px; padding: 14px; border: 0; border-radius: 12px; background: #a855f7; color: white; font-weight: 700; }'),
+      htmlDocument('hy', '<form><h1>Բարի վերադարձ</h1><label for="email">Էլ․ հասցե</label><input id="email" type="email" placeholder="you@example.com"><label for="password">Գաղտնաբառ</label><input id="password" type="password"><button>Մուտք գործել</button></form>', 'form { width: min(100%, 420px); margin: auto; display: grid; gap: 12px; padding: 28px; border: 1px solid #624174; border-radius: 24px; background: #21122d; } h1 { margin: 0 0 10px; } label { font-size: 14px; color: #d8c5e2; } input { width: 100%; padding: 14px; border: 1px solid #624174; border-radius: 12px; background: #130b1b; color: white; outline: none; } input:focus { border-color: #d946ef; box-shadow: 0 0 0 4px #d946ef22; } button { margin-top: 8px; padding: 14px; border: 0; border-radius: 12px; background: #a855f7; color: white; font-weight: 700; }')
+    ),
+  },
+]
+
+function getChallenges(language: PlaygroundLanguage): Challenge[] {
+  if (language === 'javascript') return CHALLENGES
+  if (language === 'html') return HTML_CHALLENGES
+
+  return CHALLENGES.map((challenge) => ({
+    ...challenge,
+    code: sharedCode(ALGORITHM_CHALLENGE_CODE[language][challenge.id]),
+  }))
+}
+
+const isChallengeTemplate = (code: string) =>
+  (Object.keys(LANGUAGE_DETAILS) as PlaygroundLanguage[]).some((language) =>
+    getChallenges(language).some((challenge) => Object.values(challenge.code).includes(code))
+  )
+
 /** Build the sandboxed iframe srcdoc that runs code safely. */
 function buildSandboxDoc(): string {
   return `<!DOCTYPE html>
@@ -585,7 +1009,7 @@ export function PlaygroundView() {
     if (previousLocale === locale) return
 
     setCode((current) => {
-      const challenge = CHALLENGES.find((item) => item.id === activeChallenge)
+      const challenge = getChallenges(language).find((item) => item.id === activeChallenge)
       const previousTemplate = challenge
         ? challenge.code[previousLocale]
         : STARTERS[language][previousLocale]
@@ -712,7 +1136,7 @@ export function PlaygroundView() {
     setCode((current) => {
       const isKnownTemplate = Object.values(STARTERS).some(
         (starter) => Object.values(starter).includes(current)
-      ) || CHALLENGES.some((challenge) => Object.values(challenge.code).includes(current))
+      ) || isChallengeTemplate(current)
       return isKnownTemplate ? STARTERS[nextLanguage][locale] : current
     })
     setLanguage(nextLanguage)
@@ -725,7 +1149,7 @@ export function PlaygroundView() {
     setTab('hint')
     setHint(null)
     try {
-      const challenge = CHALLENGES.find((c) => c.id === activeChallenge)
+      const challenge = getChallenges(language).find((c) => c.id === activeChallenge)
       const res = await fetch('/api/playground', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1042,14 +1466,14 @@ export function PlaygroundView() {
       </div>
 
       {/* Challenges */}
-      {(language === 'javascript' || language === 'typescript') && <div className="mt-8">
+      <div className="mt-8">
         <div className="mb-3 flex items-center gap-2">
           <Zap className="h-4 w-4 text-primary" />
           <h3 className="text-sm font-semibold">{tr('Упражнения для разминки', 'Warm-up exercises', 'Նախավարժանքներ')}</h3>
           <span className="text-xs text-muted-foreground">— {tr('кликни, чтобы загрузить', 'click to load', 'սեղմիր բեռնելու համար')}</span>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {CHALLENGES.map((c) => {
+          {getChallenges(language).map((c) => {
             const isActive = activeChallenge === c.id
             return (
               <button
@@ -1073,7 +1497,7 @@ export function PlaygroundView() {
             )
           })}
         </div>
-      </div>}
+      </div>
 
       {/* Hidden sandbox iframe */}
       <iframe
