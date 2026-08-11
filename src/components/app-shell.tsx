@@ -70,7 +70,7 @@ function ThemeToggle() {
     <button
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
       aria-label={t('theme')}
-      className="grid h-9 w-9 place-items-center rounded-lg border border-border/60 text-muted-foreground hover:text-foreground hover:border-border transition-colors"
+      className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-border/60 text-muted-foreground transition-colors hover:border-border hover:text-foreground lg:h-9 lg:w-9 lg:rounded-lg"
     >
       {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
     </button>
@@ -89,7 +89,7 @@ function StatPill({ icon: Icon, value, label }: { icon: typeof Flame; value: str
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   useLocaleSync()
-  const { locale, locales, languageNames, setLocale, t } = useTranslations()
+  const { locale, locales, languageNames, setLocale, t, tr } = useTranslations()
   const { view, setView } = useNav()
   const { sidebarOpen, setSidebar, setCommandOpen } = useUI()
   const { xp, level, streak, name, authenticated } = useUser()
@@ -100,6 +100,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     window.scrollTo({ top: 0, behavior: 'auto' })
   }, [view])
 
+  useEffect(() => {
+    if (!sidebarOpen) return
+    const previousOverflow = document.body.style.overflow
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSidebar(false)
+    }
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [setSidebar, sidebarOpen])
+
   return (
     <div className="relative flex min-h-screen flex-col">
       <AuroraBackground />
@@ -109,15 +123,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="mx-auto flex h-16 max-w-[1600px] items-center gap-3 px-4 sm:px-6 lg:px-8">
           <button
             onClick={() => setSidebar(!sidebarOpen)}
-            className="grid h-9 w-9 place-items-center rounded-lg border border-border/60 text-muted-foreground hover:text-foreground lg:hidden"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-border/60 text-muted-foreground transition-colors hover:border-border hover:text-foreground xl:hidden"
             aria-label={t('menu')}
+            aria-expanded={sidebarOpen}
+            aria-controls="mobile-navigation"
           >
             {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
 
           <button
             onClick={() => setView('home')}
-            className="flex items-center gap-2.5"
+            className="flex shrink-0 items-center gap-2 sm:gap-2.5"
           >
             <div className="relative grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 text-white shadow-lg shadow-fuchsia-500/25">
               <Sparkles className="h-4.5 w-4.5" />
@@ -125,14 +141,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
             <div className="text-left">
               <p className="text-base font-bold leading-none tracking-tight">SkillOasis</p>
-              <p className="text-[10px] text-muted-foreground leading-none mt-0.5">
+              <p className="mt-0.5 hidden text-[11px] leading-none text-muted-foreground sm:block">
                 {t('tagline')}
               </p>
             </div>
           </button>
 
-          <div className="ml-auto flex items-center gap-2">
-            <div className="hidden items-center gap-2 sm:flex">
+          <div className="ml-auto flex min-w-0 items-center gap-1.5 sm:gap-2">
+            <div className="hidden items-center gap-2 xl:flex">
               <StatPill icon={Flame} value={streak} label={t('days')} />
               <StatPill icon={Zap} value={xp} label="XP" />
               <StatPill icon={Sparkles} value={level} label={t('levelShort')} />
@@ -140,7 +156,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <button
               onClick={() => setCommandOpen(true)}
               aria-label={t('search')}
-              className="hidden h-9 w-9 items-center justify-center rounded-lg border border-border/60 bg-card/40 text-muted-foreground transition-colors hover:border-border hover:text-foreground md:flex"
+              className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-card/40 text-muted-foreground transition-colors hover:border-border hover:text-foreground md:flex lg:h-9 lg:w-9 lg:rounded-lg"
             >
               <Search className="h-4 w-4" />
             </button>
@@ -150,7 +166,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <button
                   type="button"
                   aria-label={t('language')}
-                  className="hidden h-9 items-center gap-1.5 rounded-lg border border-border/60 bg-card/40 px-2.5 text-xs transition-colors hover:border-border hover:text-foreground md:flex"
+                  className="hidden h-11 shrink-0 items-center gap-1.5 rounded-xl border border-border/60 bg-card/40 px-3 text-xs transition-colors hover:border-border hover:text-foreground md:flex lg:h-9 lg:rounded-lg lg:px-2.5"
                 >
                   <Languages className="h-3.5 w-3.5 text-muted-foreground" />
                   <span>{languageNames[locale]}</span>
@@ -174,7 +190,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               type="button"
               onClick={() => setAuthOpen(true)}
               aria-label={authenticated ? displayName : t('account')}
-              className="flex h-9 items-center gap-2 rounded-full border border-border/60 bg-card/60 px-2 transition-colors hover:border-primary/40 hover:bg-card"
+              className="flex h-11 shrink-0 items-center gap-2 rounded-full border border-border/60 bg-card/60 px-2 transition-colors hover:border-primary/40 hover:bg-card lg:h-9"
             >
               <div className="grid h-6 w-6 place-items-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-[10px] font-bold text-white">
                 {displayName.charAt(0).toUpperCase()}
@@ -187,7 +203,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <div className="mx-auto flex w-full max-w-[1600px] flex-1">
         {/* Sidebar (desktop) */}
-        <div className="hidden w-64 shrink-0 lg:block">
+        <div className="hidden w-64 shrink-0 xl:block">
           <aside className="fixed top-16 z-30 h-[calc(100dvh-4rem)] w-64 overflow-hidden border-r border-border/40 bg-background/80 px-3 py-6 backdrop-blur-xl">
             <SidebarContent active={view} onSelect={setView} />
           </aside>
@@ -202,22 +218,89 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setSidebar(false)}
-                className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
+                className="fixed inset-0 z-50 bg-black/55 backdrop-blur-sm xl:hidden"
               />
               <motion.aside
                 initial={{ x: -320 }}
                 animate={{ x: 0 }}
                 exit={{ x: -320 }}
                 transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-                className="fixed inset-y-0 left-0 z-50 w-72 overflow-hidden border-r border-border bg-background p-4 pt-20 lg:hidden"
+                id="mobile-navigation"
+                className="fixed inset-y-0 left-0 z-[60] flex w-[min(88vw,20rem)] flex-col overflow-hidden border-r border-border bg-background/98 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl backdrop-blur-2xl xl:hidden"
               >
-                <SidebarContent
-                  active={view}
-                  onSelect={(v) => {
-                    setView(v)
-                    setSidebar(false)
-                  }}
-                />
+                <div className="mb-3 flex shrink-0 items-center justify-between border-b border-border/60 pb-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setView('home')
+                      setSidebar(false)
+                    }}
+                    className="flex items-center gap-2.5 rounded-xl px-1 text-left"
+                  >
+                    <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 text-white shadow-lg shadow-fuchsia-500/25">
+                      <Sparkles className="h-4.5 w-4.5" />
+                    </span>
+                    <span>
+                      <span className="block text-sm font-bold">SkillOasis</span>
+                      <span className="block text-[11px] text-muted-foreground">{t('tagline')}</span>
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSidebar(false)}
+                    aria-label={tr('Закрыть меню', 'Close menu', 'Փակել ընտրացանկը')}
+                    className="grid h-11 w-11 place-items-center rounded-xl border border-border/60 text-muted-foreground transition-colors hover:border-border hover:text-foreground"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="mb-3 grid shrink-0 grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSidebar(false)
+                      setCommandOpen(true)
+                    }}
+                    className="flex h-11 items-center justify-center gap-2 rounded-xl border border-border/60 bg-card/60 px-3 text-sm font-medium text-muted-foreground"
+                  >
+                    <Search className="h-4 w-4" />
+                    {t('search')}
+                  </button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        className="flex h-11 items-center justify-center gap-2 rounded-xl border border-border/60 bg-card/60 px-3 text-sm font-medium"
+                      >
+                        <Languages className="h-4 w-4 text-muted-foreground" />
+                        <span className="truncate">{languageNames[locale]}</span>
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="min-w-40">
+                      <DropdownMenuRadioGroup
+                        value={locale}
+                        onValueChange={(value) => setLocale(value as typeof locale)}
+                      >
+                        {locales.map((item) => (
+                          <DropdownMenuRadioItem key={item} value={item}>
+                            {languageNames[item]}
+                          </DropdownMenuRadioItem>
+                        ))}
+                      </DropdownMenuRadioGroup>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                <div className="min-h-0 flex-1">
+                  <SidebarContent
+                    active={view}
+                    onSelect={(v) => {
+                      setView(v)
+                      setSidebar(false)
+                    }}
+                  />
+                </div>
               </motion.aside>
             </>
           )}

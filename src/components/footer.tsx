@@ -9,7 +9,7 @@ export function Footer() {
   return (
     <footer className="mt-auto border-t border-border/60 bg-background/60 backdrop-blur-sm">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
+        <div className="flex flex-col items-center justify-between gap-6 lg:flex-row">
           <div className="flex items-center gap-2.5">
             <div className="relative grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 text-white shadow-lg shadow-fuchsia-500/20">
               <Sparkles className="h-4 w-4" />
@@ -22,26 +22,26 @@ export function Footer() {
             </div>
           </div>
 
-          <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
-            <Link href="#" className="hover:text-foreground transition-colors">
+          <nav className="grid w-full max-w-sm grid-cols-2 gap-2 text-center text-sm text-muted-foreground sm:flex sm:w-auto sm:max-w-none sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-3 lg:gap-x-6">
+            <Link href="#" className="inline-flex items-center justify-center rounded-lg px-3 transition-colors hover:bg-accent/50 hover:text-foreground">
               {t('footerAbout')}
             </Link>
-            <Link href="#" className="hover:text-foreground transition-colors">
+            <Link href="#" className="inline-flex items-center justify-center rounded-lg px-3 transition-colors hover:bg-accent/50 hover:text-foreground">
               {t('footerSubjects')}
             </Link>
-            <Link href="#" className="hover:text-foreground transition-colors">
+            <Link href="#" className="inline-flex items-center justify-center rounded-lg px-3 transition-colors hover:bg-accent/50 hover:text-foreground">
               {t('footerCommunity')}
             </Link>
-            <Link href="#" className="hover:text-foreground transition-colors">
+            <Link href="#" className="inline-flex items-center justify-center rounded-lg px-3 transition-colors hover:bg-accent/50 hover:text-foreground">
               {t('footerPrivacy')}
             </Link>
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-3">
             <a
               href="#"
               aria-label="GitHub"
-              className="grid h-9 w-9 place-items-center rounded-lg border border-border/60 text-muted-foreground hover:text-foreground hover:border-border transition-colors"
+              className="grid h-11 w-11 place-items-center rounded-xl border border-border/60 text-muted-foreground transition-colors hover:border-border hover:text-foreground lg:h-9 lg:w-9 lg:rounded-lg"
             >
               <Github className="h-4 w-4" />
             </a>

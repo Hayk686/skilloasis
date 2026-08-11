@@ -124,11 +124,27 @@
   }
   html {
     scroll-behavior: smooth;
+    max-width: 100%;
+    overflow-x: clip;
   }
   body {
     @apply bg-background text-foreground;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: clip;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+  }
+  main,
+  section,
+  article {
+    min-width: 0;
+  }
+  img,
+  video,
+  canvas,
+  iframe {
+    max-width: 100%;
   }
   :root:not(.dark) body {
     background-image:
@@ -136,6 +152,40 @@
       radial-gradient(circle at 102% 24%, oklch(0.86 0.1 195 / 28%), transparent 32rem),
       linear-gradient(180deg, oklch(0.99 0.008 300), var(--background) 34rem);
     background-attachment: fixed;
+  }
+}
+
+@supports not (overflow: clip) {
+  html,
+  body {
+    overflow-x: hidden;
+  }
+}
+
+/* Finger-friendly controls on mobile and tablet layouts. */
+@media (max-width: 1279px), (pointer: coarse) {
+  button,
+  input,
+  textarea,
+  select,
+  [role='button'],
+  [role='combobox'],
+  nav a,
+  footer a {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  [role='menuitem'],
+  [role='menuitemradio'],
+  [role='option'] {
+    min-height: 44px;
+  }
+
+  input,
+  textarea,
+  select {
+    font-size: 16px;
   }
 }
 

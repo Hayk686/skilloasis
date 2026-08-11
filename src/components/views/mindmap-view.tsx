@@ -124,7 +124,7 @@ export function MindMapView() {
               className="w-full rounded-xl border border-border bg-background/60 px-4 py-2.5 text-sm outline-none ring-primary/20 transition focus:ring-2"
             />
           </div>
-          <GradientButton onClick={() => generate()} disabled={loading || !topic.trim()}>
+          <GradientButton className="w-full sm:w-auto" onClick={() => generate()} disabled={loading || !topic.trim()}>
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" /> {tr('Создаю карту…', 'Creating map…', 'Ստեղծում ենք քարտեզը…')}
@@ -227,9 +227,9 @@ function MindMapRenderer({
   const children = root.children ?? []
 
   return (
-    <div className="overflow-auto rounded-2xl border border-border/60 bg-card/40 backdrop-blur-sm">
+    <div className="max-w-full overflow-auto overscroll-contain rounded-2xl border border-border/60 bg-card/40 backdrop-blur-sm">
       <div
-        className="relative p-6 transition-transform duration-300"
+        className="relative p-4 transition-transform duration-300 sm:p-6"
         style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
       >
         {/* Root node */}

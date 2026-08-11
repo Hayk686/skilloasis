@@ -417,12 +417,12 @@ function FullInputPanel({
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="mb-1.5 text-xs text-muted-foreground">{tr('Уровень:', 'Level:', 'Մակարդակ։')}</p>
-            <div className="inline-flex items-center gap-1 rounded-lg border border-border/60 bg-muted/30 p-1">
+            <div className="grid w-full grid-cols-3 items-center gap-1 rounded-lg border border-border/60 bg-muted/30 p-1 sm:inline-grid sm:w-auto">
               {LEVELS.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => setLevel(item.id)}
-                  className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                  className={`min-w-0 rounded-md px-2 py-1 text-xs font-medium transition-colors sm:px-3 ${
                     level === item.id
                       ? 'bg-primary text-primary-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
@@ -433,7 +433,7 @@ function FullInputPanel({
               ))}
             </div>
           </div>
-          <GradientButton onClick={() => onGenerate()} disabled={loading} className="mt-5 sm:mt-0">
+          <GradientButton onClick={() => onGenerate()} disabled={loading} className="mt-1 w-full sm:mt-0 sm:w-auto">
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" /> {tr('Создаю урок...', 'Creating lesson...', 'Ստեղծում ենք դասը...')}

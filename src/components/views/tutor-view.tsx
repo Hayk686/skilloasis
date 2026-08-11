@@ -292,7 +292,7 @@ export function TutorView() {
       />
 
       {/* mobile: open sessions sheet + new chat */}
-      <div className="mb-3 flex items-center gap-2 lg:hidden">
+      <div className="mb-3 flex flex-wrap items-center gap-2 lg:hidden">
         <Sheet open={listOpen} onOpenChange={setListOpen}>
           <SheetTrigger asChild>
             <button className="inline-flex items-center gap-2 rounded-xl border border-border/60 bg-card/60 px-3 py-2 text-sm font-medium backdrop-blur transition hover:bg-card">
@@ -333,7 +333,7 @@ export function TutorView() {
         {/* left rail — desktop */}
         <GlassCard
           hover={false}
-          className="hidden h-[72vh] min-h-[520px] flex-col overflow-hidden p-3 lg:flex lg:h-[calc(100vh-240px)]"
+          className="hidden flex-col overflow-hidden p-3 lg:flex lg:h-[calc(100dvh-13rem)] lg:min-h-[500px] lg:max-h-[820px]"
         >
           <SidebarContent
             sessions={sessions}
@@ -349,10 +349,10 @@ export function TutorView() {
         <GlassCard
           hover={false}
           gradient
-          className="flex h-[72vh] min-h-[520px] flex-col overflow-hidden lg:h-[calc(100vh-240px)]"
+          className="flex h-[calc(100dvh-15rem)] min-h-[420px] max-h-[760px] flex-col overflow-hidden sm:h-[72vh] sm:min-h-[520px] lg:h-[calc(100dvh-13rem)] lg:min-h-[500px] lg:max-h-[820px]"
         >
           {/* chat header */}
-          <div className="flex items-center justify-between gap-3 border-b border-border/60 bg-gradient-to-r from-violet-500/5 via-fuchsia-500/5 to-pink-500/5 px-4 py-3">
+          <div className="flex items-center justify-between gap-2 border-b border-border/60 bg-gradient-to-r from-violet-500/5 via-fuchsia-500/5 to-pink-500/5 px-3 py-3 sm:gap-3 sm:px-4">
             <div className="flex min-w-0 items-center gap-3">
               <div className="relative grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 text-white shadow-lg shadow-fuchsia-500/30">
                 <Sparkles className="h-4 w-4" />
@@ -459,8 +459,16 @@ function SidebarContent({
               const active = s.id === currentId
               return (
                 <li key={s.id}>
-                  <button
+                  <div
+                    role="button"
+                    tabIndex={0}
                     onClick={() => onSelect(s.id)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        onSelect(s.id)
+                      }
+                    }}
                     className={cn(
                       'ambient-card group relative flex w-full items-start gap-2.5 rounded-xl border p-2.5 text-left transition-all',
                       active
@@ -491,7 +499,7 @@ function SidebarContent({
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
-                  </button>
+                  </div>
                 </li>
               )
             })}
@@ -541,7 +549,7 @@ function SubjectPicker({
       <BookOpen className="hidden h-4 w-4 text-muted-foreground sm:block" />
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger
-          className="h-9 w-[140px] border-border/60 bg-background/60 text-xs sm:w-[180px] sm:text-sm"
+          className="h-11 w-[118px] border-border/60 bg-background/60 text-xs sm:w-[180px] sm:text-sm lg:h-9"
           size="sm"
         >
           <SelectValue placeholder={tr('Предмет', 'Subject', 'Առարկա')} />
@@ -644,14 +652,14 @@ function EmptyChat({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col items-center justify-center px-4 py-10 text-center sm:py-14"
+      className="flex flex-col items-center justify-center px-3 py-6 text-center sm:px-4 sm:py-14"
     >
       <motion.div
         animate={{ y: [0, -8, 0] }}
         transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-        className="relative mb-5 grid h-20 w-20 place-items-center rounded-3xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 text-white shadow-xl shadow-fuchsia-500/30"
+        className="relative mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 text-white shadow-xl shadow-fuchsia-500/30 sm:mb-5 sm:h-20 sm:w-20 sm:rounded-3xl"
       >
-        <Sparkles className="h-9 w-9" />
+        <Sparkles className="h-7 w-7 sm:h-9 sm:w-9" />
         <div className="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-violet-500 to-fuchsia-500 opacity-50 blur-xl" />
       </motion.div>
 
@@ -662,7 +670,7 @@ function EmptyChat({
         {tr('Спроси что угодно — от квантовой физики до основ философии. Выбери идею ниже или напиши свой вопрос.', 'Ask anything—from quantum physics to philosophy. Choose an idea below or write your own question.', 'Հարցրու ցանկացած բան՝ քվանտային ֆիզիկայից մինչև փիլիսոփայություն։ Ընտրիր ներքևի գաղափարներից մեկը կամ գրիր քո հարցը։')}
       </p>
 
-      <div className="mt-6 grid w-full max-w-2xl gap-2 sm:grid-cols-2">
+      <div className="mt-5 grid w-full max-w-2xl gap-2 sm:mt-6 sm:grid-cols-2">
         {SUGGESTED_PROMPTS.map((p) => {
           const text = localize(p.text)
           return (

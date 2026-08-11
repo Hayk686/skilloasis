@@ -204,7 +204,7 @@ export function CommandPalette() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[100] flex items-start justify-center bg-black/70 p-4 pt-[12vh] backdrop-blur-md"
+          className="fixed inset-0 z-[100] flex items-start justify-center bg-black/70 p-2 pt-3 backdrop-blur-md sm:p-4 sm:pt-[12vh]"
           onClick={() => setCommandOpen(false)}
         >
           <motion.div
@@ -213,7 +213,7 @@ export function CommandPalette() {
             exit={{ opacity: 0, y: -10, scale: 0.98 }}
             transition={{ type: 'spring', damping: 28, stiffness: 320 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-border/60 bg-card/95 shadow-2xl backdrop-blur-2xl"
+            className="relative max-h-[calc(100dvh-1.5rem)] w-full max-w-xl overflow-hidden rounded-2xl border border-border/60 bg-card/95 shadow-2xl backdrop-blur-2xl"
           >
             {/* gradient top border */}
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/70 to-transparent" />

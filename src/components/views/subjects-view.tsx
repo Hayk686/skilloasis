@@ -111,7 +111,7 @@ function SubjectDetail({
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 40, scale: 0.98 }}
         transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-        className="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-2xl overflow-hidden rounded-3xl border border-border bg-card shadow-2xl"
+        className="fixed inset-x-3 bottom-3 z-50 mx-auto max-h-[calc(100dvh-1.5rem)] max-w-2xl overflow-x-hidden overflow-y-auto rounded-3xl border border-border bg-card shadow-2xl sm:inset-x-4 sm:bottom-4"
       >
         <div className={`relative h-28 bg-gradient-to-br ${subject.gradient}`}>
           <div className="absolute inset-0 bg-grid opacity-20" />

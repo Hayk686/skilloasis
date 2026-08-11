@@ -250,7 +250,7 @@ export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-2 backdrop-blur-md sm:p-4"
           onClick={() => onOpenChange(false)}
         >
           <motion.div
@@ -259,7 +259,7 @@ export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) 
             exit={{ opacity: 0, y: -10, scale: 0.98 }}
             transition={{ type: 'spring', damping: 28, stiffness: 320 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-3xl overflow-hidden rounded-2xl border border-border/60 bg-card/95 shadow-2xl backdrop-blur-2xl"
+            className="relative max-h-[calc(100dvh-1rem)] w-full max-w-3xl overflow-x-hidden overflow-y-auto rounded-2xl border border-border/60 bg-card/95 shadow-2xl backdrop-blur-2xl sm:max-h-[calc(100dvh-2rem)]"
           >
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/70 to-transparent" />
 

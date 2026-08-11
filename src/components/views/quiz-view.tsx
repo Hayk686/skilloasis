@@ -498,14 +498,14 @@ function SetupPhase({
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-2 block text-sm font-medium">{tr('Вопросов', 'Questions', 'Հարցերի քանակ')}</label>
-              <div className="inline-flex items-center gap-1 rounded-lg border border-border/60 bg-muted/30 p-1">
+              <div className="grid w-full grid-cols-3 items-center gap-1 rounded-lg border border-border/60 bg-muted/30 p-1 sm:inline-grid sm:w-auto">
                 {COUNTS.map((c) => (
                   <button
                     key={c}
                     type="button"
                     onClick={() => setCount(c)}
                     className={cn(
-                      'min-w-[2.5rem] rounded-md px-3 py-1.5 text-sm font-semibold transition-colors',
+                      'min-w-0 rounded-md px-2 py-1.5 text-sm font-semibold transition-colors sm:min-w-[2.5rem] sm:px-3',
                       count === c
                         ? 'bg-primary text-primary-foreground'
                         : 'text-muted-foreground hover:text-foreground'

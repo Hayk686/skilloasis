@@ -62,7 +62,7 @@ export function HomeView() {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <Particles count={24} />
-        <PageSection className="relative py-16 sm:py-24">
+        <PageSection className="relative py-12 sm:py-20 lg:py-24">
           <div className="mx-auto max-w-3xl text-center">
             <motion.h1
               initial={{ opacity: 0, y: 24 }}
@@ -79,7 +79,7 @@ export function HomeView() {
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.15 }}
-              className="mx-auto mt-6 max-w-2xl text-pretty text-lg text-muted-foreground sm:text-xl"
+              className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground sm:mt-6 sm:text-xl"
             >
               {tr(
                 'SkillOasis — это AI-платформа, которая объясняет сложное простыми словами. Программирование, математика, языки, наука, история — всё в одном месте.',
@@ -94,13 +94,13 @@ export function HomeView() {
               transition={{ duration: 0.6, delay: 0.25 }}
               className="mt-9 flex flex-wrap items-center justify-center gap-3"
             >
-              <GradientButton onClick={() => setView('tutor')} className="px-7 py-3 text-base">
+              <GradientButton onClick={() => setView('tutor')} className="w-full px-7 py-3 text-base sm:w-auto">
                 {tr('Начать учиться', 'Start learning', 'Սկսել սովորել')}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </GradientButton>
               <button
                 onClick={() => setView('subjects')}
-                className="inline-flex items-center gap-2 rounded-xl border border-border/60 bg-card/60 px-6 py-3 text-base font-semibold backdrop-blur-sm transition-colors hover:bg-accent"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border/60 bg-card/60 px-6 py-3 text-base font-semibold backdrop-blur-sm transition-colors hover:bg-accent sm:w-auto"
               >
                 <Compass className="h-4 w-4" />
                 {tr('Выбрать предмет', 'Choose a subject', 'Ընտրել առարկա')}
@@ -112,7 +112,7 @@ export function HomeView() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.4 }}
-              className="mx-auto mt-12 grid max-w-2xl grid-cols-3 gap-4"
+              className="mx-auto mt-10 grid max-w-2xl grid-cols-1 gap-3 sm:mt-12 sm:grid-cols-3 sm:gap-4"
             >
               {[
                 { v: '8+', l: tr('предметов', 'subjects', 'առարկա') },
@@ -130,7 +130,7 @@ export function HomeView() {
       </section>
 
       {/* Quick actions */}
-      <PageSection className="py-12">
+      <PageSection className="py-8 sm:py-12">
         <StaggerGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {QUICK_ACTIONS.map((a) => {
             const Icon = a.icon
@@ -323,7 +323,7 @@ export function HomeView() {
             {[...TESTIMONIALS, ...TESTIMONIALS].map((t, i) => (
               <div
                 key={i}
-                className="ambient-card w-80 shrink-0 rounded-2xl border border-border/60 bg-card/60 p-5 backdrop-blur-sm"
+                className="ambient-card w-[min(20rem,calc(100vw-3rem))] shrink-0 rounded-2xl border border-border/60 bg-card/60 p-5 backdrop-blur-sm"
               >
                 <Quote className="mb-2 h-5 w-5 text-primary/40" />
                 <p className="text-sm leading-relaxed text-foreground/90">«{localize(t.text)}»</p>
@@ -355,13 +355,13 @@ export function HomeView() {
               {tr('Один вопрос — и ты уже учишься. Без обязательств, без оплаты, без границ.', 'One question is all it takes to start learning. No commitments, fees, or boundaries.', 'Մեկ հարց, և դու արդեն սովորում ես։ Առանց պարտավորությունների, վճարների և սահմանների։')}
             </p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-              <GradientButton onClick={() => setView('tutor')} className="px-7 py-3 text-base">
+              <GradientButton onClick={() => setView('tutor')} className="w-full px-7 py-3 text-base sm:w-auto">
                 {tr('Спросить наставника', 'Ask the tutor', 'Հարցնել ուսուցչին')}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </GradientButton>
               <button
                 onClick={() => setView('paths')}
-                className="inline-flex items-center gap-2 rounded-xl border border-border/60 bg-card/60 px-6 py-3 text-base font-semibold backdrop-blur-sm transition-colors hover:bg-accent"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border/60 bg-card/60 px-6 py-3 text-base font-semibold backdrop-blur-sm transition-colors hover:bg-accent sm:w-auto"
               >
                 <Compass className="h-4 w-4" />
                 {tr('Построить маршрут', 'Build a learning path', 'Կառուցել ուսուցման ուղի')}

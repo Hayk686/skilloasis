@@ -1236,7 +1236,7 @@ export function PlaygroundView() {
       {/* Toolbar */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <Select value={language} onValueChange={(value) => changeLanguage(value as PlaygroundLanguage)}>
-          <SelectTrigger className="w-[140px] bg-card/60" aria-label={tr('Язык кода', 'Code language', 'Կոդի լեզու')}>
+          <SelectTrigger className="w-full bg-card/60 sm:w-[140px]" aria-label={tr('Язык кода', 'Code language', 'Կոդի լեզու')}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -1248,12 +1248,12 @@ export function PlaygroundView() {
         <Button
           onClick={run}
           disabled={running}
-          className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/20 hover:from-emerald-600 hover:to-teal-600"
+          className="min-w-0 flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/20 hover:from-emerald-600 hover:to-teal-600 sm:flex-none"
         >
           {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
           {tr('Запустить', 'Run', 'Գործարկել')}
         </Button>
-        <Button variant="outline" onClick={askHint} disabled={hintLoading}>
+        <Button className="min-w-0 flex-1 sm:flex-none" variant="outline" onClick={askHint} disabled={hintLoading}>
           {hintLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lightbulb className="h-4 w-4 text-amber-400" />}
           {tr('AI-подсказка', 'AI hint', 'AI հուշում')}
         </Button>
@@ -1294,7 +1294,7 @@ export function PlaygroundView() {
             </div>
             <span className="font-mono text-[11px] text-muted-foreground">{lineCount} {tr('строк', 'lines', 'տող')}</span>
           </div>
-          <div className="relative flex" style={{ height: '460px' }}>
+          <div className="relative flex h-[360px] sm:h-[460px]">
             {/* Line numbers gutter */}
             <div
               ref={gutterRef}
@@ -1318,7 +1318,7 @@ export function PlaygroundView() {
               spellCheck={false}
               autoCapitalize="off"
               autoCorrect="off"
-              className="flex-1 resize-none bg-transparent p-3 font-mono text-xs leading-[1.5] text-foreground outline-none"
+              className="min-w-0 flex-1 resize-none overflow-auto bg-transparent p-3 font-mono text-xs leading-[1.5] text-foreground outline-none"
               placeholder={tr('// Пиши код здесь...', '// Write code here...', '// Գրիր կոդն այստեղ...')}
             />
           </div>
@@ -1364,7 +1364,7 @@ export function PlaygroundView() {
 
           {/* Console content */}
           {tab === 'console' && (
-            <div className="h-[460px] overflow-y-auto p-4 font-mono text-xs">
+            <div className="h-[360px] overflow-y-auto p-3 font-mono text-xs sm:h-[460px] sm:p-4">
               {language === 'html' && previewDoc && (
                 <iframe
                   title={tr('Предпросмотр HTML', 'HTML preview', 'HTML նախադիտում')}
@@ -1426,7 +1426,7 @@ export function PlaygroundView() {
 
           {/* AI hint content */}
           {tab === 'hint' && (
-            <div className="h-[460px] overflow-y-auto p-4">
+            <div className="h-[360px] overflow-y-auto p-3 sm:h-[460px] sm:p-4">
               {hintLoading && (
                 <div className="space-y-2">
                   {[100, 92, 96, 80, 88, 70, 94, 60].map((w, i) => (
@@ -1467,10 +1467,10 @@ export function PlaygroundView() {
 
       {/* Challenges */}
       <div className="mt-8">
-        <div className="mb-3 flex items-center gap-2">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
           <Zap className="h-4 w-4 text-primary" />
           <h3 className="text-sm font-semibold">{tr('Упражнения для разминки', 'Warm-up exercises', 'Նախավարժանքներ')}</h3>
-          <span className="text-xs text-muted-foreground">— {tr('кликни, чтобы загрузить', 'click to load', 'սեղմիր բեռնելու համար')}</span>
+          <span className="w-full text-xs text-muted-foreground sm:w-auto">{tr('Кликни, чтобы загрузить', 'Click to load', 'Սեղմիր՝ բեռնելու համար')}</span>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {getChallenges(language).map((c) => {
