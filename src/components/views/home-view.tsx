@@ -36,10 +36,10 @@ const QUICK_ACTIONS: { id: ViewId; title: LocalizedText; desc: LocalizedText; ic
 ]
 
 const FEATURES = [
-  { icon: Brain, title: localized('Понимает, а не зубрит', 'Understand, do not memorize', 'Հասկանալ, ոչ թե անգիր անել'), desc: localized('Объясняет через аналогии и примеры. Сложное становится простым.', 'Learn through analogies and examples. Complex ideas become simple.', 'Բացատրություններ՝ համեմատություններով և օրինակներով։ Բարդը դառնում է պարզ։') },
-  { icon: InfinityIcon, title: localized('Безлимит и бесплатно', 'Unlimited and free', 'Անսահման և անվճար'), desc: localized('Никаких подписок, лимитов и платных функций. Навсегда.', 'No subscriptions, limits, or paid features. Ever.', 'Առանց բաժանորդագրության, սահմանափակումների և վճարովի գործառույթների։ Ընդմիշտ։') },
-  { icon: Rocket, title: localized('Адаптируется под тебя', 'Adapts to you', 'Հարմարվում է քեզ'), desc: localized('Подбирает сложность и темп. Растёшь вместе с платформой.', 'Matches your difficulty and pace as you grow.', 'Ընտրում է քեզ համապատասխան բարդությունն ու տեմպը։') },
-  { icon: Heart, title: localized('Воодушевляет', 'Keeps you inspired', 'Ոգեշնչում է'), desc: localized('Тёплый наставник, который верит в твой прогресс.', 'A supportive tutor that believes in your progress.', 'Հոգատար ուսուցիչ, որը հավատում է քո առաջընթացին։') },
+  { icon: Brain, gradient: 'from-fuchsia-950/95 via-violet-950/85 to-slate-950', glow: 'bg-fuchsia-500', iconColor: 'text-fuchsia-200', title: localized('Понимает, а не зубрит', 'Understand, do not memorize', 'Հասկանալ, ոչ թե անգիր անել'), desc: localized('Объясняет через аналогии и примеры. Сложное становится простым.', 'Learn through analogies and examples. Complex ideas become simple.', 'Բացատրություններ՝ համեմատություններով և օրինակներով։ Բարդը դառնում է պարզ։') },
+  { icon: InfinityIcon, gradient: 'from-cyan-950/90 via-teal-950/80 to-slate-950', glow: 'bg-cyan-400', iconColor: 'text-cyan-200', title: localized('Безлимит и бесплатно', 'Unlimited and free', 'Անսահման և անվճար'), desc: localized('Никаких подписок, лимитов и платных функций. Навсегда.', 'No subscriptions, limits, or paid features. Ever.', 'Առանց բաժանորդագրության, սահմանափակումների և վճարովի գործառույթների։ Ընդմիշտ։') },
+  { icon: Rocket, gradient: 'from-emerald-950/90 via-green-950/80 to-slate-950', glow: 'bg-emerald-400', iconColor: 'text-emerald-200', title: localized('Адаптируется под тебя', 'Adapts to you', 'Հարմարվում է քեզ'), desc: localized('Подбирает сложность и темп. Растёшь вместе с платформой.', 'Matches your difficulty and pace as you grow.', 'Ընտրում է քեզ համապատասխան բարդությունն ու տեմպը։') },
+  { icon: Heart, gradient: 'from-rose-950/90 via-red-950/75 to-slate-950', glow: 'bg-rose-400', iconColor: 'text-rose-200', title: localized('Воодушевляет', 'Keeps you inspired', 'Ոգեշնչում է'), desc: localized('Тёплый наставник, который верит в твой прогресс.', 'A supportive tutor that believes in your progress.', 'Հոգատար ուսուցիչ, որը հավատում է քո առաջընթացին։') },
 ]
 
 const TESTIMONIALS = [
@@ -201,28 +201,42 @@ export function HomeView() {
 
       {/* Why SkillOasis */}
       <PageSection className="py-12">
-        <div className="mb-6 text-center">
-          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">{tr('Почему SkillOasis', 'Why SkillOasis', 'Ինչու SkillOasis')}</h2>
-          <p className="mt-1 text-sm text-muted-foreground sm:text-base">
-            {tr('Учиться должно быть радостно', 'Learning should feel joyful', 'Սովորելը պետք է հաճելի լինի')}
-          </p>
+        <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#07070a] px-5 py-10 shadow-2xl shadow-black/30 sm:px-8 sm:py-14 lg:px-12">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.14),transparent_42%)]" />
+          <div className="pointer-events-none absolute inset-0 opacity-[0.035] [background-image:linear-gradient(rgba(255,255,255,.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.7)_1px,transparent_1px)] [background-size:38px_38px]" />
+
+          <div className="relative mx-auto mb-9 max-w-2xl text-center sm:mb-11">
+            <div className="mx-auto mb-4 flex w-fit items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+              <Sparkles className="h-3.5 w-3.5" />
+              SkillOasis
+            </div>
+            <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">{tr('Почему SkillOasis', 'Why SkillOasis', 'Ինչու SkillOasis')}</h2>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-white/55 sm:text-base">
+              {tr('Учиться должно быть радостно', 'Learning should feel joyful', 'Սովորելը պետք է հաճելի լինի')}
+            </p>
+          </div>
+
+          <StaggerGroup className="relative mx-auto grid max-w-5xl gap-4 sm:grid-cols-2">
+            {FEATURES.map((f) => {
+              const Icon = f.icon
+              return (
+                <StaggerItem key={localize(f.title)}>
+                  <article className={`group relative h-full min-h-48 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br ${f.gradient} p-6 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:shadow-2xl sm:p-7`}>
+                    <div className={`pointer-events-none absolute -right-14 -top-14 h-40 w-40 rounded-full ${f.glow} opacity-10 blur-3xl transition-opacity duration-300 group-hover:opacity-20`} />
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent opacity-60" />
+                    <div className="relative">
+                      <div className={`mb-7 inline-grid h-11 w-11 place-items-center rounded-xl border border-white/15 bg-white/10 ${f.iconColor} shadow-inner shadow-white/5 backdrop-blur-sm`}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <h3 className="text-lg font-semibold tracking-tight text-white sm:text-xl">{localize(f.title)}</h3>
+                      <p className="mt-2 max-w-md text-sm leading-relaxed text-white/60">{localize(f.desc)}</p>
+                    </div>
+                  </article>
+                </StaggerItem>
+              )
+            })}
+          </StaggerGroup>
         </div>
-        <StaggerGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {FEATURES.map((f) => {
-            const Icon = f.icon
-            return (
-              <StaggerItem key={localize(f.title)}>
-                <GlassCard className="h-full p-5">
-                  <div className="mb-3 inline-grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <p className="font-semibold">{localize(f.title)}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{localize(f.desc)}</p>
-                </GlassCard>
-              </StaggerItem>
-            )
-          })}
-        </StaggerGroup>
       </PageSection>
 
       {/* What's new — highlight recently shipped features */}
