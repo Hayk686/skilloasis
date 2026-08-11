@@ -103,7 +103,7 @@ export function CommandPalette() {
     { id: 'subj', label: t('navSubjects'), hint: t('navSubjectsDesc'), icon: Sparkles, group: navigationGroup, action: () => goto('subjects') },
     { id: 'ach', label: t('navAchievements'), icon: Award, group: navigationGroup, action: () => goto('achievements') },
     { id: 'mindmap', label: t('navMindmap'), hint: tr('Концепт-карты', 'Concept maps', 'Հասկացությունների քարտեզներ'), icon: Network, group: navigationGroup, action: () => goto('mindmap') },
-    { id: 'playground', label: t('navPlayground'), hint: 'JavaScript + AI', icon: Terminal, group: navigationGroup, action: () => goto('playground') },
+    { id: 'playground', label: t('navPlayground'), hint: 'JavaScript / TypeScript + AI', icon: Terminal, group: navigationGroup, action: () => goto('playground') },
     {
       id: 'explain',
       label: tr('Объяснить концепцию…', 'Explain a concept…', 'Բացատրել հասկացությունը…'),
