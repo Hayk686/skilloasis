@@ -45,7 +45,28 @@ interface Challenge {
 
 const localized = (ru: string, en: string, hy: string): LocalizedText => ({ ru, en, hy })
 
-type PlaygroundLanguage = 'javascript' | 'typescript'
+type PlaygroundLanguage =
+  | 'javascript'
+  | 'typescript'
+  | 'python'
+  | 'html'
+  | 'java'
+  | 'cpp'
+  | 'csharp'
+  | 'go'
+  | 'rust'
+
+const LANGUAGE_DETAILS: Record<PlaygroundLanguage, { label: string; extension: string }> = {
+  javascript: { label: 'JavaScript', extension: 'js' },
+  typescript: { label: 'TypeScript', extension: 'ts' },
+  python: { label: 'Python', extension: 'py' },
+  html: { label: 'HTML / CSS', extension: 'html' },
+  java: { label: 'Java', extension: 'java' },
+  cpp: { label: 'C++', extension: 'cpp' },
+  csharp: { label: 'C#', extension: 'cs' },
+  go: { label: 'Go', extension: 'go' },
+  rust: { label: 'Rust', extension: 'rs' },
+}
 
 const JAVASCRIPT_STARTER = localized(`// Добро пожаловать в песочницу SkillOasis 🚀
 // Пиши JavaScript и нажми «Запустить» (Ctrl+Enter)
@@ -135,9 +156,240 @@ console.log('Գումար՝', sum)
 console.log('Միջին՝', sum / nums.length)
 `)
 
+const PYTHON_STARTER = localized(`# Добро пожаловать в песочницу Python SkillOasis 🚀
+def greet(name: str) -> str:
+    return f"Привет, {name}! Добро пожаловать в SkillOasis."
+
+print(greet("друг"))
+numbers = [1, 2, 3, 4, 5]
+print("Сумма:", sum(numbers))
+print("Среднее:", sum(numbers) / len(numbers))
+`, `# Welcome to the SkillOasis Python playground 🚀
+def greet(name: str) -> str:
+    return f"Hello, {name}! Welcome to SkillOasis."
+
+print(greet("friend"))
+numbers = [1, 2, 3, 4, 5]
+print("Sum:", sum(numbers))
+print("Average:", sum(numbers) / len(numbers))
+`, `# Բարի գալուստ SkillOasis-ի Python փորձադաշտ 🚀
+def greet(name: str) -> str:
+    return f"Ողջույն, {name}։ Բարի գալուստ SkillOasis։"
+
+print(greet("ընկեր"))
+numbers = [1, 2, 3, 4, 5]
+print("Գումար՝", sum(numbers))
+print("Միջին՝", sum(numbers) / len(numbers))
+`)
+
+const HTML_STARTER = localized(`<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body { font-family: system-ui; padding: 32px; background: #12091d; color: white; }
+    .card { padding: 24px; border-radius: 18px; background: #261238; }
+    h1 { color: #d946ef; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Привет из SkillOasis!</h1>
+    <p>Измени HTML и CSS, затем нажми «Запустить».</p>
+  </div>
+</body>
+</html>`, `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body { font-family: system-ui; padding: 32px; background: #12091d; color: white; }
+    .card { padding: 24px; border-radius: 18px; background: #261238; }
+    h1 { color: #d946ef; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Hello from SkillOasis!</h1>
+    <p>Edit the HTML and CSS, then press Run.</p>
+  </div>
+</body>
+</html>`, `<!doctype html>
+<html lang="hy">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body { font-family: system-ui; padding: 32px; background: #12091d; color: white; }
+    .card { padding: 24px; border-radius: 18px; background: #261238; }
+    h1 { color: #d946ef; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Ողջույն SkillOasis-ից։</h1>
+    <p>Փոխիր HTML-ն ու CSS-ը, ապա սեղմիր «Գործարկել»։</p>
+  </div>
+</body>
+</html>`)
+
+const JAVA_STARTER = localized(`// Добро пожаловать в песочницу Java SkillOasis 🚀
+class Main {
+  public static void main(String[] args) {
+    String name = "друг";
+    System.out.println("Привет, " + name + "! Добро пожаловать в SkillOasis.");
+    int[] numbers = {1, 2, 3, 4, 5};
+    int sum = 0;
+    for (int number : numbers) sum += number;
+    System.out.println("Сумма: " + sum);
+  }
+}`, `// Welcome to the SkillOasis Java playground 🚀
+class Main {
+  public static void main(String[] args) {
+    String name = "friend";
+    System.out.println("Hello, " + name + "! Welcome to SkillOasis.");
+    int[] numbers = {1, 2, 3, 4, 5};
+    int sum = 0;
+    for (int number : numbers) sum += number;
+    System.out.println("Sum: " + sum);
+  }
+}`, `// Բարի գալուստ SkillOasis-ի Java փորձադաշտ 🚀
+class Main {
+  public static void main(String[] args) {
+    String name = "ընկեր";
+    System.out.println("Ողջույն, " + name + "։ Բարի գալուստ SkillOasis։");
+    int[] numbers = {1, 2, 3, 4, 5};
+    int sum = 0;
+    for (int number : numbers) sum += number;
+    System.out.println("Գումար՝ " + sum);
+  }
+}`)
+
+const CPP_STARTER = localized(`// Добро пожаловать в песочницу C++ SkillOasis 🚀
+#include <iostream>
+#include <numeric>
+#include <vector>
+
+int main() {
+  std::cout << "Привет! Добро пожаловать в SkillOasis.\n";
+  std::vector<int> numbers{1, 2, 3, 4, 5};
+  std::cout << "Сумма: " << std::accumulate(numbers.begin(), numbers.end(), 0) << '\n';
+}`, `// Welcome to the SkillOasis C++ playground 🚀
+#include <iostream>
+#include <numeric>
+#include <vector>
+
+int main() {
+  std::cout << "Hello! Welcome to SkillOasis.\n";
+  std::vector<int> numbers{1, 2, 3, 4, 5};
+  std::cout << "Sum: " << std::accumulate(numbers.begin(), numbers.end(), 0) << '\n';
+}`, `// Բարի գալուստ SkillOasis-ի C++ փորձադաշտ 🚀
+#include <iostream>
+#include <numeric>
+#include <vector>
+
+int main() {
+  std::cout << "Ողջույն։ Բարի գալուստ SkillOasis։\n";
+  std::vector<int> numbers{1, 2, 3, 4, 5};
+  std::cout << "Գումար՝ " << std::accumulate(numbers.begin(), numbers.end(), 0) << '\n';
+}`)
+
+const CSHARP_STARTER = localized(`// Добро пожаловать в песочницу C# SkillOasis 🚀
+using System;
+using System.Linq;
+
+public class Program {
+  public static void Main() {
+    Console.WriteLine("Привет! Добро пожаловать в SkillOasis.");
+    int[] numbers = { 1, 2, 3, 4, 5 };
+    Console.WriteLine($"Сумма: {numbers.Sum()}");
+  }
+}`, `// Welcome to the SkillOasis C# playground 🚀
+using System;
+using System.Linq;
+
+public class Program {
+  public static void Main() {
+    Console.WriteLine("Hello! Welcome to SkillOasis.");
+    int[] numbers = { 1, 2, 3, 4, 5 };
+    Console.WriteLine($"Sum: {numbers.Sum()}");
+  }
+}`, `// Բարի գալուստ SkillOasis-ի C# փորձադաշտ 🚀
+using System;
+using System.Linq;
+
+public class Program {
+  public static void Main() {
+    Console.WriteLine("Ողջույն։ Բարի գալուստ SkillOasis։");
+    int[] numbers = { 1, 2, 3, 4, 5 };
+    Console.WriteLine($"Գումար՝ {numbers.Sum()}");
+  }
+}`)
+
+const GO_STARTER = localized(`// Добро пожаловать в песочницу Go SkillOasis 🚀
+package main
+
+import "fmt"
+
+func main() {
+  fmt.Println("Привет! Добро пожаловать в SkillOasis.")
+  numbers := []int{1, 2, 3, 4, 5}
+  sum := 0
+  for _, number := range numbers { sum += number }
+  fmt.Println("Сумма:", sum)
+}`, `// Welcome to the SkillOasis Go playground 🚀
+package main
+
+import "fmt"
+
+func main() {
+  fmt.Println("Hello! Welcome to SkillOasis.")
+  numbers := []int{1, 2, 3, 4, 5}
+  sum := 0
+  for _, number := range numbers { sum += number }
+  fmt.Println("Sum:", sum)
+}`, `// Բարի գալուստ SkillOasis-ի Go փորձադաշտ 🚀
+package main
+
+import "fmt"
+
+func main() {
+  fmt.Println("Ողջույն։ Բարի գալուստ SkillOasis։")
+  numbers := []int{1, 2, 3, 4, 5}
+  sum := 0
+  for _, number := range numbers { sum += number }
+  fmt.Println("Գումար՝", sum)
+}`)
+
+const RUST_STARTER = localized(`// Добро пожаловать в песочницу Rust SkillOasis 🚀
+fn main() {
+    println!("Привет! Добро пожаловать в SkillOasis.");
+    let numbers = [1, 2, 3, 4, 5];
+    let sum: i32 = numbers.iter().sum();
+    println!("Сумма: {sum}");
+}`, `// Welcome to the SkillOasis Rust playground 🚀
+fn main() {
+    println!("Hello! Welcome to SkillOasis.");
+    let numbers = [1, 2, 3, 4, 5];
+    let sum: i32 = numbers.iter().sum();
+    println!("Sum: {sum}");
+}`, `// Բարի գալուստ SkillOasis-ի Rust փորձադաշտ 🚀
+fn main() {
+    println!("Ողջույն։ Բարի գալուստ SkillOasis։");
+    let numbers = [1, 2, 3, 4, 5];
+    let sum: i32 = numbers.iter().sum();
+    println!("Գումար՝ {sum}");
+}`)
+
 const STARTERS: Record<PlaygroundLanguage, LocalizedText> = {
   javascript: JAVASCRIPT_STARTER,
   typescript: TYPESCRIPT_STARTER,
+  python: PYTHON_STARTER,
+  html: HTML_STARTER,
+  java: JAVA_STARTER,
+  cpp: CPP_STARTER,
+  csharp: CSHARP_STARTER,
+  go: GO_STARTER,
+  rust: RUST_STARTER,
 }
 
 const CHALLENGES: Challenge[] = [
@@ -314,6 +566,7 @@ export function PlaygroundView() {
   const [logs, setLogs] = useState<LogEntry[]>([])
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<string | null>(null)
+  const [previewDoc, setPreviewDoc] = useState<string | null>(null)
   const [running, setRunning] = useState(false)
   const [tab, setTab] = useState<'console' | 'hint'>('console')
   const [hint, setHint] = useState<string | null>(null)
@@ -342,6 +595,7 @@ export function PlaygroundView() {
     setLogs([])
     setError(null)
     setResult(null)
+    setPreviewDoc(null)
     setHint(null)
     previousLocaleRef.current = locale
   }, [activeChallenge, language, locale])
@@ -378,8 +632,38 @@ export function PlaygroundView() {
     setLogs([])
     setError(null)
     setResult(null)
+    setPreviewDoc(null)
     setTab('console')
     setRunning(true)
+
+    if (language === 'html') {
+      setPreviewDoc(code)
+      setRunning(false)
+      return
+    }
+
+    if (!['javascript', 'typescript'].includes(language)) {
+      try {
+        const response = await fetch('/api/playground/execute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, language }),
+        })
+        const data = await response.json()
+        if (!response.ok) throw new Error(data.error ?? 'Execution failed')
+        if (data.output) setLogs([{ type: 'log', args: [data.output.trimEnd()] }])
+        if (data.error) setError(data.error.trimEnd())
+        if (!data.output && !data.error) {
+          setResult(tr('Выполнено без вывода', 'Completed without output', 'Կատարված է առանց արտածման'))
+        }
+      } catch (executionError) {
+        setError(executionError instanceof Error ? executionError.message : String(executionError))
+      } finally {
+        setRunning(false)
+      }
+      return
+    }
+
     let executableCode = code
     if (language === 'typescript') {
       try {
@@ -408,12 +692,13 @@ export function PlaygroundView() {
     send()
     // safety timeout
     setTimeout(() => setRunning((r) => r), 5000)
-  }, [code, language])
+  }, [code, language, tr])
 
   const clearOutput = useCallback(() => {
     setLogs([])
     setError(null)
     setResult(null)
+    setPreviewDoc(null)
   }, [])
 
   const resetCode = useCallback(() => {
@@ -425,16 +710,15 @@ export function PlaygroundView() {
 
   const changeLanguage = useCallback((nextLanguage: PlaygroundLanguage) => {
     setCode((current) => {
-      const challenge = CHALLENGES.find((item) => item.id === activeChallenge)
-      if (challenge) return current
-      const isUntouchedStarter = Object.values(STARTERS).some(
+      const isKnownTemplate = Object.values(STARTERS).some(
         (starter) => Object.values(starter).includes(current)
-      )
-      return isUntouchedStarter ? STARTERS[nextLanguage][locale] : current
+      ) || CHALLENGES.some((challenge) => Object.values(challenge.code).includes(current))
+      return isKnownTemplate ? STARTERS[nextLanguage][locale] : current
     })
     setLanguage(nextLanguage)
+    setActiveChallenge(null)
     clearOutput()
-  }, [activeChallenge, clearOutput, locale])
+  }, [clearOutput, locale])
 
   const askHint = useCallback(async () => {
     setHintLoading(true)
@@ -506,18 +790,19 @@ export function PlaygroundView() {
   const lineCount = code.split('\n').length
   const lineNumbers = Array.from({ length: lineCount }, (_, i) => i + 1)
 
-  const hasOutput = logs.length > 0 || error || result !== null
+  const hasOutput = logs.length > 0 || Boolean(error) || result !== null || previewDoc !== null
+  const languageDetails = LANGUAGE_DETAILS[language]
 
   return (
     <PageSection>
       <SectionHeader
         title={tr('Песочница кода', 'Code playground', 'Կոդի փորձադաշտ')}
-        subtitle={tr('Пиши JavaScript или TypeScript, запускай в безопасной песочнице и получай подсказки от AI', 'Write JavaScript or TypeScript, run it safely, and get hints from AI', 'Գրիր JavaScript կամ TypeScript, անվտանգ գործարկիր այն և ստացիր AI հուշումներ')}
+        subtitle={tr('Пиши код на девяти языках, запускай в песочнице и получай подсказки от AI', 'Write code in nine languages, run it in a sandbox, and get hints from AI', 'Գրիր կոդ ինը լեզվով, գործարկիր փորձադաշտում և ստացիր AI հուշումներ')}
         icon={Terminal}
         action={
           <div className="hidden items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3 py-1.5 text-xs text-muted-foreground sm:flex">
             <Code2 className="h-3.5 w-3.5 text-emerald-400" />
-            {language === 'javascript' ? 'JavaScript' : 'TypeScript'}
+            {languageDetails.label}
             <span className="mx-1 h-3 w-px bg-border" />
             <kbd className="rounded border border-border/60 bg-muted/40 px-1.5 py-0.5 text-[10px]">Ctrl+↵</kbd>
           </div>
@@ -531,8 +816,9 @@ export function PlaygroundView() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="javascript">JavaScript</SelectItem>
-            <SelectItem value="typescript">TypeScript</SelectItem>
+            {Object.entries(LANGUAGE_DETAILS).map(([value, details]) => (
+              <SelectItem key={value} value={value}>{details.label}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <Button
@@ -579,7 +865,7 @@ export function PlaygroundView() {
                 <div className="h-3 w-3 rounded-full bg-emerald-500/70" />
               </div>
               <span className="ml-2 font-mono text-xs text-muted-foreground">
-                script.{language === 'javascript' ? 'js' : 'ts'}
+                {language === 'java' ? 'Main' : language === 'csharp' ? 'Program' : 'script'}.{languageDetails.extension}
               </span>
             </div>
             <span className="font-mono text-[11px] text-muted-foreground">{lineCount} {tr('строк', 'lines', 'տող')}</span>
@@ -628,7 +914,9 @@ export function PlaygroundView() {
               )}
             >
               <Terminal className="h-3.5 w-3.5" />
-              {tr('Консоль', 'Console', 'Վահանակ')}
+              {language === 'html'
+                ? tr('Предпросмотр', 'Preview', 'Նախադիտում')
+                : tr('Консоль', 'Console', 'Վահանակ')}
               {logs.length > 0 && (
                 <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[10px] text-emerald-400">
                   {logs.length}
@@ -653,6 +941,14 @@ export function PlaygroundView() {
           {/* Console content */}
           {tab === 'console' && (
             <div className="h-[460px] overflow-y-auto p-4 font-mono text-xs">
+              {language === 'html' && previewDoc && (
+                <iframe
+                  title={tr('Предпросмотр HTML', 'HTML preview', 'HTML նախադիտում')}
+                  srcDoc={previewDoc}
+                  sandbox="allow-scripts"
+                  className="h-full w-full rounded-lg border border-border bg-white"
+                />
+              )}
               {running && (
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -665,7 +961,7 @@ export function PlaygroundView() {
                   <p className="text-xs">{tr('Нажми «Запустить» — вывод появится здесь', 'Press “Run” and the output will appear here', 'Սեղմիր «Գործարկել», և արդյունքը կհայտնվի այստեղ')}</p>
                 </div>
               )}
-              <div className="space-y-1">
+              <div className={cn('space-y-1', language === 'html' && 'hidden')}>
                 {logs.map((log, i) => (
                   <motion.div
                     key={i}
@@ -682,7 +978,7 @@ export function PlaygroundView() {
                     <span className="select-none opacity-40">
                       {log.type === 'error' ? '✕' : log.type === 'warn' ? '⚠' : '›'}
                     </span>
-                    <span className="break-all">{log.args.join(' ')}</span>
+                    <span className="whitespace-pre-wrap break-words">{log.args.join(' ')}</span>
                   </motion.div>
                 ))}
               </div>
@@ -746,7 +1042,7 @@ export function PlaygroundView() {
       </div>
 
       {/* Challenges */}
-      <div className="mt-8">
+      {(language === 'javascript' || language === 'typescript') && <div className="mt-8">
         <div className="mb-3 flex items-center gap-2">
           <Zap className="h-4 w-4 text-primary" />
           <h3 className="text-sm font-semibold">{tr('Упражнения для разминки', 'Warm-up exercises', 'Նախավարժանքներ')}</h3>
@@ -777,7 +1073,7 @@ export function PlaygroundView() {
             )
           })}
         </div>
-      </div>
+      </div>}
 
       {/* Hidden sandbox iframe */}
       <iframe
