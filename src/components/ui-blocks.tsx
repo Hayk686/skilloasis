@@ -66,7 +66,7 @@ export function GlassCard({
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-2xl border border-border/60 bg-card/60 backdrop-blur-xl',
+        'ambient-card relative overflow-hidden rounded-2xl border border-border/60 bg-card/60 backdrop-blur-xl',
         hover && 'transition-all hover:border-border hover:shadow-xl hover:shadow-primary/5',
         className
       )}

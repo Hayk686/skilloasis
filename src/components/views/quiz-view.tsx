@@ -823,7 +823,7 @@ function OptionCard({
       onClick={onClick}
       disabled={revealed}
       className={cn(
-        'group relative flex w-full items-center gap-3 rounded-xl border p-4 text-left transition-all',
+        'ambient-card group relative flex w-full items-center gap-3 rounded-xl border p-4 text-left transition-all',
         !revealed &&
           'border-border/60 bg-card/40 hover:border-primary/40 hover:bg-card/70',
         !revealed && selected && 'border-primary bg-primary/10 ring-1 ring-primary/30',
@@ -1139,7 +1139,7 @@ function StatCard({
   accent: string
 }) {
   return (
-    <div className="rounded-xl border border-border/60 bg-card/40 p-4">
+    <div className="ambient-card rounded-xl border border-border/60 bg-card/40 p-4">
       <Icon className={cn('h-4 w-4', accent)} />
       <p className="mt-2 text-xl font-bold">{value}</p>
       <p className="text-xs text-muted-foreground">{label}</p>

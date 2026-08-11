@@ -32,7 +32,7 @@ export function SubjectsView() {
                 setSelected(s)
                 setSubject(s.id)
               }}
-              className="group relative h-full w-full overflow-hidden rounded-2xl border border-border/60 bg-card/60 p-5 text-left backdrop-blur-sm transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10"
+              className="ambient-card group relative h-full w-full overflow-hidden rounded-2xl border border-border/60 bg-card/60 p-5 text-left backdrop-blur-sm transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10"
             >
               <div className={`absolute -right-10 -top-10 h-32 w-32 rounded-full bg-gradient-to-br ${s.gradient} opacity-25 blur-2xl transition-opacity group-hover:opacity-50`} />
               <div className="relative">

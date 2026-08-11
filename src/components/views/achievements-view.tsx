@@ -95,7 +95,7 @@ export function AchievementsView() {
             return (
               <div
                 key={a.type}
-                className={`group relative overflow-hidden rounded-2xl border p-5 text-center transition-all ${
+                className={`ambient-card group relative overflow-hidden rounded-2xl border p-5 text-center transition-all ${
                   isUnlocked
                     ? 'border-primary/40 bg-gradient-to-br from-primary/10 to-fuchsia-500/5'
                     : 'border-border/60 bg-card/40 opacity-70'

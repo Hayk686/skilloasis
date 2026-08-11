@@ -32,7 +32,9 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "SkillOasis" }],
   icons: {
-    icon: "/logo.svg",
+    icon: [{ url: "/logo.svg?v=2", type: "image/svg+xml" }],
+    shortcut: "/logo.svg?v=2",
+    apple: "/logo.svg?v=2",
   },
   openGraph: {
     title: "SkillOasis",

@@ -119,7 +119,7 @@ export function HomeView() {
                 { v: '∞', l: tr('тем для изучения', 'topics to explore', 'ուսումնասիրվող թեմա') },
                 { v: '0$', l: tr('стоимость', 'cost', 'արժեք') },
               ].map((s) => (
-                <div key={s.l} className="rounded-2xl border border-border/40 bg-card/40 px-4 py-3 backdrop-blur-sm">
+                <div key={s.l} className="ambient-card rounded-2xl border border-border/40 bg-card/40 px-4 py-3 backdrop-blur-sm">
                   <div className="text-2xl font-bold text-gradient sm:text-3xl">{s.v}</div>
                   <div className="text-xs text-muted-foreground sm:text-sm">{s.l}</div>
                 </div>
@@ -138,7 +138,7 @@ export function HomeView() {
               <StaggerItem key={a.id}>
                 <button
                   onClick={() => setView(a.id)}
-                  className="group relative h-full w-full overflow-hidden rounded-2xl border border-border/60 bg-card/60 p-5 text-left backdrop-blur-sm transition-all hover:-translate-y-1 hover:border-border hover:shadow-xl hover:shadow-primary/10"
+                  className="ambient-card group relative h-full w-full overflow-hidden rounded-2xl border border-border/60 bg-card/60 p-5 text-left backdrop-blur-sm transition-all hover:-translate-y-1 hover:border-border hover:shadow-xl hover:shadow-primary/10"
                 >
                   <div className={`mb-4 inline-grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br ${a.gradient} text-white shadow-lg`}>
                     <Icon className="h-6 w-6" />
@@ -176,7 +176,7 @@ export function HomeView() {
             return <StaggerItem key={s.id}>
               <button
                 onClick={() => openSubject(s.id)}
-                className="group relative h-full w-full overflow-hidden rounded-2xl border border-border/60 bg-card/60 p-5 text-left backdrop-blur-sm transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10"
+                className="ambient-card group relative h-full w-full overflow-hidden rounded-2xl border border-border/60 bg-card/60 p-5 text-left backdrop-blur-sm transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10"
               >
                 <div className={`absolute -right-8 -top-8 h-28 w-28 rounded-full bg-gradient-to-br ${s.gradient} opacity-20 blur-2xl transition-opacity group-hover:opacity-40`} />
                 <div className="relative">
@@ -344,7 +344,7 @@ export function HomeView() {
             {[...TESTIMONIALS, ...TESTIMONIALS].map((t, i) => (
               <div
                 key={i}
-                className="w-80 shrink-0 rounded-2xl border border-border/60 bg-card/60 p-5 backdrop-blur-sm"
+                className="ambient-card w-80 shrink-0 rounded-2xl border border-border/60 bg-card/60 p-5 backdrop-blur-sm"
               >
                 <Quote className="mb-2 h-5 w-5 text-primary/40" />
                 <p className="text-sm leading-relaxed text-foreground/90">«{localize(t.text)}»</p>
@@ -365,7 +365,7 @@ export function HomeView() {
 
       {/* CTA */}
       <PageSection className="py-16">
-        <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-violet-500/10 via-fuchsia-500/10 to-pink-500/10 p-8 text-center sm:p-12">
+        <div className="ambient-card relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-violet-500/10 via-fuchsia-500/10 to-pink-500/10 p-8 text-center sm:p-12">
           <div className="absolute inset-0 bg-grid opacity-20 mask-radial" />
           <div className="relative">
             <Zap className="mx-auto mb-4 h-10 w-10 text-primary" />

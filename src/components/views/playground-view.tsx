@@ -1056,7 +1056,7 @@ export function PlaygroundView() {
                 key={c.id}
                 onClick={() => loadChallenge(c)}
                 className={cn(
-                  'group relative overflow-hidden rounded-xl border p-4 text-left transition-all',
+                  'ambient-card group relative overflow-hidden rounded-xl border p-4 text-left transition-all',
                   isActive
                     ? 'border-primary/40 bg-primary/5 shadow-lg shadow-primary/10'
                     : 'border-border/60 bg-card/40 hover:border-border hover:bg-card/70'

@@ -1022,7 +1022,7 @@ export function DashboardView() {
               <StaggerItem key={a.id}>
                 <button
                   onClick={() => setView(a.id)}
-                  className="group relative h-full w-full overflow-hidden rounded-2xl border border-border/60 bg-card/60 p-4 text-left backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-border hover:shadow-lg hover:shadow-primary/10"
+                  className="ambient-card group relative h-full w-full overflow-hidden rounded-2xl border border-border/60 bg-card/60 p-4 text-left backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-border hover:shadow-lg hover:shadow-primary/10"
                 >
                   <div
                     className={`mb-3 inline-grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br ${a.gradient} text-white shadow-md`}
@@ -1307,7 +1307,7 @@ export function DashboardView() {
                     initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.3, delay: i * 0.04 }}
-                    className="flex items-center gap-3 rounded-xl border border-border/40 bg-card/40 p-3 transition-colors hover:border-border/70 hover:bg-card/70"
+                    className="ambient-card flex items-center gap-3 rounded-xl border border-border/40 bg-card/40 p-3 transition-colors hover:border-border/70 hover:bg-card/70"
                   >
                     <div
                       className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ring-1 ${meta.ring}`}
@@ -1392,7 +1392,7 @@ export function DashboardView() {
                       initial={{ opacity: 0, scale: 0.85 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.3, delay: i * 0.05 }}
-                      className="group relative flex flex-col items-center gap-1 rounded-xl border border-primary/30 bg-gradient-to-br from-primary/10 to-fuchsia-500/5 p-3 text-center"
+                      className="ambient-card group relative flex flex-col items-center gap-1 rounded-xl border border-primary/30 bg-gradient-to-br from-primary/10 to-fuchsia-500/5 p-3 text-center"
                       title={achievementCopy?.desc}
                     >
                       <div className="absolute -right-5 -top-5 h-12 w-12 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 opacity-30 blur-xl transition-opacity group-hover:opacity-50" />

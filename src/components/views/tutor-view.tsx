@@ -462,7 +462,7 @@ function SidebarContent({
                   <button
                     onClick={() => onSelect(s.id)}
                     className={cn(
-                      'group relative flex w-full items-start gap-2.5 rounded-xl border p-2.5 text-left transition-all',
+                      'ambient-card group relative flex w-full items-start gap-2.5 rounded-xl border p-2.5 text-left transition-all',
                       active
                         ? 'border-primary/40 bg-primary/10 glow-soft'
                         : 'border-border/50 bg-background/40 hover:border-border hover:bg-card'
