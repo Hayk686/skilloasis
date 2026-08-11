@@ -278,17 +278,7 @@
   animation: ticker 40s linear infinite;
 }
 
-/* Slow ambient color movement shared by cards across the application. */
-@keyframes card-aurora-one {
-  0%, 100% { transform: translate3d(-18%, -18%, 0) scale(0.9); }
-  35% { transform: translate3d(82%, 18%, 0) scale(1.15); }
-  68% { transform: translate3d(28%, 72%, 0) scale(0.82); }
-}
-@keyframes card-aurora-two {
-  0%, 100% { transform: translate3d(18%, 22%, 0) scale(1); }
-  42% { transform: translate3d(-72%, -24%, 0) scale(0.78); }
-  76% { transform: translate3d(-18%, -68%, 0) scale(1.12); }
-}
+/* Pointer-following color glow shared by cards across the application. */
 @layer components {
   .ambient-card {
     position: relative;
@@ -300,35 +290,31 @@
     content: '';
     position: absolute;
     pointer-events: none;
-    width: 52%;
-    aspect-ratio: 1;
-    border-radius: 999px;
-    filter: blur(42px);
-    opacity: 0.09;
-    will-change: transform;
-    transition: opacity 300ms ease;
+    inset: 0;
+    z-index: -1;
+    opacity: 0;
+    will-change: opacity, background;
+    transition: opacity 180ms ease;
   }
   .ambient-card::before {
-    left: -18%;
-    top: -45%;
-    background: color-mix(in oklch, var(--primary) 90%, transparent);
-    animation: card-aurora-one 13s ease-in-out infinite;
+    background: radial-gradient(
+      280px circle at var(--card-glow-x, 50%) var(--card-glow-y, 50%),
+      color-mix(in oklch, var(--primary) 34%, transparent),
+      transparent 72%
+    );
   }
   .ambient-card::after {
-    bottom: -48%;
-    right: -16%;
-    background: oklch(0.72 0.2 190 / 75%);
-    animation: card-aurora-two 17s ease-in-out infinite;
+    background: radial-gradient(
+      220px circle at var(--card-glow-x, 50%) var(--card-glow-y, 50%),
+      oklch(0.72 0.2 190 / 18%),
+      transparent 70%
+    );
   }
-  .ambient-card:hover::before,
+  .ambient-card:hover::before {
+    opacity: 1;
+  }
   .ambient-card:hover::after {
-    opacity: 0.16;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .ambient-card::before,
-    .ambient-card::after {
-      animation: none;
-    }
+    opacity: 0.85;
   }
 }
 

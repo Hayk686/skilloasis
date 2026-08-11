@@ -36,10 +36,10 @@ const QUICK_ACTIONS: { id: ViewId; title: LocalizedText; desc: LocalizedText; ic
 ]
 
 const FEATURES = [
-  { icon: Brain, gradient: 'from-fuchsia-950/95 via-violet-950/85 to-slate-950', glow: 'bg-fuchsia-500', iconColor: 'text-fuchsia-200', title: localized('Понимает, а не зубрит', 'Understand, do not memorize', 'Հասկանալ, ոչ թե անգիր անել'), desc: localized('Объясняет через аналогии и примеры. Сложное становится простым.', 'Learn through analogies and examples. Complex ideas become simple.', 'Բացատրություններ՝ համեմատություններով և օրինակներով։ Բարդը դառնում է պարզ։') },
-  { icon: InfinityIcon, gradient: 'from-cyan-950/90 via-teal-950/80 to-slate-950', glow: 'bg-cyan-400', iconColor: 'text-cyan-200', title: localized('Безлимит и бесплатно', 'Unlimited and free', 'Անսահման և անվճար'), desc: localized('Никаких подписок, лимитов и платных функций. Навсегда.', 'No subscriptions, limits, or paid features. Ever.', 'Առանց բաժանորդագրության, սահմանափակումների և վճարովի գործառույթների։ Ընդմիշտ։') },
-  { icon: Rocket, gradient: 'from-emerald-950/90 via-green-950/80 to-slate-950', glow: 'bg-emerald-400', iconColor: 'text-emerald-200', title: localized('Адаптируется под тебя', 'Adapts to you', 'Հարմարվում է քեզ'), desc: localized('Подбирает сложность и темп. Растёшь вместе с платформой.', 'Matches your difficulty and pace as you grow.', 'Ընտրում է քեզ համապատասխան բարդությունն ու տեմպը։') },
-  { icon: Heart, gradient: 'from-rose-950/90 via-red-950/75 to-slate-950', glow: 'bg-rose-400', iconColor: 'text-rose-200', title: localized('Воодушевляет', 'Keeps you inspired', 'Ոգեշնչում է'), desc: localized('Тёплый наставник, который верит в твой прогресс.', 'A supportive tutor that believes in your progress.', 'Հոգատար ուսուցիչ, որը հավատում է քո առաջընթացին։') },
+  { icon: Brain, gradient: 'from-fuchsia-100/90 via-violet-50 to-white dark:from-fuchsia-950/95 dark:via-violet-950/85 dark:to-slate-950', iconColor: 'text-fuchsia-700 dark:text-fuchsia-200', title: localized('Понимает, а не зубрит', 'Understand, do not memorize', 'Հասկանալ, ոչ թե անգիր անել'), desc: localized('Объясняет через аналогии и примеры. Сложное становится простым.', 'Learn through analogies and examples. Complex ideas become simple.', 'Բացատրություններ՝ համեմատություններով և օրինակներով։ Բարդը դառնում է պարզ։') },
+  { icon: InfinityIcon, gradient: 'from-cyan-100/90 via-teal-50 to-white dark:from-cyan-950/90 dark:via-teal-950/80 dark:to-slate-950', iconColor: 'text-cyan-700 dark:text-cyan-200', title: localized('Безлимит и бесплатно', 'Unlimited and free', 'Անսահման և անվճար'), desc: localized('Никаких подписок, лимитов и платных функций. Навсегда.', 'No subscriptions, limits, or paid features. Ever.', 'Առանց բաժանորդագրության, սահմանափակումների և վճարովի գործառույթների։ Ընդմիշտ։') },
+  { icon: Rocket, gradient: 'from-emerald-100/90 via-green-50 to-white dark:from-emerald-950/90 dark:via-green-950/80 dark:to-slate-950', iconColor: 'text-emerald-700 dark:text-emerald-200', title: localized('Адаптируется под тебя', 'Adapts to you', 'Հարմարվում է քեզ'), desc: localized('Подбирает сложность и темп. Растёшь вместе с платформой.', 'Matches your difficulty and pace as you grow.', 'Ընտրում է քեզ համապատասխան բարդությունն ու տեմպը։') },
+  { icon: Heart, gradient: 'from-rose-100/90 via-red-50 to-white dark:from-rose-950/90 dark:via-red-950/75 dark:to-slate-950', iconColor: 'text-rose-700 dark:text-rose-200', title: localized('Воодушевляет', 'Keeps you inspired', 'Ոգեշնչում է'), desc: localized('Тёплый наставник, который верит в твой прогресс.', 'A supportive tutor that believes in your progress.', 'Հոգատար ուսուցիչ, որը հավատում է քո առաջընթացին։') },
 ]
 
 const TESTIMONIALS = [
@@ -201,55 +201,34 @@ export function HomeView() {
 
       {/* Why SkillOasis */}
       <PageSection className="py-12">
-        <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#07070a] px-5 py-10 shadow-2xl shadow-black/30 sm:px-8 sm:py-14 lg:px-12">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.14),transparent_42%)]" />
-          <div className="pointer-events-none absolute inset-0 opacity-[0.035] [background-image:linear-gradient(rgba(255,255,255,.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.7)_1px,transparent_1px)] [background-size:38px_38px]" />
+        <div className="relative overflow-hidden rounded-[2rem] border border-border/60 bg-card/55 px-5 py-10 shadow-2xl shadow-primary/5 dark:border-white/10 dark:bg-[#07070a] dark:shadow-black/30 sm:px-8 sm:py-14 lg:px-12">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.1),transparent_42%)] dark:bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.14),transparent_42%)]" />
+          <div className="pointer-events-none absolute inset-0 opacity-[0.045] [background-image:linear-gradient(rgba(0,0,0,.5)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,.5)_1px,transparent_1px)] [background-size:38px_38px] dark:opacity-[0.035] dark:[background-image:linear-gradient(rgba(255,255,255,.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.7)_1px,transparent_1px)]" />
 
           <div className="relative mx-auto mb-9 max-w-2xl text-center sm:mb-11">
             <div className="mx-auto mb-4 flex w-fit items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
               <Sparkles className="h-3.5 w-3.5" />
               SkillOasis
             </div>
-            <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">{tr('Почему SkillOasis', 'Why SkillOasis', 'Ինչու SkillOasis')}</h2>
-            <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-white/55 sm:text-base">
+            <h2 className="text-3xl font-bold tracking-tight text-foreground dark:text-white sm:text-4xl">{tr('Почему SkillOasis', 'Why SkillOasis', 'Ինչու SkillOasis')}</h2>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground dark:text-white/55 sm:text-base">
               {tr('Учиться должно быть радостно', 'Learning should feel joyful', 'Սովորելը պետք է հաճելի լինի')}
             </p>
           </div>
 
           <StaggerGroup className="relative mx-auto grid max-w-5xl gap-4 sm:grid-cols-2">
-            {FEATURES.map((f, index) => {
+            {FEATURES.map((f) => {
               const Icon = f.icon
               return (
                 <StaggerItem key={localize(f.title)}>
-                  <article className={`group relative h-full min-h-48 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br ${f.gradient} p-6 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:shadow-2xl sm:p-7`}>
-                    <motion.div
-                      aria-hidden
-                      className={`pointer-events-none absolute -left-20 -top-20 h-56 w-56 rounded-full ${f.glow} opacity-20 blur-3xl motion-reduce:hidden`}
-                      animate={{
-                        x: index % 2 === 0 ? ['0%', '115%', '35%', '0%'] : ['105%', '10%', '80%', '105%'],
-                        y: ['0%', '55%', '95%', '0%'],
-                        scale: [0.9, 1.15, 0.8, 0.9],
-                      }}
-                      transition={{
-                        duration: 11 + index * 1.5,
-                        repeat: Infinity,
-                        ease: 'easeInOut',
-                        delay: index * 0.7,
-                      }}
-                    />
-                    <motion.div
-                      aria-hidden
-                      className="pointer-events-none absolute -bottom-24 -right-16 h-48 w-48 rounded-full bg-white opacity-[0.07] blur-3xl motion-reduce:hidden"
-                      animate={{ x: ['0%', '-80%', '-20%', '0%'], y: ['0%', '-45%', '15%', '0%'] }}
-                      transition={{ duration: 14 + index, repeat: Infinity, ease: 'easeInOut', delay: index }}
-                    />
+                  <article className={`ambient-card group relative h-full min-h-48 overflow-hidden rounded-2xl border border-black/10 bg-gradient-to-br ${f.gradient} p-6 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:border-primary/25 hover:shadow-2xl dark:border-white/10 dark:hover:border-white/20 sm:p-7`}>
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent opacity-60" />
                     <div className="relative">
                       <div className={`mb-7 inline-grid h-11 w-11 place-items-center rounded-xl border border-white/15 bg-white/10 ${f.iconColor} shadow-inner shadow-white/5 backdrop-blur-sm`}>
                         <Icon className="h-5 w-5" />
                       </div>
-                      <h3 className="text-lg font-semibold tracking-tight text-white sm:text-xl">{localize(f.title)}</h3>
-                      <p className="mt-2 max-w-md text-sm leading-relaxed text-white/60">{localize(f.desc)}</p>
+                      <h3 className="text-lg font-semibold tracking-tight text-foreground dark:text-white sm:text-xl">{localize(f.title)}</h3>
+                      <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground dark:text-white/70">{localize(f.desc)}</p>
                     </div>
                   </article>
                 </StaggerItem>
