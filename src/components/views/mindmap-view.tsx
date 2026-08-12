@@ -18,7 +18,6 @@ import { SUBJECTS, localizeSubject } from '@/lib/subjects'
 import {
   PageSection,
   SectionHeader,
-  GlassCard,
   GradientButton,
   LoadingState,
   EmptyState,
@@ -112,7 +111,7 @@ export function MindMapView() {
       />
 
       {/* Input */}
-      <GlassCard className="mb-6 p-5" hover={false}>
+      <section className="map-glass-panel mb-6 rounded-2xl p-5">
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-0 flex-1">
             <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{tr('Тема', 'Topic', 'Թեմա')}</label>
@@ -151,7 +150,7 @@ export function MindMapView() {
             )
           })}
         </div>
-      </GlassCard>
+      </section>
 
       {/* Map rendering */}
       <AnimatePresence mode="wait">
@@ -227,7 +226,7 @@ function MindMapRenderer({
   const children = root.children ?? []
 
   return (
-    <div className="max-w-full overflow-auto overscroll-contain rounded-2xl border border-border/60 bg-card/40 backdrop-blur-sm">
+    <div className="map-glass-panel max-w-full overflow-auto overscroll-contain rounded-2xl">
       <div
         className="relative p-4 transition-transform duration-300 sm:p-6"
         style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
@@ -286,10 +285,10 @@ function BranchCard({
   return (
     <div
       className={cn(
-        'rounded-xl border transition-all',
+        'map-glass-node rounded-xl border transition-all',
         depth === 1
-          ? 'border-border/60 bg-card/60 hover:border-primary/30'
-          : 'border-border/40 bg-background/30'
+          ? 'border-border/60 hover:border-primary/30'
+          : 'border-border/40'
       )}
     >
       {/* Node header */}

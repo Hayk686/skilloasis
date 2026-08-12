@@ -27,7 +27,6 @@ import {
   Landmark,
 } from 'lucide-react'
 import { useNav, useUI, ViewId } from '@/lib/store'
-import { SUBJECTS, localizeSubject } from '@/lib/subjects'
 import { PageSection, GradientButton, StaggerGroup, StaggerItem, GlassCard, Pill } from '@/components/ui-blocks'
 import { useTranslations, type LocalizedText } from '@/lib/i18n-client'
 
@@ -326,123 +325,6 @@ export function HomeView() {
           </StaggerGroup>
         </PageSection>
       </section>
-
-      {/* Editorial learning worlds */}
-      <PageSection id="knowledge-worlds" className="render-lazy scroll-mt-20 py-14 sm:py-20">
-        <div className="mb-8 flex flex-wrap items-end justify-between gap-4 sm:mb-10">
-          <div>
-            <div className="mb-3 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">
-              <span className="h-px w-10 bg-primary/65" />
-              {tr('Маршруты знаний', 'Curated journeys', 'Ընտրված ուղիներ')}
-            </div>
-            <h2 className="text-3xl font-black tracking-[-0.04em] sm:text-4xl lg:text-5xl">
-              {tr('Миры знаний', 'Worlds of knowledge', 'Գիտելիքի աշխարհներ')}
-            </h2>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
-              {tr('Выбери область — и начни погружение', 'Choose an area and start exploring', 'Ընտրիր ոլորտը և սկսիր ուսումնասիրել')}
-            </p>
-          </div>
-          <button
-            onClick={() => setView('subjects')}
-            className="group inline-flex min-h-11 items-center gap-2 rounded-full border border-border/70 bg-card/70 px-5 text-sm font-semibold backdrop-blur transition-all hover:border-primary/40 hover:bg-accent"
-          >
-            {tr('Все предметы', 'All subjects', 'Բոլոր առարկաները')}
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </button>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {HERO_WORLDS.map((world, index) => {
-            const source = SUBJECTS.find((subject) => subject.id === world.subjectId)
-            const subject = source ? localizeSubject(source, locale) : null
-            const WorldIcon = world.icon
-            const lightPalette = [
-              'from-violet-100 via-white to-fuchsia-50 text-violet-700',
-              'from-cyan-100 via-white to-sky-50 text-cyan-700',
-              'from-fuchsia-100 via-white to-rose-50 text-fuchsia-700',
-              'from-amber-100 via-white to-orange-50 text-amber-700',
-            ][index]
-
-            return (
-              <div key={world.id}>
-                <button
-                  type="button"
-                  onClick={() => openSubject(world.subjectId)}
-                  className={`group relative flex h-full min-h-64 w-full flex-col overflow-hidden rounded-3xl border border-slate-900/10 bg-gradient-to-br p-6 text-left text-slate-950 shadow-[0_18px_45px_-32px_rgba(30,41,59,.45)] transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-1 hover:border-primary/25 hover:shadow-[0_22px_50px_-30px_rgba(124,58,237,.35)] sm:p-7 dark:border-white/12 dark:bg-slate-950 dark:text-white dark:shadow-[0_24px_64px_-38px_rgba(15,23,42,.9)] ${lightPalette}`}
-                >
-                  <div
-                    aria-hidden
-                    className="absolute -inset-2 hidden bg-cover transition-transform duration-700 ease-out group-hover:scale-[1.025] dark:block"
-                    style={{
-                      backgroundImage: "url('/info-oasis-knowledge-world.webp')",
-                      backgroundPosition: world.position,
-                    }}
-                  />
-                  <div aria-hidden className={`absolute inset-0 hidden bg-gradient-to-br dark:block ${world.ambient}`} />
-                  <div aria-hidden className="absolute inset-0 hidden bg-gradient-to-t from-slate-950 via-slate-950/55 to-slate-950/10 dark:block" />
-
-                  <div className="relative flex h-full flex-col">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="grid h-12 w-12 place-items-center rounded-2xl border border-current/15 bg-white/75 shadow-sm dark:border-white/20 dark:bg-black/25 dark:text-cyan-100 dark:shadow-none">
-                        <WorldIcon className="h-6 w-6" />
-                      </div>
-                      <span className="text-xs font-semibold tracking-[0.24em] text-slate-500 dark:text-white/62">
-                        {String(index + 1).padStart(2, '0')} / {String(HERO_WORLDS.length).padStart(2, '0')}
-                      </span>
-                    </div>
-
-                    <div className="mt-10 flex flex-1 flex-col text-slate-950 dark:text-white">
-                      <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-current sm:text-xs dark:text-cyan-200">
-                        Info Oasis · {localize(world.label)}
-                      </p>
-                      <h3 className="text-2xl font-black tracking-[-0.04em] sm:text-3xl">
-                        {localize(world.lesson)}
-                      </h3>
-                      <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-600 dark:text-white/70">
-                        {subject?.description ?? localize(world.description)}
-                      </p>
-                      <div className="mt-auto flex items-center justify-between gap-4 border-t border-slate-900/10 pt-5 dark:border-white/15">
-                        <div className="flex min-w-0 gap-2 overflow-hidden">
-                          {subject?.topics.slice(0, 2).map((topic) => (
-                            <span key={topic} className="truncate rounded-full border border-slate-900/10 bg-white/75 px-3 py-1 text-[11px] text-slate-600 dark:border-white/15 dark:bg-black/25 dark:text-white/70">
-                              {topic}
-                            </span>
-                          ))}
-                        </div>
-                        <ArrowRight className="h-5 w-5 shrink-0 transition-transform duration-300 group-hover:translate-x-1" />
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              </div>
-            )
-          })}
-        </div>
-
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {SUBJECTS.filter((subject) => !HERO_WORLDS.some((world) => world.subjectId === subject.id)).map((subject) => {
-            const copy = localizeSubject(subject, locale)
-            return (
-              <div key={subject.id}>
-                <button
-                  type="button"
-                  onClick={() => openSubject(subject.id)}
-                  className="group flex min-h-28 w-full items-center gap-4 rounded-2xl border border-border/70 bg-card p-4 text-left shadow-sm transition-[transform,border-color,box-shadow] hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg"
-                >
-                  <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${subject.gradient} text-2xl shadow-lg`}>
-                    {subject.emoji}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block font-semibold">{copy.name}</span>
-                    <span className="mt-1 block truncate text-xs text-muted-foreground">{copy.topics.slice(0, 2).join(' · ')}</span>
-                  </span>
-                  <ArrowRight className="ml-auto h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
-                </button>
-              </div>
-            )
-          })}
-        </div>
-      </PageSection>
 
       {/* Why Info Oasis */}
       <PageSection className="render-lazy py-12">
