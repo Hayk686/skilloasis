@@ -181,7 +181,7 @@ export function AppShell({
                   <ChevronDown className="hidden h-3.5 w-3.5 text-muted-foreground md:block" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-32">
+              <DropdownMenuContent align="end" className="z-[80] min-w-32">
                 <DropdownMenuRadioGroup
                   value={locale}
                   onValueChange={(value) => setLocale(value as typeof locale)}
@@ -256,41 +256,18 @@ export function AppShell({
                   </button>
                 </div>
 
-                <div className="mb-3 grid shrink-0 grid-cols-2 gap-2">
+                <div className="mb-3 shrink-0">
                   <button
                     type="button"
                     onClick={() => {
                       setSidebar(false)
                       setCommandOpen(true)
                     }}
-                    className="flex h-11 items-center justify-center gap-2 rounded-xl border border-border/60 bg-card/60 px-3 text-sm font-medium text-muted-foreground"
+                    className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-border/60 bg-card/60 px-3 text-sm font-medium text-muted-foreground"
                   >
                     <Search className="h-4 w-4" />
                     {t('search')}
                   </button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        className="flex h-11 items-center justify-center gap-2 rounded-xl border border-border/60 bg-card/60 px-3 text-sm font-medium"
-                      >
-                        <Languages className="h-4 w-4 text-muted-foreground" />
-                        <span className="truncate">{languageNames[locale]}</span>
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="min-w-40">
-                      <DropdownMenuRadioGroup
-                        value={locale}
-                        onValueChange={(value) => setLocale(value as typeof locale)}
-                      >
-                        {locales.map((item) => (
-                          <DropdownMenuRadioItem key={item} value={item}>
-                            {languageNames[item]}
-                          </DropdownMenuRadioItem>
-                        ))}
-                      </DropdownMenuRadioGroup>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
                 </div>
 
                 <div className="min-h-0 flex-1">
