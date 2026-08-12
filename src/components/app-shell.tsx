@@ -127,26 +127,27 @@ export function AppShell({
 
       {/* Top bar */}
       <header className="sticky top-0 z-40 border-b border-border/40 bg-background/70 backdrop-blur-xl">
-        <div className="flex h-16 w-full items-center gap-3 px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 w-full items-center gap-2 px-3 sm:gap-3 sm:px-6 lg:px-8">
           <button
             onClick={() => setSidebar(!sidebarOpen)}
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-border/60 text-muted-foreground transition-colors hover:border-border hover:text-foreground 2xl:hidden"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-border/60 text-muted-foreground transition-colors hover:border-border hover:text-foreground"
             aria-label={t('menu')}
             aria-expanded={sidebarOpen}
-            aria-controls="mobile-navigation"
+            aria-controls="navigation-drawer"
           >
             {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
 
           <button
             onClick={() => setView('home')}
+            aria-label="Info Oasis"
             className="flex shrink-0 items-center gap-2 sm:gap-2.5"
           >
             <div className="relative grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 text-white shadow-lg shadow-fuchsia-500/25">
               <Sparkles className="h-4.5 w-4.5" />
               <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 blur-md opacity-50 -z-10" />
             </div>
-            <div className="text-left">
+            <div className="hidden text-left sm:block">
               <p className="text-base font-bold leading-none tracking-tight">Info Oasis</p>
               <p className="mt-0.5 hidden text-[11px] leading-none text-muted-foreground sm:block">
                 {t('tagline')}
@@ -173,11 +174,11 @@ export function AppShell({
                 <button
                   type="button"
                   aria-label={t('language')}
-                  className="hidden h-11 shrink-0 items-center gap-1.5 rounded-xl border border-border/60 bg-card/40 px-3 text-xs transition-colors hover:border-border hover:text-foreground md:flex lg:h-9 lg:rounded-lg lg:px-2.5"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-card/40 text-xs transition-colors hover:border-border hover:text-foreground md:w-auto md:gap-1.5 md:px-3 lg:h-9 lg:rounded-lg lg:px-2.5"
                 >
                   <Languages className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span>{languageNames[locale]}</span>
-                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="hidden md:inline">{languageNames[locale]}</span>
+                  <ChevronDown className="hidden h-3.5 w-3.5 text-muted-foreground md:block" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-32">
@@ -209,14 +210,7 @@ export function AppShell({
       </header>
 
       <div className="flex w-full flex-1">
-        {/* Sidebar (desktop) */}
-        <div className="hidden w-64 shrink-0 2xl:block">
-          <aside className="fixed top-16 z-30 h-[calc(100dvh-4rem)] w-64 overflow-hidden border-r border-border/40 bg-background/80 px-3 py-6 backdrop-blur-xl">
-            <SidebarContent active={view} onSelect={setView} />
-          </aside>
-        </div>
-
-        {/* Sidebar (mobile drawer) */}
+        {/* Navigation drawer */}
         <AnimatePresence>
           {sidebarOpen && (
             <>
@@ -225,15 +219,15 @@ export function AppShell({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setSidebar(false)}
-                className="fixed inset-0 z-50 bg-black/55 backdrop-blur-sm 2xl:hidden"
+                className="fixed inset-0 z-50 bg-black/55 backdrop-blur-sm"
               />
               <motion.aside
                 initial={{ x: -320 }}
                 animate={{ x: 0 }}
                 exit={{ x: -320 }}
                 transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-                id="mobile-navigation"
-                className="fixed inset-y-0 left-0 z-[60] flex w-[min(88vw,20rem)] flex-col overflow-hidden border-r border-border bg-background/98 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl backdrop-blur-2xl 2xl:hidden"
+                id="navigation-drawer"
+                className="fixed inset-y-0 left-0 z-[60] flex w-[min(88vw,20rem)] flex-col overflow-hidden border-r border-border bg-background/98 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl backdrop-blur-2xl"
               >
                 <div className="mb-3 flex shrink-0 items-center justify-between border-b border-border/60 pb-3">
                   <button

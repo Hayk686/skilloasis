@@ -46,7 +46,7 @@ export function Footer() {
       ref={footerRef}
       onPointerMove={moveGlow}
       onPointerLeave={hideGlow}
-      className="interactive-footer relative isolate mt-auto overflow-hidden border-t border-border/70 bg-[#05050b] text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] dark:border-white/10 dark:text-white dark:shadow-none 2xl:pl-64"
+      className="interactive-footer relative isolate mt-auto overflow-hidden border-t border-border/70 bg-[#05050b] text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] dark:border-white/10 dark:text-white dark:shadow-none"
     >
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-30 bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(250,245,255,0.96)_48%,rgba(236,254,255,0.92))] dark:hidden" />
       <div aria-hidden className="footer-spotlight pointer-events-none absolute inset-0 -z-10" />
