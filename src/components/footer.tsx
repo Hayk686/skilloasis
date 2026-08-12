@@ -103,7 +103,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="relative flex min-h-40 items-start justify-between gap-4 pt-5 sm:min-h-52 lg:min-h-64">
+        <div className="relative flex min-h-24 items-start justify-between gap-4 py-5 sm:min-h-20">
           <a
             href="https://github.com/Hayk686/skilloasis"
             target="_blank"
@@ -120,11 +120,6 @@ export function Footer() {
             </span>
             <span className="hidden text-white/20 sm:inline">•</span>
             <span>© {new Date().getFullYear()} Info Oasis</span>
-          </div>
-
-          <div aria-hidden className="footer-wordmark absolute inset-x-0 bottom-16 select-none whitespace-nowrap text-center font-black leading-none tracking-[-0.075em] sm:bottom-[-0.08em]">
-            <span className="footer-wordmark-outline">INFO OASIS</span>
-            <span className="footer-wordmark-color absolute inset-0">INFO OASIS</span>
           </div>
         </div>
       </div>

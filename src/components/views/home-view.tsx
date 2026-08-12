@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useRef, type PointerEvent as ReactPointerEvent } from 'react'
 import { motion } from 'framer-motion'
 import {
   Sparkles,
@@ -23,7 +24,7 @@ import {
 import { useNav, useUI, ViewId } from '@/lib/store'
 import { SUBJECTS, localizeSubject } from '@/lib/subjects'
 import { PageSection, GradientButton, StaggerGroup, StaggerItem, GlassCard, Pill } from '@/components/ui-blocks'
-import { Particles } from '@/components/aurora'
+import { BackgroundPaths } from '@/components/background-paths'
 import { useTranslations, type LocalizedText } from '@/lib/i18n-client'
 
 const localized = (ru: string, en: string, hy: string): LocalizedText => ({ ru, en, hy })
@@ -56,35 +57,64 @@ export function HomeView() {
   const { setView, openSubject } = useNav()
   const { setCommandOpen } = useUI()
   const { locale, tr, localize } = useTranslations()
+  const heroRef = useRef<HTMLElement>(null)
+  const heroFrameRef = useRef<number | null>(null)
+
+  useEffect(() => () => {
+    if (heroFrameRef.current !== null) cancelAnimationFrame(heroFrameRef.current)
+  }, [])
+
+  function moveHeroGlow(event: ReactPointerEvent<HTMLElement>) {
+    if (event.pointerType === 'touch' || heroFrameRef.current !== null) return
+    const hero = heroRef.current
+    if (!hero) return
+    const bounds = hero.getBoundingClientRect()
+    const x = ((event.clientX - bounds.left) / bounds.width) * 100
+    const y = ((event.clientY - bounds.top) / bounds.height) * 100
+    heroFrameRef.current = requestAnimationFrame(() => {
+      hero.style.setProperty('--hero-glow-x', `${x}%`)
+      hero.style.setProperty('--hero-glow-y', `${y}%`)
+      hero.dataset.glowActive = 'true'
+      heroFrameRef.current = null
+    })
+  }
+
+  function hideHeroGlow() {
+    heroRef.current?.removeAttribute('data-glow-active')
+  }
 
   return (
     <div>
       {/* Hero */}
-      <section className="relative overflow-hidden">
-        <Particles count={24} />
-        <PageSection className="relative py-12 sm:py-20 lg:py-24">
-          <div className="mx-auto max-w-3xl text-center">
+      <section
+        ref={heroRef}
+        onPointerMove={moveHeroGlow}
+        onPointerLeave={hideHeroGlow}
+        className="interactive-hero relative isolate overflow-hidden"
+      >
+        <BackgroundPaths />
+        <PageSection className="relative py-14 sm:py-24 lg:py-28">
+          <div className="mx-auto max-w-5xl text-center">
             <motion.h1
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.05 }}
-              className="text-balance text-4xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl"
+              className="hero-wordmark relative mx-auto select-none whitespace-nowrap font-black leading-none tracking-[-0.075em]"
             >
-              {tr('Учись', 'Learn', 'Սովորիր')} <span className="text-gradient">{tr('чему угодно', 'anything', 'ամեն ինչ')}</span>
-              <br />
-              {tr('с умным наставником', 'with a smart tutor', 'խելացի ուսուցչի հետ')}
+              <span className="hero-wordmark-outline">INFO OASIS</span>
+              <span aria-hidden className="hero-wordmark-color absolute inset-0">INFO OASIS</span>
             </motion.h1>
 
             <motion.p
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.15 }}
-              className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground sm:mt-6 sm:text-xl"
+              className="mx-auto mt-7 max-w-3xl text-pretty text-base font-medium leading-relaxed text-muted-foreground sm:mt-9 sm:text-xl"
             >
               {tr(
-                'Info Oasis — это AI-платформа, которая объясняет сложное простыми словами. Программирование, математика, языки, наука, история — всё в одном месте.',
-                'Info Oasis is an AI learning platform that explains complex ideas in simple words. Programming, mathematics, languages, science, and history—all in one place.',
-                'Info Oasis-ը AI ուսուցման հարթակ է, որը բարդ թեմաները բացատրում է պարզ բառերով։ Ծրագրավորում, մաթեմատիկա, լեզուներ, գիտություն և պատմություն՝ ամեն ինչ մեկ տեղում։'
+                'Учись чему угодно с умным наставником. Info Oasis объясняет сложные идеи простыми словами — программирование, математика, языки, наука и история в одном месте.',
+                'Learn anything with a smart tutor. Info Oasis explains complex ideas in simple words—from programming and mathematics to languages, science, and history—all in one place.',
+                'Սովորիր ամեն ինչ խելացի ուսուցչի հետ։ Info Oasis-ը բարդ գաղափարները բացատրում է պարզ բառերով՝ ծրագրավորումից ու մաթեմատիկայից մինչև լեզուներ, գիտություն և պատմություն՝ ամեն ինչ մեկ տեղում։'
               )}
             </motion.p>
 

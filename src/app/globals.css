@@ -430,7 +430,7 @@
   }
 }
 
-/* Interactive landing-page wordmark inspired by the supplied footer reference. */
+/* Cursor spotlight retained in the structured landing-page footer. */
 .interactive-footer {
   --footer-glow-x: 50%;
   --footer-glow-y: 72%;
@@ -446,41 +446,91 @@
 .interactive-footer[data-glow-active='true'] .footer-spotlight {
   opacity: 1;
 }
-.footer-wordmark {
-  font-size: clamp(3.25rem, 11.35vw, 11.25rem);
+
+/* Large interactive brand mark in the landing hero. */
+.interactive-hero {
+  --hero-glow-x: 50%;
+  --hero-glow-y: 50%;
 }
-.footer-wordmark-outline,
-.footer-wordmark-color {
+.hero-wordmark {
+  font-size: clamp(3.1rem, 12vw, 10rem);
+}
+.hero-wordmark-outline,
+.hero-wordmark-color {
   display: block;
   color: transparent;
 }
-.footer-wordmark-outline {
-  -webkit-text-stroke: 1px rgb(148 163 184 / 34%);
-  text-shadow: 0 0 28px rgb(59 130 246 / 5%);
+.hero-wordmark-outline {
+  -webkit-text-stroke: 1.5px rgb(71 85 105 / 38%);
+  text-shadow: 0 0 32px rgb(99 102 241 / 10%);
 }
-.footer-wordmark-color {
+.dark .hero-wordmark-outline {
+  -webkit-text-stroke-color: rgb(148 163 184 / 34%);
+}
+.hero-wordmark-color {
   background: linear-gradient(100deg, #38bdf8 4%, #818cf8 28%, #d946ef 54%, #fb7185 76%, #22d3ee 98%);
   background-clip: text;
   -webkit-background-clip: text;
-  -webkit-mask-image: radial-gradient(190px circle at var(--footer-glow-x) var(--footer-glow-y), black 0%, rgb(0 0 0 / 86%) 34%, transparent 72%);
-  mask-image: radial-gradient(190px circle at var(--footer-glow-x) var(--footer-glow-y), black 0%, rgb(0 0 0 / 86%) 34%, transparent 72%);
+  -webkit-mask-image: radial-gradient(220px circle at var(--hero-glow-x) var(--hero-glow-y), black 0%, rgb(0 0 0 / 92%) 30%, transparent 72%);
+  mask-image: radial-gradient(220px circle at var(--hero-glow-x) var(--hero-glow-y), black 0%, rgb(0 0 0 / 92%) 30%, transparent 72%);
   opacity: 0;
-  filter: drop-shadow(0 0 13px rgb(168 85 247 / 35%));
+  filter: drop-shadow(0 0 18px rgb(168 85 247 / 42%));
   transition: opacity 180ms ease;
   will-change: opacity, mask-image;
 }
-.interactive-footer[data-glow-active='true'] .footer-wordmark-color {
+.interactive-hero[data-glow-active='true'] .hero-wordmark-color {
   opacity: 0.95;
 }
 
+@keyframes wordmark-touch-sweep {
+  0%, 100% {
+    -webkit-mask-position: -35% 50%;
+    mask-position: -35% 50%;
+  }
+  50% {
+    -webkit-mask-position: 135% 50%;
+    mask-position: 135% 50%;
+  }
+}
+
+@keyframes footer-touch-sweep {
+  0%, 100% { transform: translate3d(-10%, 0, 0); }
+  50% { transform: translate3d(145%, 0, 0); }
+}
+
 @media (max-width: 767px), (hover: none), (pointer: coarse) {
-  .footer-wordmark-color {
-    -webkit-mask-image: linear-gradient(90deg, transparent 2%, black 28%, black 72%, transparent 98%);
-    mask-image: linear-gradient(90deg, transparent 2%, black 28%, black 72%, transparent 98%);
-    opacity: 0.45;
+  .hero-wordmark-color {
+    -webkit-mask-image: radial-gradient(circle, black 0%, rgb(0 0 0 / 92%) 38%, transparent 72%);
+    mask-image: radial-gradient(circle, black 0%, rgb(0 0 0 / 92%) 38%, transparent 72%);
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: 48% 180%;
+    mask-size: 48% 180%;
+    opacity: 0.95;
+    animation: wordmark-touch-sweep 6s ease-in-out infinite;
   }
   .footer-spotlight {
-    opacity: 0.6;
+    inset: -20% auto -20% -35%;
+    width: 62%;
+    opacity: 0.65;
+    background: radial-gradient(circle at center, rgb(34 211 238 / 15%), rgb(217 70 239 / 10%) 40%, transparent 72%);
+    animation: footer-touch-sweep 9s ease-in-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-wordmark-color {
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 22%, black 78%, transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0%, black 22%, black 78%, transparent 100%);
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    opacity: 0.72;
+  }
+  .footer-spotlight {
+    inset: 0;
+    width: auto;
+    transform: none;
+    opacity: 0.45;
   }
 }
 
