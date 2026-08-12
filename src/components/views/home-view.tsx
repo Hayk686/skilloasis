@@ -149,7 +149,7 @@ export function HomeView() {
       {/* Hero */}
       <section
         aria-label={tr('Миры знаний', 'Worlds of knowledge', 'Գիտելիքի աշխարհներ')}
-        className="relative isolate min-h-[calc(100svh-4rem)] overflow-hidden bg-slate-950 text-white"
+        className="relative isolate min-h-[calc(100svh-4rem)] overflow-hidden bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white"
         onMouseEnter={() => setHeroPaused(true)}
         onMouseLeave={() => setHeroPaused(false)}
         onFocusCapture={() => setHeroPaused(true)}
@@ -165,7 +165,7 @@ export function HomeView() {
             animate={{ opacity: 1, scale: 1.015 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 1.15, ease: 'easeOut' }}
-            className="absolute inset-0 bg-cover bg-center brightness-[0.9] saturate-[1.08] dark:brightness-[0.7]"
+            className="absolute inset-0 bg-cover bg-center opacity-45 brightness-[1.35] saturate-[0.72] dark:opacity-100 dark:brightness-[0.7] dark:saturate-[1.08]"
             style={{
               backgroundImage: "url('/info-oasis-knowledge-world.webp')",
               backgroundPosition: activeWorld.position,
@@ -173,8 +173,8 @@ export function HomeView() {
           />
         </AnimatePresence>
         <div aria-hidden className={`absolute inset-0 bg-gradient-to-r ${activeWorld.ambient} transition-colors duration-700`} />
-        <div aria-hidden className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,6,23,.92)_0%,rgba(2,6,23,.72)_42%,rgba(2,6,23,.23)_73%,rgba(2,6,23,.44)_100%)]" />
-        <div aria-hidden className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,.18),transparent_38%,rgba(2,6,23,.86))]" />
+        <div aria-hidden className="absolute inset-0 bg-[linear-gradient(90deg,rgba(248,250,252,.96)_0%,rgba(248,250,252,.82)_44%,rgba(248,250,252,.34)_76%,rgba(248,250,252,.52)_100%)] dark:bg-[linear-gradient(90deg,rgba(2,6,23,.92)_0%,rgba(2,6,23,.72)_42%,rgba(2,6,23,.23)_73%,rgba(2,6,23,.44)_100%)]" />
+        <div aria-hidden className="absolute inset-0 bg-[linear-gradient(180deg,rgba(248,250,252,.28),transparent_38%,rgba(248,250,252,.9))] dark:bg-[linear-gradient(180deg,rgba(2,6,23,.18),transparent_38%,rgba(2,6,23,.86))]" />
 
         <div className="relative mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-[1400px] flex-col px-5 pb-5 pt-10 sm:px-8 sm:pb-7 sm:pt-14 lg:px-12 lg:pb-8 xl:px-10 xl:pr-20 2xl:px-16 2xl:pr-24">
           <div className="grid flex-1 items-center gap-10 py-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(18rem,.65fr)] xl:gap-8 xl:py-12 2xl:gap-16">
@@ -185,11 +185,11 @@ export function HomeView() {
               transition={{ duration: 0.5 }}
               className="max-w-3xl"
             >
-              <div className="mb-5 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-200/90 sm:text-xs sm:tracking-[0.26em]">
-                <span className="h-px w-10 shrink-0 bg-cyan-300/70" />
+              <div className="mb-5 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-800 sm:text-xs sm:tracking-[0.26em] dark:text-cyan-200/90">
+                <span className="h-px w-10 shrink-0 bg-cyan-700/70 dark:bg-cyan-300/70" />
                 <span className="min-w-0 [overflow-wrap:anywhere]">Info Oasis · {localize(activeWorld.label)}</span>
               </div>
-              <h1 className="text-[clamp(2.9rem,7vw,6.4rem)] font-black leading-[0.88] tracking-[-0.06em] text-white drop-shadow-[0_4px_30px_rgba(0,0,0,.35)]">
+              <h1 className="text-[clamp(2.9rem,7vw,6.4rem)] font-black leading-[0.88] tracking-[-0.06em] text-slate-950 drop-shadow-[0_4px_30px_rgba(255,255,255,.5)] dark:text-white dark:drop-shadow-[0_4px_30px_rgba(0,0,0,.35)]">
                 {localize(activeWorld.headline).split('\n').map((line, index) => (
                   <span key={line} className="block overflow-hidden pb-[0.05em]">
                     <motion.span
@@ -203,7 +203,7 @@ export function HomeView() {
                   </span>
                 ))}
               </h1>
-              <p className="mt-6 max-w-2xl text-pretty text-base leading-7 text-white/76 [overflow-wrap:anywhere] sm:mt-8 sm:text-lg sm:leading-8">
+              <p className="mt-6 max-w-2xl text-pretty text-base leading-7 text-slate-700 [overflow-wrap:anywhere] sm:mt-8 sm:text-lg sm:leading-8 dark:text-white/76">
                 {localize(activeWorld.description)}
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -218,7 +218,7 @@ export function HomeView() {
                 <button
                   type="button"
                   onClick={() => document.getElementById('how-info-oasis-works')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-white/30 bg-black/20 px-6 font-semibold text-white backdrop-blur-md transition-colors hover:border-white/55 hover:bg-white/10"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-slate-900/20 bg-white/55 px-6 font-semibold text-slate-950 backdrop-blur-md transition-colors hover:border-slate-900/35 hover:bg-white/75 dark:border-white/30 dark:bg-black/20 dark:text-white dark:hover:border-white/55 dark:hover:bg-white/10"
                 >
                   <CirclePlay className="h-5 w-5" />
                   {tr('Как это работает', 'See how it works', 'Ինչպես է աշխատում')}
@@ -231,21 +231,21 @@ export function HomeView() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.08 }}
-              className="self-end rounded-2xl border border-white/18 bg-slate-950/48 p-5 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-6 lg:self-center"
+              className="self-end rounded-2xl border border-slate-900/12 bg-white/72 p-5 text-slate-950 shadow-2xl shadow-slate-900/15 backdrop-blur-xl sm:p-6 lg:self-center dark:border-white/18 dark:bg-slate-950/48 dark:text-white dark:shadow-black/30"
             >
-              <div className="mb-8 flex items-center justify-between text-xs uppercase tracking-[0.2em] text-white/55">
+              <div className="mb-8 flex items-center justify-between text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-white/55">
                 <span>{tr('Тема дня', 'Featured lesson', 'Օրվա թեմա')}</span>
                 <span>{String(heroWorld + 1).padStart(2, '0')} / {String(HERO_WORLDS.length).padStart(2, '0')}</span>
               </div>
-              <div className="grid h-12 w-12 place-items-center rounded-xl border border-white/15 bg-white/10 text-cyan-200">
+              <div className="grid h-12 w-12 place-items-center rounded-xl border border-slate-900/10 bg-white/65 text-cyan-700 shadow-sm dark:border-white/15 dark:bg-white/10 dark:text-cyan-200 dark:shadow-none">
                 <ActiveWorldIcon className="h-6 w-6" />
               </div>
               <h2 className="mt-5 text-2xl font-bold tracking-tight">{localize(activeWorld.lesson)}</h2>
-              <p className="mt-3 text-sm leading-6 text-white/65 [overflow-wrap:anywhere]">{localize(activeWorld.description)}</p>
+              <p className="mt-3 text-sm leading-6 text-slate-600 [overflow-wrap:anywhere] dark:text-white/65">{localize(activeWorld.description)}</p>
               <button
                 type="button"
                 onClick={() => openSubject(activeWorld.subjectId)}
-                className="group mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-cyan-200 transition-colors hover:text-white"
+                className="group mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-cyan-700 transition-colors hover:text-slate-950 dark:text-cyan-200 dark:hover:text-white"
               >
                 {tr('Открыть предмет', 'Explore this subject', 'Բացել առարկան')}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -263,7 +263,7 @@ export function HomeView() {
                   onClick={() => setHeroWorld(index)}
                   aria-label={localize(world.label)}
                   aria-pressed={index === heroWorld}
-                  className={`grid h-12 place-items-center rounded-xl border backdrop-blur-md transition-colors ${index === heroWorld ? 'border-cyan-300/65 bg-cyan-300/15 text-cyan-100' : 'border-white/15 bg-black/20 text-white/60'}`}
+                  className={`grid h-12 place-items-center rounded-xl border backdrop-blur-md transition-colors ${index === heroWorld ? 'border-cyan-700/45 bg-cyan-100/75 text-cyan-800 dark:border-cyan-300/65 dark:bg-cyan-300/15 dark:text-cyan-100' : 'border-slate-900/15 bg-white/45 text-slate-600 dark:border-white/15 dark:bg-black/20 dark:text-white/60'}`}
                 >
                   <WorldIcon className="h-5 w-5" />
                 </button>
@@ -271,15 +271,15 @@ export function HomeView() {
             })}
           </div>
 
-          <div className="grid grid-cols-3 border-t border-white/18 py-5 sm:py-6">
+          <div className="grid grid-cols-3 border-t border-slate-900/12 py-5 sm:py-6 dark:border-white/18">
             {[
               { v: '8+', l: tr('предметов', 'subjects', 'առարկա') },
               { v: '∞', l: tr('тем для изучения', 'topics to explore', 'ուսումնասիրվող թեմա') },
               { v: '0$', l: tr('стоимость', 'cost', 'արժեք') },
             ].map((stat, index) => (
-              <div key={stat.l} className={`px-3 text-center sm:px-6 ${index > 0 ? 'border-l border-white/18' : ''}`}>
-                <div className="text-2xl font-bold tracking-tight text-white sm:text-3xl">{stat.v}</div>
-                <div className="mt-1 text-[11px] text-white/55 sm:text-sm">{stat.l}</div>
+              <div key={stat.l} className={`px-3 text-center sm:px-6 ${index > 0 ? 'border-l border-slate-900/12 dark:border-white/18' : ''}`}>
+                <div className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl dark:text-white">{stat.v}</div>
+                <div className="mt-1 text-[11px] text-slate-600 sm:text-sm dark:text-white/55">{stat.l}</div>
               </div>
             ))}
           </div>
@@ -293,7 +293,7 @@ export function HomeView() {
               onClick={() => setHeroWorld(index)}
               aria-label={localize(world.label)}
               aria-pressed={index === heroWorld}
-              className={`flex min-h-11 w-11 items-center justify-center rounded-full border text-xs font-semibold backdrop-blur-md transition-all ${index === heroWorld ? 'border-cyan-300/70 bg-cyan-300/16 text-white shadow-lg shadow-cyan-500/20' : 'border-white/15 bg-black/20 text-white/50 hover:border-white/40 hover:text-white'}`}
+              className={`flex min-h-11 w-11 items-center justify-center rounded-full border text-xs font-semibold backdrop-blur-md transition-all ${index === heroWorld ? 'border-cyan-700/50 bg-cyan-100/80 text-cyan-900 shadow-lg shadow-cyan-500/15 dark:border-cyan-300/70 dark:bg-cyan-300/16 dark:text-white dark:shadow-cyan-500/20' : 'border-slate-900/15 bg-white/55 text-slate-600 hover:border-slate-900/35 hover:text-slate-950 dark:border-white/15 dark:bg-black/20 dark:text-white/50 dark:hover:border-white/40 dark:hover:text-white'}`}
             >
               {String(index + 1).padStart(2, '0')}
             </button>
