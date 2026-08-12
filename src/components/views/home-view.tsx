@@ -328,7 +328,7 @@ export function HomeView() {
       </section>
 
       {/* Editorial learning worlds */}
-      <PageSection id="knowledge-worlds" className="scroll-mt-20 py-14 sm:py-20">
+      <PageSection id="knowledge-worlds" className="render-lazy scroll-mt-20 py-14 sm:py-20">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4 sm:mb-10">
           <div>
             <div className="mb-3 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">
@@ -351,65 +351,60 @@ export function HomeView() {
           </button>
         </div>
 
-        <StaggerGroup className="grid gap-3 sm:grid-cols-2 lg:grid-cols-12 lg:auto-rows-[17rem]">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {HERO_WORLDS.map((world, index) => {
             const source = SUBJECTS.find((subject) => subject.id === world.subjectId)
             const subject = source ? localizeSubject(source, locale) : null
             const WorldIcon = world.icon
-            const layout = [
-              'sm:col-span-2 lg:col-span-7 lg:row-span-2',
-              'lg:col-span-5',
-              'lg:col-span-5',
-              'sm:col-span-2 lg:col-span-12',
+            const lightPalette = [
+              'from-violet-100 via-white to-fuchsia-50 text-violet-700',
+              'from-cyan-100 via-white to-sky-50 text-cyan-700',
+              'from-fuchsia-100 via-white to-rose-50 text-fuchsia-700',
+              'from-amber-100 via-white to-orange-50 text-amber-700',
             ][index]
 
             return (
-              <StaggerItem key={world.id} className={layout}>
+              <div key={world.id}>
                 <button
                   type="button"
                   onClick={() => openSubject(world.subjectId)}
-                  className="group relative h-full min-h-[22rem] w-full overflow-hidden rounded-[1.5rem] border border-white/15 bg-slate-950 text-left text-white shadow-[0_28px_80px_-42px_rgba(15,23,42,.9)] sm:min-h-[24rem] lg:min-h-0"
+                  className={`group relative flex h-full min-h-64 w-full flex-col overflow-hidden rounded-3xl border border-slate-900/10 bg-gradient-to-br p-6 text-left text-slate-950 shadow-[0_18px_45px_-32px_rgba(30,41,59,.45)] transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-1 hover:border-primary/25 hover:shadow-[0_22px_50px_-30px_rgba(124,58,237,.35)] sm:p-7 dark:border-white/12 dark:bg-slate-950 dark:text-white dark:shadow-[0_24px_64px_-38px_rgba(15,23,42,.9)] ${lightPalette}`}
                 >
-                  <motion.div
+                  <div
                     aria-hidden
-                    initial={{ scale: 1.02 }}
-                    whileInView={{ scale: [1.02, 1.065, 1.02], x: [0, index % 2 ? -7 : 7, 0] }}
-                    viewport={{ amount: 0.15 }}
-                    transition={{ duration: 15 + index * 1.5, repeat: Infinity, ease: 'easeInOut' }}
-                    className="absolute -inset-3 bg-cover will-change-transform transition-[filter] duration-700 group-hover:brightness-110"
+                    className="absolute -inset-2 hidden bg-cover transition-transform duration-700 ease-out group-hover:scale-[1.025] dark:block"
                     style={{
                       backgroundImage: "url('/info-oasis-knowledge-world.webp')",
                       backgroundPosition: world.position,
                     }}
                   />
-                  <div aria-hidden className={`absolute inset-0 bg-gradient-to-br ${world.ambient}`} />
-                  <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/48 to-slate-950/5" />
-                  <div aria-hidden className="absolute inset-0 opacity-0 ring-1 ring-inset ring-white/45 transition-opacity duration-500 group-hover:opacity-100" />
+                  <div aria-hidden className={`absolute inset-0 hidden bg-gradient-to-br dark:block ${world.ambient}`} />
+                  <div aria-hidden className="absolute inset-0 hidden bg-gradient-to-t from-slate-950 via-slate-950/55 to-slate-950/10 dark:block" />
 
-                  <div className="relative flex h-full min-h-[22rem] flex-col justify-between p-6 sm:min-h-[24rem] sm:p-8 lg:min-h-0">
+                  <div className="relative flex h-full flex-col">
                     <div className="flex items-start justify-between gap-4">
-                      <div className="grid h-12 w-12 place-items-center rounded-2xl border border-white/20 bg-black/25 text-cyan-100 backdrop-blur-md">
+                      <div className="grid h-12 w-12 place-items-center rounded-2xl border border-current/15 bg-white/75 shadow-sm dark:border-white/20 dark:bg-black/25 dark:text-cyan-100 dark:shadow-none">
                         <WorldIcon className="h-6 w-6" />
                       </div>
-                      <span className="text-xs font-semibold tracking-[0.24em] text-white/62">
+                      <span className="text-xs font-semibold tracking-[0.24em] text-slate-500 dark:text-white/62">
                         {String(index + 1).padStart(2, '0')} / {String(HERO_WORLDS.length).padStart(2, '0')}
                       </span>
                     </div>
 
-                    <div className="max-w-xl">
-                      <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.26em] text-cyan-200 sm:text-xs">
+                    <div className="mt-10 flex flex-1 flex-col text-slate-950 dark:text-white">
+                      <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-current sm:text-xs dark:text-cyan-200">
                         Info Oasis · {localize(world.label)}
                       </p>
-                      <h3 className="text-3xl font-black tracking-[-0.04em] sm:text-4xl">
+                      <h3 className="text-2xl font-black tracking-[-0.04em] sm:text-3xl">
                         {localize(world.lesson)}
                       </h3>
-                      <p className="mt-3 line-clamp-2 max-w-lg text-sm leading-6 text-white/70 sm:text-base">
+                      <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-600 dark:text-white/70">
                         {subject?.description ?? localize(world.description)}
                       </p>
-                      <div className="mt-5 flex items-center justify-between gap-4 border-t border-white/15 pt-4">
+                      <div className="mt-auto flex items-center justify-between gap-4 border-t border-slate-900/10 pt-5 dark:border-white/15">
                         <div className="flex min-w-0 gap-2 overflow-hidden">
                           {subject?.topics.slice(0, 2).map((topic) => (
-                            <span key={topic} className="truncate rounded-full border border-white/15 bg-black/25 px-3 py-1 text-[11px] text-white/70 backdrop-blur">
+                            <span key={topic} className="truncate rounded-full border border-slate-900/10 bg-white/75 px-3 py-1 text-[11px] text-slate-600 dark:border-white/15 dark:bg-black/25 dark:text-white/70">
                               {topic}
                             </span>
                           ))}
@@ -419,20 +414,20 @@ export function HomeView() {
                     </div>
                   </div>
                 </button>
-              </StaggerItem>
+              </div>
             )
           })}
-        </StaggerGroup>
+        </div>
 
-        <StaggerGroup className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {SUBJECTS.filter((subject) => !HERO_WORLDS.some((world) => world.subjectId === subject.id)).map((subject) => {
             const copy = localizeSubject(subject, locale)
             return (
-              <StaggerItem key={subject.id}>
+              <div key={subject.id}>
                 <button
                   type="button"
                   onClick={() => openSubject(subject.id)}
-                  className="ambient-card group flex min-h-28 w-full items-center gap-4 rounded-2xl border border-border/60 bg-card/70 p-4 text-left backdrop-blur transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-xl"
+                  className="group flex min-h-28 w-full items-center gap-4 rounded-2xl border border-border/70 bg-card p-4 text-left shadow-sm transition-[transform,border-color,box-shadow] hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg"
                 >
                   <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${subject.gradient} text-2xl shadow-lg`}>
                     {subject.emoji}
@@ -443,14 +438,14 @@ export function HomeView() {
                   </span>
                   <ArrowRight className="ml-auto h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
                 </button>
-              </StaggerItem>
+              </div>
             )
           })}
-        </StaggerGroup>
+        </div>
       </PageSection>
 
       {/* Why Info Oasis */}
-      <PageSection className="py-12">
+      <PageSection className="render-lazy py-12">
         <div className="relative overflow-hidden rounded-[2rem] border border-border/60 bg-card/55 px-5 py-10 shadow-2xl shadow-primary/5 dark:border-white/10 dark:bg-[#07070a] dark:shadow-black/30 sm:px-8 sm:py-14 lg:px-12">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.1),transparent_42%)] dark:bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.14),transparent_42%)]" />
           <div className="pointer-events-none absolute inset-0 opacity-[0.045] [background-image:linear-gradient(rgba(0,0,0,.5)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,.5)_1px,transparent_1px)] [background-size:38px_38px] dark:opacity-[0.035] dark:[background-image:linear-gradient(rgba(255,255,255,.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.7)_1px,transparent_1px)]" />
@@ -489,7 +484,7 @@ export function HomeView() {
       </PageSection>
 
       {/* What's new — highlight recently shipped features */}
-      <PageSection className="py-12">
+      <PageSection className="render-lazy py-12">
         <div className="mb-6 flex items-center gap-2">
           <Pill className="border-primary/30 bg-primary/10 text-primary">
             <Sparkles className="h-3 w-3" /> {tr('Новинки', 'New', 'Նորույթներ')}
@@ -557,7 +552,7 @@ export function HomeView() {
       </PageSection>
 
       {/* Testimonials marquee */}
-      <section className="relative overflow-hidden border-y border-border/40 bg-card/30 py-10">
+      <section className="render-lazy relative overflow-hidden border-y border-border/40 bg-card/30 py-10">
         <div className="mb-6 text-center">
           <div className="mb-2 flex items-center justify-center gap-1">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -593,7 +588,7 @@ export function HomeView() {
       </section>
 
       {/* CTA */}
-      <PageSection className="py-16">
+      <PageSection className="render-lazy py-16">
         <div className="ambient-card relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-violet-500/10 via-fuchsia-500/10 to-pink-500/10 p-8 text-center sm:p-12">
           <div className="absolute inset-0 bg-grid opacity-20 mask-radial" />
           <div className="relative">

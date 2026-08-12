@@ -366,6 +366,19 @@
   animation: ticker 40s linear infinite;
 }
 
+/* Skip paint and layout work for landing sections until they approach the viewport. */
+.render-lazy {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+}
+
+/* Large blurred layers remain static on touch devices to avoid costly recompositing. */
+@media (hover: none), (pointer: coarse) {
+  .aurora-orb {
+    animation: none !important;
+  }
+}
+
 /* Pointer-following color glow shared by cards across the application. */
 @layer components {
   .ambient-card {
@@ -387,7 +400,6 @@
     inset: 0;
     z-index: -1;
     opacity: 0;
-    will-change: opacity, background;
     transition: opacity 180ms ease;
   }
   .ambient-card::before {
@@ -427,7 +439,6 @@
     radial-gradient(480px circle at var(--footer-glow-x) var(--footer-glow-y), rgb(34 211 238 / 12%), transparent 54%),
     radial-gradient(360px circle at var(--footer-glow-x) var(--footer-glow-y), rgb(217 70 239 / 12%), transparent 66%);
   transition: opacity 240ms ease;
-  will-change: opacity, background;
 }
 .interactive-footer[data-glow-active='true'] .footer-spotlight {
   opacity: 1;

@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 /**
  * Animated aurora background — soft floating gradient blobs.
  */
-export function AuroraBackground({ className }: { className?: string }) {
+export function AuroraBackground({ className, animated = true }: { className?: string; animated?: boolean }) {
   return (
     <div
       aria-hidden
@@ -16,22 +16,22 @@ export function AuroraBackground({ className }: { className?: string }) {
       )}
     >
       <div className="absolute inset-0 bg-grid opacity-[0.35] mask-radial" />
-      <motion.div
-        className="absolute -top-40 -left-32 h-[42rem] w-[42rem] rounded-full blur-3xl opacity-40 animate-aurora"
+      <div
+        className={cn('aurora-orb absolute -top-40 -left-32 h-[42rem] w-[42rem] rounded-full blur-3xl opacity-40', animated && 'animate-aurora')}
         style={{
           background:
             'radial-gradient(circle at center, oklch(0.7 0.25 315), transparent 60%)',
         }}
       />
-      <motion.div
-        className="absolute top-1/3 -right-40 h-[38rem] w-[38rem] rounded-full blur-3xl opacity-35 animate-aurora-slow"
+      <div
+        className={cn('aurora-orb absolute top-1/3 -right-40 h-[38rem] w-[38rem] rounded-full blur-3xl opacity-35', animated && 'animate-aurora-slow')}
         style={{
           background:
             'radial-gradient(circle at center, oklch(0.72 0.2 175), transparent 60%)',
         }}
       />
-      <motion.div
-        className="absolute -bottom-48 left-1/4 h-[40rem] w-[40rem] rounded-full blur-3xl opacity-30 animate-aurora"
+      <div
+        className={cn('aurora-orb absolute -bottom-48 left-1/4 h-[40rem] w-[40rem] rounded-full blur-3xl opacity-30', animated && 'animate-aurora')}
         style={{
           background:
             'radial-gradient(circle at center, oklch(0.72 0.22 55), transparent 60%)',

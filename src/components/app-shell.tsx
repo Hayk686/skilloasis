@@ -125,10 +125,10 @@ export function AppShell({
 
   return (
     <div className="relative flex min-h-screen flex-col">
-      <AuroraBackground />
+      {view !== 'home' && <AuroraBackground />}
 
       {/* Top bar */}
-      <header className="sticky top-0 z-40 border-b border-border/40 bg-background/70 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/95 shadow-sm">
         <div className="flex h-16 w-full items-center gap-2 px-3 sm:gap-3 sm:px-6 lg:px-8">
           <button
             onClick={() => setSidebar(!sidebarOpen)}
