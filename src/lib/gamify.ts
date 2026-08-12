@@ -8,16 +8,19 @@ import { DEFAULT_GUEST_NAME } from '@/lib/i18n-config'
 
 export { xpForLevel, levelFromXp, levelProgress, ACHIEVEMENTS, type AchievementType } from '@/lib/gamify-client'
 
-const COOKIE_NAME = 'skilloasis_uid'
-const LEGACY_COOKIE_NAME = 'lumina_uid'
+const COOKIE_NAME = 'info_oasis_uid'
+const LEGACY_COOKIE_NAMES = ['skilloasis_uid', 'lumina_uid'] as const
 
 function sessionSecret(): string {
-  const secret = process.env.SKILLOASIS_SESSION_SECRET ?? process.env.LUMINA_SESSION_SECRET
+  const secret =
+    process.env.INFO_OASIS_SESSION_SECRET ??
+    process.env.SKILLOASIS_SESSION_SECRET ??
+    process.env.LUMINA_SESSION_SECRET
   if (secret && secret.length >= 32) return secret
   if (process.env.NODE_ENV === 'production') {
-    throw new Error('SKILLOASIS_SESSION_SECRET must contain at least 32 characters')
+    throw new Error('INFO_OASIS_SESSION_SECRET must contain at least 32 characters')
   }
-  return 'skilloasis-development-secret-change-me'
+  return 'info-oasis-development-secret-change-me'
 }
 
 function signUserId(userId: string): string {
@@ -86,7 +89,8 @@ function isUniqueConstraintError(error: unknown): boolean {
 export async function getOrCreateUser() {
   const cookieStore = await cookies()
   const cookieUserId = readSignedUserId(
-    cookieStore.get(COOKIE_NAME)?.value ?? cookieStore.get(LEGACY_COOKIE_NAME)?.value
+    cookieStore.get(COOKIE_NAME)?.value ??
+      LEGACY_COOKIE_NAMES.map((name) => cookieStore.get(name)?.value).find(Boolean)
   )
   const cookieUser = cookieUserId
     ? await db.user.findUnique({ where: { id: cookieUserId } })
@@ -149,16 +153,18 @@ export function setUserIdCookie(res: Response, userId: string) {
       process.env.NODE_ENV === 'production' ? '; Secure' : ''
     }`
   )
-  res.headers.append(
-    'Set-Cookie',
-    `${LEGACY_COOKIE_NAME}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax${
-      process.env.NODE_ENV === 'production' ? '; Secure' : ''
-    }`
-  )
+  for (const cookieName of LEGACY_COOKIE_NAMES) {
+    res.headers.append(
+      'Set-Cookie',
+      `${cookieName}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax${
+        process.env.NODE_ENV === 'production' ? '; Secure' : ''
+      }`
+    )
+  }
 }
 
 export function clearUserIdCookie(res: Response) {
-  for (const cookieName of [COOKIE_NAME, LEGACY_COOKIE_NAME]) {
+  for (const cookieName of [COOKIE_NAME, ...LEGACY_COOKIE_NAMES]) {
     res.headers.append(
       'Set-Cookie',
       `${cookieName}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax${

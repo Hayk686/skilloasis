@@ -3,6 +3,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { DEFAULT_GUEST_NAME } from '@/lib/i18n-config'
+import { getPathForView } from '@/lib/seo'
 
 export type ViewId =
   | 'home'
@@ -61,7 +62,7 @@ export const useUser = create<UserState>()(
       setHydrated: (v) => set({ hydrated: v }),
     }),
     {
-      name: 'skilloasis-user',
+      name: 'info-oasis-user',
       skipHydration: true,
       partialize: (state) => ({
         userId: state.userId,
@@ -77,9 +78,22 @@ export const useUser = create<UserState>()(
 export const useNav = create<NavState>()((set) => ({
   view: 'home',
   activeSubject: null,
-  setView: (v) => set({ view: v }),
+  setView: (v) => {
+    if (typeof window !== 'undefined') {
+      const nextPath = getPathForView(v)
+      if (window.location.pathname !== nextPath) {
+        window.history.pushState({ view: v }, '', nextPath)
+      }
+    }
+    set({ view: v })
+  },
   setSubject: (s) => set({ activeSubject: s }),
-  openSubject: (subjectId) => set({ activeSubject: subjectId, view: 'subjects' }),
+  openSubject: (subjectId) => {
+    if (typeof window !== 'undefined' && window.location.pathname !== getPathForView('subjects')) {
+      window.history.pushState({ view: 'subjects' }, '', getPathForView('subjects'))
+    }
+    set({ activeSubject: subjectId, view: 'subjects' })
+  },
 }))
 
 export const useUI = create<UIState>()((set) => ({

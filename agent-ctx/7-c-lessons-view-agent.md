@@ -1,7 +1,7 @@
 # Task 7-c — Lessons View Agent
 
 ## Task
-Implement `/home/z/my-project/src/components/views/lessons-view.tsx` — the Interactive Lessons view (lesson generator + reader) for the SkillOasis learning platform.
+Implement `/home/z/my-project/src/components/views/lessons-view.tsx` — the Interactive Lessons view (lesson generator + reader) for the Info Oasis learning platform.
 
 ## What was built
 A premium, magazine-quality lesson generator & reader (~830 lines) with:

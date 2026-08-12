@@ -326,9 +326,9 @@ export function AuthDialog({
 
               <p className="text-center text-[11px] leading-relaxed text-muted-foreground">
                 {tr(
-                  'Продолжая, вы соглашаетесь с условиями и политикой конфиденциальности SkillOasis.',
-                  'By continuing, you agree to the SkillOasis terms and privacy policy.',
-                  'Շարունակելով՝ դուք համաձայնում եք SkillOasis-ի պայմաններին և գաղտնիության քաղաքականությանը։'
+                  'Продолжая, вы соглашаетесь с условиями и политикой конфиденциальности Info Oasis.',
+                  'By continuing, you agree to the Info Oasis terms and privacy policy.',
+                  'Շարունակելով՝ դուք համաձայնում եք Info Oasis-ի պայմաններին և գաղտնիության քաղաքականությանը։'
                 )}
               </p>
             </div>

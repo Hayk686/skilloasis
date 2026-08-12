@@ -87,10 +87,17 @@ function StatPill({ icon: Icon, value, label }: { icon: typeof Flame; value: str
   )
 }
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({
+  children,
+  activeView,
+}: {
+  children: React.ReactNode
+  activeView?: ViewId
+}) {
   useLocaleSync()
   const { locale, locales, languageNames, setLocale, t, tr } = useTranslations()
-  const { view, setView } = useNav()
+  const { view: storedView, setView } = useNav()
+  const view = activeView ?? storedView
   const { sidebarOpen, setSidebar, setCommandOpen } = useUI()
   const { xp, level, streak, name, authenticated } = useUser()
   const [authOpen, setAuthOpen] = useState(false)
@@ -140,7 +147,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 blur-md opacity-50 -z-10" />
             </div>
             <div className="text-left">
-              <p className="text-base font-bold leading-none tracking-tight">SkillOasis</p>
+              <p className="text-base font-bold leading-none tracking-tight">Info Oasis</p>
               <p className="mt-0.5 hidden text-[11px] leading-none text-muted-foreground sm:block">
                 {t('tagline')}
               </p>
@@ -241,7 +248,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       <Sparkles className="h-4.5 w-4.5" />
                     </span>
                     <span>
-                      <span className="block text-sm font-bold">SkillOasis</span>
+                      <span className="block text-sm font-bold">Info Oasis</span>
                       <span className="block text-[11px] text-muted-foreground">{t('tagline')}</span>
                     </span>
                   </button>

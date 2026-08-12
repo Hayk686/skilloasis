@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { CardGlowController } from "@/components/card-glow-controller";
+import { createPageMetadata, SITE_NAME, SITE_URL, VIEW_SEO } from "@/lib/seo";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,32 +18,51 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SkillOasis",
-  description:
-    "SkillOasis — бесплатная AI-платформа для обучения чему угодно. Интерактивные уроки, AI-наставник, адаптивные квизы и флешкарты. Полностью бесплатно, навсегда.",
-  keywords: [
-    "SkillOasis",
-    "обучение",
-    "AI",
-    "бесплатно",
-    "уроки",
-    "квизы",
-    "флешкарты",
-    "наставник",
-    "self-education",
-  ],
-  authors: [{ name: "SkillOasis" }],
+  ...createPageMetadata(VIEW_SEO.home),
+  metadataBase: new URL(SITE_URL),
+  applicationName: SITE_NAME,
+  authors: [{ name: "Info Oasis" }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  category: "education",
+  manifest: "/manifest.webmanifest",
+  referrer: "origin-when-cross-origin",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   icons: {
     icon: [{ url: "/logo.svg?v=2", type: "image/svg+xml" }],
     shortcut: "/logo.svg?v=2",
     apple: "/logo.svg?v=2",
   },
-  openGraph: {
-    title: "SkillOasis",
-    description: "AI-наставник, интерактивные уроки, квизы и флешкарты. Бесплатно навсегда.",
-    type: "website",
-  },
 };
+
+const globalJsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: SITE_NAME,
+    url: SITE_URL,
+    description: VIEW_SEO.home.description,
+    inLanguage: ["en", "ru", "hy"],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: SITE_NAME,
+    url: SITE_URL,
+    applicationCategory: "EducationalApplication",
+    operatingSystem: "Web",
+    description: VIEW_SEO.home.description,
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
+  },
+];
 
 export default function RootLayout({
   children,
@@ -50,10 +70,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(globalJsonLd).replace(/</g, "\\u003c"),
+          }}
+        />
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

@@ -1,7 +1,7 @@
 # Task 7-a — Dashboard View Implementation
 
 **Agent:** subagent (Z.ai Code)
-**Task:** Implement `/home/z/my-project/src/components/views/dashboard-view.tsx` — the personal progress dashboard for the SkillOasis learning platform.
+**Task:** Implement `/home/z/my-project/src/components/views/dashboard-view.tsx` — the personal progress dashboard for the Info Oasis learning platform.
 
 ## What was built
 

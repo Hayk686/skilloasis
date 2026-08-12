@@ -119,10 +119,10 @@ export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) 
     ctx.fill()
     ctx.restore()
 
-    // SkillOasis wordmark
+    // Info Oasis wordmark
     ctx.fillStyle = '#fff'
     ctx.font = 'bold 30px ui-sans-serif, system-ui, -apple-system, sans-serif'
-    ctx.fillText('SkillOasis', 132, 88)
+    ctx.fillText('Info Oasis', 132, 88)
     ctx.fillStyle = 'rgba(255,255,255,0.55)'
     ctx.font = '13px ui-sans-serif, system-ui, sans-serif'
     ctx.fillText(tr('Учись всему. Бесплатно. Навсегда.', 'Learn anything. Free. Forever.', 'Սովորիր ամեն ինչ։ Անվճար։ Ընդմիշտ։'), 132, 108)
@@ -210,7 +210,7 @@ export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) 
     ctx.fillStyle = 'rgba(255,255,255,0.4)'
     ctx.font = '13px ui-sans-serif, system-ui, sans-serif'
     ctx.textAlign = 'right'
-    ctx.fillText(tr('SkillOasis · AI-обучающая платформа', 'SkillOasis · AI learning platform', 'SkillOasis · AI ուսուցման հարթակ'), CANVAS_W - 60, CANVAS_H - 40)
+    ctx.fillText(tr('Info Oasis · AI-обучающая платформа', 'Info Oasis · AI learning platform', 'Info Oasis · AI ուսուցման հարթակ'), CANVAS_W - 60, CANVAS_H - 40)
     ctx.textAlign = 'left'
   }, [displayName, xp, level, streak, unlockedCount, totalAchievements, lp.pct, dateLocale, tr])
 
@@ -226,7 +226,7 @@ export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) 
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `skilloasis-${displayName}-${level}.png`
+      a.download = `info-oasis-${displayName}-${level}.png`
       a.click()
       URL.revokeObjectURL(url)
       toast.success(tr('Карточка сохранена', 'Card saved', 'Քարտը պահպանված է'), { icon: <Download className="h-4 w-4" /> })
@@ -272,7 +272,7 @@ export function ShareCard({ open, onOpenChange, achievements }: ShareCardProps) 
                 <div>
                   <h3 className="text-base font-bold leading-tight">{tr('Карточка прогресса', 'Progress card', 'Առաջընթացի քարտ')}</h3>
                   <p className="text-xs text-muted-foreground">
-                    {tr('Поделись своими успехами в SkillOasis', 'Share your progress in SkillOasis', 'Կիսվիր SkillOasis-ում քո առաջընթացով')}
+                    {tr('Поделись своими успехами в Info Oasis', 'Share your progress in Info Oasis', 'Կիսվիր Info Oasis-ում քո առաջընթացով')}
                   </p>
                 </div>
               </div>

@@ -302,7 +302,7 @@ export function CommandPalette() {
                     </span>
                   </div>
                   <span className="flex items-center gap-1">
-                    <Sparkles className="h-3 w-3 text-primary" /> SkillOasis Command
+                    <Sparkles className="h-3 w-3 text-primary" /> Info Oasis Command
                   </span>
                 </div>
               </>

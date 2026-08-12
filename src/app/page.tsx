@@ -1,6 +1,7 @@
 'use client'
 
 import { Component, type ReactNode, useEffect, lazy, Suspense } from 'react'
+import { usePathname } from 'next/navigation'
 import { AppShell } from '@/components/app-shell'
 import { useNav, useUser } from '@/lib/store'
 import { useUserSync } from '@/hooks/use-user-sync'
@@ -10,6 +11,10 @@ import { PathsView } from '@/components/views/paths-view'
 import { AchievementsView } from '@/components/views/achievements-view'
 import { LoadingState } from '@/components/ui-blocks'
 import { useTranslations } from '@/lib/i18n-client'
+import type { ViewId } from '@/lib/store'
+import { getSeoByPath, VIEW_SEO } from '@/lib/seo'
+import { ClientSeo } from '@/components/client-seo'
+import { PageJsonLd } from '@/components/seo-json-ld'
 
 const DashboardView = lazy(() =>
   import('@/components/views/dashboard-view').then((m) => ({ default: m.DashboardView }))
@@ -69,10 +74,13 @@ class ViewErrorBoundary extends Component<
   }
 }
 
-export default function Home() {
+export default function Home({ initialView = 'home' }: { initialView?: ViewId }) {
   const { t } = useTranslations()
-  const { view } = useNav()
+  const pathname = usePathname()
+  const { view: storedView } = useNav()
   const { hydrated } = useUser()
+  const view = getSeoByPath(pathname)?.view ?? initialView ?? storedView
+  const seo = VIEW_SEO[view]
   useUserSync()
 
   // Scroll to top on view change
@@ -83,7 +91,9 @@ export default function Home() {
   }, [view])
 
   return (
-    <AppShell>
+    <AppShell activeView={view}>
+      <ClientSeo page={seo} />
+      <PageJsonLd page={seo} />
       {!hydrated ? (
         <ViewFallback label={t('loadProfile')} />
       ) : (

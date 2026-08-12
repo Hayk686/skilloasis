@@ -70,11 +70,11 @@ const LANGUAGE_DETAILS: Record<PlaygroundLanguage, { label: string; extension: s
   rust: { label: 'Rust', extension: 'rs' },
 }
 
-const JAVASCRIPT_STARTER = localized(`// Добро пожаловать в песочницу SkillOasis 🚀
+const JAVASCRIPT_STARTER = localized(`// Добро пожаловать в песочницу Info Oasis 🚀
 // Пиши JavaScript и нажми «Запустить» (Ctrl+Enter)
 
 function greet(name) {
-  return \`Привет, \${name}! Добро пожаловать в SkillOasis.\`
+  return \`Привет, \${name}! Добро пожаловать в Info Oasis.\`
 }
 
 console.log(greet('друг'))
@@ -84,11 +84,11 @@ const nums = [1, 2, 3, 4, 5]
 const sum = nums.reduce((a, b) => a + b, 0)
 console.log('Сумма:', sum)
 console.log('Среднее:', sum / nums.length)
-`, `// Welcome to the SkillOasis playground 🚀
+`, `// Welcome to the Info Oasis playground 🚀
 // Write JavaScript and press Run (Ctrl+Enter)
 
 function greet(name) {
-  return \`Hello, \${name}! Welcome to SkillOasis.\`
+  return \`Hello, \${name}! Welcome to Info Oasis.\`
 }
 
 console.log(greet('friend'))
@@ -98,11 +98,11 @@ const nums = [1, 2, 3, 4, 5]
 const sum = nums.reduce((a, b) => a + b, 0)
 console.log('Sum:', sum)
 console.log('Average:', sum / nums.length)
-`, `// Բարի գալուստ SkillOasis-ի կոդի փորձադաշտ 🚀
+`, `// Բարի գալուստ Info Oasis-ի կոդի փորձադաշտ 🚀
 // Գրիր JavaScript և սեղմիր «Գործարկել» (Ctrl+Enter)
 
 function greet(name) {
-  return \`Ողջույն, \${name}։ Բարի գալուստ SkillOasis։\`
+  return \`Ողջույն, \${name}։ Բարի գալուստ Info Oasis։\`
 }
 
 console.log(greet('ընկեր'))
@@ -114,11 +114,11 @@ console.log('Գումար՝', sum)
 console.log('Միջին՝', sum / nums.length)
 `)
 
-const TYPESCRIPT_STARTER = localized(`// Добро пожаловать в песочницу TypeScript SkillOasis 🚀
+const TYPESCRIPT_STARTER = localized(`// Добро пожаловать в песочницу TypeScript Info Oasis 🚀
 // Пиши TypeScript и нажми «Запустить» (Ctrl+Enter)
 
 function greet(name: string): string {
-  return \`Привет, \${name}! Добро пожаловать в SkillOasis.\`
+  return \`Привет, \${name}! Добро пожаловать в Info Oasis.\`
 }
 
 console.log(greet('друг'))
@@ -128,11 +128,11 @@ const nums: number[] = [1, 2, 3, 4, 5]
 const sum = nums.reduce((a, b) => a + b, 0)
 console.log('Сумма:', sum)
 console.log('Среднее:', sum / nums.length)
-`, `// Welcome to the SkillOasis TypeScript playground 🚀
+`, `// Welcome to the Info Oasis TypeScript playground 🚀
 // Write TypeScript and press Run (Ctrl+Enter)
 
 function greet(name: string): string {
-  return \`Hello, \${name}! Welcome to SkillOasis.\`
+  return \`Hello, \${name}! Welcome to Info Oasis.\`
 }
 
 console.log(greet('friend'))
@@ -142,11 +142,11 @@ const nums: number[] = [1, 2, 3, 4, 5]
 const sum = nums.reduce((a, b) => a + b, 0)
 console.log('Sum:', sum)
 console.log('Average:', sum / nums.length)
-`, `// Բարի գալուստ SkillOasis-ի TypeScript փորձադաշտ 🚀
+`, `// Բարի գալուստ Info Oasis-ի TypeScript փորձադաշտ 🚀
 // Գրիր TypeScript և սեղմիր «Գործարկել» (Ctrl+Enter)
 
 function greet(name: string): string {
-  return \`Ողջույն, \${name}։ Բարի գալուստ SkillOasis։\`
+  return \`Ողջույն, \${name}։ Բարի գալուստ Info Oasis։\`
 }
 
 console.log(greet('ընկեր'))
@@ -158,25 +158,25 @@ console.log('Գումար՝', sum)
 console.log('Միջին՝', sum / nums.length)
 `)
 
-const PYTHON_STARTER = localized(`# Добро пожаловать в песочницу Python SkillOasis 🚀
+const PYTHON_STARTER = localized(`# Добро пожаловать в песочницу Python Info Oasis 🚀
 def greet(name: str) -> str:
-    return f"Привет, {name}! Добро пожаловать в SkillOasis."
+    return f"Привет, {name}! Добро пожаловать в Info Oasis."
 
 print(greet("друг"))
 numbers = [1, 2, 3, 4, 5]
 print("Сумма:", sum(numbers))
 print("Среднее:", sum(numbers) / len(numbers))
-`, `# Welcome to the SkillOasis Python playground 🚀
+`, `# Welcome to the Info Oasis Python playground 🚀
 def greet(name: str) -> str:
-    return f"Hello, {name}! Welcome to SkillOasis."
+    return f"Hello, {name}! Welcome to Info Oasis."
 
 print(greet("friend"))
 numbers = [1, 2, 3, 4, 5]
 print("Sum:", sum(numbers))
 print("Average:", sum(numbers) / len(numbers))
-`, `# Բարի գալուստ SkillOasis-ի Python փորձադաշտ 🚀
+`, `# Բարի գալուստ Info Oasis-ի Python փորձադաշտ 🚀
 def greet(name: str) -> str:
-    return f"Ողջույն, {name}։ Բարի գալուստ SkillOasis։"
+    return f"Ողջույն, {name}։ Բարի գալուստ Info Oasis։"
 
 print(greet("ընկեր"))
 numbers = [1, 2, 3, 4, 5]
@@ -196,7 +196,7 @@ const HTML_STARTER = localized(`<!doctype html>
 </head>
 <body>
   <div class="card">
-    <h1>Привет из SkillOasis!</h1>
+    <h1>Привет из Info Oasis!</h1>
     <p>Измени HTML и CSS, затем нажми «Запустить».</p>
   </div>
 </body>
@@ -212,7 +212,7 @@ const HTML_STARTER = localized(`<!doctype html>
 </head>
 <body>
   <div class="card">
-    <h1>Hello from SkillOasis!</h1>
+    <h1>Hello from Info Oasis!</h1>
     <p>Edit the HTML and CSS, then press Run.</p>
   </div>
 </body>
@@ -228,37 +228,37 @@ const HTML_STARTER = localized(`<!doctype html>
 </head>
 <body>
   <div class="card">
-    <h1>Ողջույն SkillOasis-ից։</h1>
+    <h1>Ողջույն Info Oasis-ից։</h1>
     <p>Փոխիր HTML-ն ու CSS-ը, ապա սեղմիր «Գործարկել»։</p>
   </div>
 </body>
 </html>`)
 
-const JAVA_STARTER = localized(`// Добро пожаловать в песочницу Java SkillOasis 🚀
+const JAVA_STARTER = localized(`// Добро пожаловать в песочницу Java Info Oasis 🚀
 class Main {
   public static void main(String[] args) {
     String name = "друг";
-    System.out.println("Привет, " + name + "! Добро пожаловать в SkillOasis.");
+    System.out.println("Привет, " + name + "! Добро пожаловать в Info Oasis.");
     int[] numbers = {1, 2, 3, 4, 5};
     int sum = 0;
     for (int number : numbers) sum += number;
     System.out.println("Сумма: " + sum);
   }
-}`, `// Welcome to the SkillOasis Java playground 🚀
+}`, `// Welcome to the Info Oasis Java playground 🚀
 class Main {
   public static void main(String[] args) {
     String name = "friend";
-    System.out.println("Hello, " + name + "! Welcome to SkillOasis.");
+    System.out.println("Hello, " + name + "! Welcome to Info Oasis.");
     int[] numbers = {1, 2, 3, 4, 5};
     int sum = 0;
     for (int number : numbers) sum += number;
     System.out.println("Sum: " + sum);
   }
-}`, `// Բարի գալուստ SkillOasis-ի Java փորձադաշտ 🚀
+}`, `// Բարի գալուստ Info Oasis-ի Java փորձադաշտ 🚀
 class Main {
   public static void main(String[] args) {
     String name = "ընկեր";
-    System.out.println("Ողջույն, " + name + "։ Բարի գալուստ SkillOasis։");
+    System.out.println("Ողջույն, " + name + "։ Բարի գալուստ Info Oasis։");
     int[] numbers = {1, 2, 3, 4, 5};
     int sum = 0;
     for (int number : numbers) sum += number;
@@ -266,117 +266,117 @@ class Main {
   }
 }`)
 
-const CPP_STARTER = localized(`// Добро пожаловать в песочницу C++ SkillOasis 🚀
+const CPP_STARTER = localized(`// Добро пожаловать в песочницу C++ Info Oasis 🚀
 #include <iostream>
 #include <numeric>
 #include <vector>
 
 int main() {
-  std::cout << "Привет! Добро пожаловать в SkillOasis.\n";
+  std::cout << "Привет! Добро пожаловать в Info Oasis.\n";
   std::vector<int> numbers{1, 2, 3, 4, 5};
   std::cout << "Сумма: " << std::accumulate(numbers.begin(), numbers.end(), 0) << '\n';
-}`, `// Welcome to the SkillOasis C++ playground 🚀
+}`, `// Welcome to the Info Oasis C++ playground 🚀
 #include <iostream>
 #include <numeric>
 #include <vector>
 
 int main() {
-  std::cout << "Hello! Welcome to SkillOasis.\n";
+  std::cout << "Hello! Welcome to Info Oasis.\n";
   std::vector<int> numbers{1, 2, 3, 4, 5};
   std::cout << "Sum: " << std::accumulate(numbers.begin(), numbers.end(), 0) << '\n';
-}`, `// Բարի գալուստ SkillOasis-ի C++ փորձադաշտ 🚀
+}`, `// Բարի գալուստ Info Oasis-ի C++ փորձադաշտ 🚀
 #include <iostream>
 #include <numeric>
 #include <vector>
 
 int main() {
-  std::cout << "Ողջույն։ Բարի գալուստ SkillOasis։\n";
+  std::cout << "Ողջույն։ Բարի գալուստ Info Oasis։\n";
   std::vector<int> numbers{1, 2, 3, 4, 5};
   std::cout << "Գումար՝ " << std::accumulate(numbers.begin(), numbers.end(), 0) << '\n';
 }`)
 
-const CSHARP_STARTER = localized(`// Добро пожаловать в песочницу C# SkillOasis 🚀
+const CSHARP_STARTER = localized(`// Добро пожаловать в песочницу C# Info Oasis 🚀
 using System;
 using System.Linq;
 
 public class Program {
   public static void Main() {
-    Console.WriteLine("Привет! Добро пожаловать в SkillOasis.");
+    Console.WriteLine("Привет! Добро пожаловать в Info Oasis.");
     int[] numbers = { 1, 2, 3, 4, 5 };
     Console.WriteLine($"Сумма: {numbers.Sum()}");
   }
-}`, `// Welcome to the SkillOasis C# playground 🚀
+}`, `// Welcome to the Info Oasis C# playground 🚀
 using System;
 using System.Linq;
 
 public class Program {
   public static void Main() {
-    Console.WriteLine("Hello! Welcome to SkillOasis.");
+    Console.WriteLine("Hello! Welcome to Info Oasis.");
     int[] numbers = { 1, 2, 3, 4, 5 };
     Console.WriteLine($"Sum: {numbers.Sum()}");
   }
-}`, `// Բարի գալուստ SkillOasis-ի C# փորձադաշտ 🚀
+}`, `// Բարի գալուստ Info Oasis-ի C# փորձադաշտ 🚀
 using System;
 using System.Linq;
 
 public class Program {
   public static void Main() {
-    Console.WriteLine("Ողջույն։ Բարի գալուստ SkillOasis։");
+    Console.WriteLine("Ողջույն։ Բարի գալուստ Info Oasis։");
     int[] numbers = { 1, 2, 3, 4, 5 };
     Console.WriteLine($"Գումար՝ {numbers.Sum()}");
   }
 }`)
 
-const GO_STARTER = localized(`// Добро пожаловать в песочницу Go SkillOasis 🚀
+const GO_STARTER = localized(`// Добро пожаловать в песочницу Go Info Oasis 🚀
 package main
 
 import "fmt"
 
 func main() {
-  fmt.Println("Привет! Добро пожаловать в SkillOasis.")
+  fmt.Println("Привет! Добро пожаловать в Info Oasis.")
   numbers := []int{1, 2, 3, 4, 5}
   sum := 0
   for _, number := range numbers { sum += number }
   fmt.Println("Сумма:", sum)
-}`, `// Welcome to the SkillOasis Go playground 🚀
+}`, `// Welcome to the Info Oasis Go playground 🚀
 package main
 
 import "fmt"
 
 func main() {
-  fmt.Println("Hello! Welcome to SkillOasis.")
+  fmt.Println("Hello! Welcome to Info Oasis.")
   numbers := []int{1, 2, 3, 4, 5}
   sum := 0
   for _, number := range numbers { sum += number }
   fmt.Println("Sum:", sum)
-}`, `// Բարի գալուստ SkillOasis-ի Go փորձադաշտ 🚀
+}`, `// Բարի գալուստ Info Oasis-ի Go փորձադաշտ 🚀
 package main
 
 import "fmt"
 
 func main() {
-  fmt.Println("Ողջույն։ Բարի գալուստ SkillOasis։")
+  fmt.Println("Ողջույն։ Բարի գալուստ Info Oasis։")
   numbers := []int{1, 2, 3, 4, 5}
   sum := 0
   for _, number := range numbers { sum += number }
   fmt.Println("Գումար՝", sum)
 }`)
 
-const RUST_STARTER = localized(`// Добро пожаловать в песочницу Rust SkillOasis 🚀
+const RUST_STARTER = localized(`// Добро пожаловать в песочницу Rust Info Oasis 🚀
 fn main() {
-    println!("Привет! Добро пожаловать в SkillOasis.");
+    println!("Привет! Добро пожаловать в Info Oasis.");
     let numbers = [1, 2, 3, 4, 5];
     let sum: i32 = numbers.iter().sum();
     println!("Сумма: {sum}");
-}`, `// Welcome to the SkillOasis Rust playground 🚀
+}`, `// Welcome to the Info Oasis Rust playground 🚀
 fn main() {
-    println!("Hello! Welcome to SkillOasis.");
+    println!("Hello! Welcome to Info Oasis.");
     let numbers = [1, 2, 3, 4, 5];
     let sum: i32 = numbers.iter().sum();
     println!("Sum: {sum}");
-}`, `// Բարի գալուստ SkillOasis-ի Rust փորձադաշտ 🚀
+}`, `// Բարի գալուստ Info Oasis-ի Rust փորձադաշտ 🚀
 fn main() {
-    println!("Ողջույն։ Բարի գալուստ SkillOasis։");
+    println!("Ողջույն։ Բարի գալուստ Info Oasis։");
     let numbers = [1, 2, 3, 4, 5];
     let sum: i32 = numbers.iter().sum();
     println!("Գումար՝ {sum}");
@@ -552,7 +552,7 @@ console.log(fibonacci.join(', '))`,
 }
 
 console.log(isPalindrome('Never odd or even'))
-console.log(isPalindrome('SkillOasis'))`,
+console.log(isPalindrome('Info Oasis'))`,
     sort: `interface User {
   name: string
   age: number
@@ -588,7 +588,7 @@ print(*fibonacci, sep=", ")`,
     return clean == clean[::-1]
 
 print(is_palindrome("Never odd or even"))
-print(is_palindrome("SkillOasis"))`,
+print(is_palindrome("Info Oasis"))`,
     sort: `users = [
     {"name": "Anna", "age": 28},
     {"name": "Ben", "age": 19},
@@ -630,7 +630,7 @@ class Main {
 
   public static void main(String[] args) {
     System.out.println(isPalindrome("Never odd or even"));
-    System.out.println(isPalindrome("SkillOasis"));
+    System.out.println(isPalindrome("Info Oasis"));
   }
 }`,
     sort: `import java.util.ArrayList;
@@ -691,7 +691,7 @@ bool isPalindrome(const std::string& value) {
 
 int main() {
   std::cout << std::boolalpha << isPalindrome("Never odd or even") << '\\n';
-  std::cout << isPalindrome("SkillOasis") << '\\n';
+  std::cout << isPalindrome("Info Oasis") << '\\n';
 }`,
     sort: `#include <algorithm>
 #include <iostream>
@@ -744,7 +744,7 @@ public class Program {
 
   public static void Main() {
     Console.WriteLine(IsPalindrome("Never odd or even"));
-    Console.WriteLine(IsPalindrome("SkillOasis"));
+    Console.WriteLine(IsPalindrome("Info Oasis"));
   }
 }`,
     sort: `using System;
@@ -808,7 +808,7 @@ func isPalindrome(value string) bool {
 
 func main() {
   fmt.Println(isPalindrome("Never odd or even"))
-  fmt.Println(isPalindrome("SkillOasis"))
+  fmt.Println(isPalindrome("Info Oasis"))
 }`,
     sort: `package main
 
@@ -853,7 +853,7 @@ func main() {
 
 fn main() {
     println!("{}", is_palindrome("Never odd or even"));
-    println!("{}", is_palindrome("SkillOasis"));
+    println!("{}", is_palindrome("Info Oasis"));
 }`,
     sort: `#[derive(Debug)]
 struct User { name: &'static str, age: u8 }
@@ -891,9 +891,9 @@ const HTML_CHALLENGES: Challenge[] = [
     desc: localized('Создай аккуратную карточку с аватаром, именем и описанием', 'Build a polished card with an avatar, name, and description', 'Ստեղծիր կոկիկ քարտ՝ ավատարով, անունով և նկարագրությամբ'),
     hint: localized('Используй flex, gap, border-radius и мягкую тень.', 'Use flex, gap, border-radius, and a soft shadow.', 'Օգտագործիր flex, gap, border-radius և մեղմ ստվեր։'),
     code: localized(
-      htmlDocument('ru', '<article class="profile"><div class="avatar">S</div><div><h1>Ученик SkillOasis</h1><p>Изучаю веб-разработку шаг за шагом.</p></div></article>', '.profile { max-width: 520px; display: flex; gap: 20px; align-items: center; padding: 28px; border: 1px solid #6d3a86; border-radius: 24px; background: #241331; box-shadow: 0 24px 60px #0008; } .avatar { display: grid; place-items: center; width: 72px; aspect-ratio: 1; border-radius: 20px; background: linear-gradient(135deg, #8b5cf6, #ec4899); font-size: 28px; font-weight: 800; } h1 { margin: 0 0 8px; } p { margin: 0; color: #c8b9d3; }'),
-      htmlDocument('en', '<article class="profile"><div class="avatar">S</div><div><h1>SkillOasis learner</h1><p>Learning web development one step at a time.</p></div></article>', '.profile { max-width: 520px; display: flex; gap: 20px; align-items: center; padding: 28px; border: 1px solid #6d3a86; border-radius: 24px; background: #241331; box-shadow: 0 24px 60px #0008; } .avatar { display: grid; place-items: center; width: 72px; aspect-ratio: 1; border-radius: 20px; background: linear-gradient(135deg, #8b5cf6, #ec4899); font-size: 28px; font-weight: 800; } h1 { margin: 0 0 8px; } p { margin: 0; color: #c8b9d3; }'),
-      htmlDocument('hy', '<article class="profile"><div class="avatar">S</div><div><h1>SkillOasis-ի սովորող</h1><p>Քայլ առ քայլ սովորում եմ վեբ մշակում։</p></div></article>', '.profile { max-width: 520px; display: flex; gap: 20px; align-items: center; padding: 28px; border: 1px solid #6d3a86; border-radius: 24px; background: #241331; box-shadow: 0 24px 60px #0008; } .avatar { display: grid; place-items: center; width: 72px; aspect-ratio: 1; border-radius: 20px; background: linear-gradient(135deg, #8b5cf6, #ec4899); font-size: 28px; font-weight: 800; } h1 { margin: 0 0 8px; } p { margin: 0; color: #c8b9d3; }')
+      htmlDocument('ru', '<article class="profile"><div class="avatar">S</div><div><h1>Ученик Info Oasis</h1><p>Изучаю веб-разработку шаг за шагом.</p></div></article>', '.profile { max-width: 520px; display: flex; gap: 20px; align-items: center; padding: 28px; border: 1px solid #6d3a86; border-radius: 24px; background: #241331; box-shadow: 0 24px 60px #0008; } .avatar { display: grid; place-items: center; width: 72px; aspect-ratio: 1; border-radius: 20px; background: linear-gradient(135deg, #8b5cf6, #ec4899); font-size: 28px; font-weight: 800; } h1 { margin: 0 0 8px; } p { margin: 0; color: #c8b9d3; }'),
+      htmlDocument('en', '<article class="profile"><div class="avatar">S</div><div><h1>Info Oasis learner</h1><p>Learning web development one step at a time.</p></div></article>', '.profile { max-width: 520px; display: flex; gap: 20px; align-items: center; padding: 28px; border: 1px solid #6d3a86; border-radius: 24px; background: #241331; box-shadow: 0 24px 60px #0008; } .avatar { display: grid; place-items: center; width: 72px; aspect-ratio: 1; border-radius: 20px; background: linear-gradient(135deg, #8b5cf6, #ec4899); font-size: 28px; font-weight: 800; } h1 { margin: 0 0 8px; } p { margin: 0; color: #c8b9d3; }'),
+      htmlDocument('hy', '<article class="profile"><div class="avatar">S</div><div><h1>Info Oasis-ի սովորող</h1><p>Քայլ առ քայլ սովորում եմ վեբ մշակում։</p></div></article>', '.profile { max-width: 520px; display: flex; gap: 20px; align-items: center; padding: 28px; border: 1px solid #6d3a86; border-radius: 24px; background: #241331; box-shadow: 0 24px 60px #0008; } .avatar { display: grid; place-items: center; width: 72px; aspect-ratio: 1; border-radius: 20px; background: linear-gradient(135deg, #8b5cf6, #ec4899); font-size: 28px; font-weight: 800; } h1 { margin: 0 0 8px; } p { margin: 0; color: #c8b9d3; }')
     ),
   },
   {
@@ -956,7 +956,7 @@ function buildSandboxDoc(): string {
   const orig = { log: console.log, warn: console.warn, error: console.error, info: console.info };
   function send(type, args) {
     try {
-      parent.postMessage({ __skilloasis_sandbox: true, kind: 'log', log: { type, args: args.map(String) } }, '*');
+      parent.postMessage({ __info_oasis_sandbox: true, kind: 'log', log: { type, args: args.map(String) } }, '*');
     } catch (e) {}
   }
   console.log = (...a) => { send('log', a); orig.log(...a); };
@@ -964,21 +964,21 @@ function buildSandboxDoc(): string {
   console.error = (...a) => { send('error', a); orig.error(...a); };
   console.info = (...a) => { send('info', a); orig.info(...a); };
   window.addEventListener('error', (e) => {
-    parent.postMessage({ __skilloasis_sandbox: true, kind: 'error', message: e.message }, '*');
+    parent.postMessage({ __info_oasis_sandbox: true, kind: 'error', message: e.message }, '*');
   });
   window.addEventListener('message', (e) => {
-    if (!e.data || !e.data.__skilloasis_run) return;
+    if (!e.data || !e.data.__info_oasis_run) return;
     const code = e.data.code;
     let result = null;
     try {
       // Indirect eval → runs in global scope, captures return of expression
       result = eval(code);
-      parent.postMessage({ __skilloasis_sandbox: true, kind: 'done', result: result === undefined ? null : String(result) }, '*');
+      parent.postMessage({ __info_oasis_sandbox: true, kind: 'done', result: result === undefined ? null : String(result) }, '*');
     } catch (err) {
-      parent.postMessage({ __skilloasis_sandbox: true, kind: 'error', message: (err && err.message) ? err.message : String(err) }, '*');
+      parent.postMessage({ __info_oasis_sandbox: true, kind: 'error', message: (err && err.message) ? err.message : String(err) }, '*');
     }
   });
-  parent.postMessage({ __skilloasis_sandbox: true, kind: 'ready' }, '*');
+  parent.postMessage({ __info_oasis_sandbox: true, kind: 'ready' }, '*');
 <\/script>
 </body></html>`
 }
@@ -1035,7 +1035,7 @@ export function PlaygroundView() {
   useEffect(() => {
     function onMessage(e: MessageEvent) {
       const d = e.data
-      if (!d || !d.__skilloasis_sandbox) return
+      if (!d || !d.__info_oasis_sandbox) return
       if (d.kind === 'ready') {
         readyRef.current = true
       } else if (d.kind === 'log') {
@@ -1111,7 +1111,7 @@ export function PlaygroundView() {
         setTimeout(send, 80)
         return
       }
-      iframeRef.current?.contentWindow?.postMessage({ __skilloasis_run: true, code: executableCode }, '*')
+      iframeRef.current?.contentWindow?.postMessage({ __info_oasis_run: true, code: executableCode }, '*')
     }
     send()
     // safety timeout

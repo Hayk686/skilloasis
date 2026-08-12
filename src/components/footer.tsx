@@ -15,7 +15,7 @@ export function Footer() {
               <Sparkles className="h-4 w-4" />
             </div>
             <div>
-              <p className="text-sm font-semibold leading-tight">SkillOasis</p>
+              <p className="text-sm font-semibold leading-tight">Info Oasis</p>
               <p className="text-xs text-muted-foreground leading-tight">
                 {t('footerFree')}
               </p>
@@ -23,23 +23,28 @@ export function Footer() {
           </div>
 
           <nav className="grid w-full max-w-sm grid-cols-2 gap-2 text-center text-sm text-muted-foreground sm:flex sm:w-auto sm:max-w-none sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-3 lg:gap-x-6">
-            <Link href="#" className="inline-flex items-center justify-center rounded-lg px-3 transition-colors hover:bg-accent/50 hover:text-foreground">
+            <Link href="/about" className="inline-flex items-center justify-center rounded-lg px-3 transition-colors hover:bg-accent/50 hover:text-foreground">
               {t('footerAbout')}
             </Link>
-            <Link href="#" className="inline-flex items-center justify-center rounded-lg px-3 transition-colors hover:bg-accent/50 hover:text-foreground">
+            <Link href="/services" className="inline-flex items-center justify-center rounded-lg px-3 transition-colors hover:bg-accent/50 hover:text-foreground">
+              {t('footerServices')}
+            </Link>
+            <Link href="/subjects" className="inline-flex items-center justify-center rounded-lg px-3 transition-colors hover:bg-accent/50 hover:text-foreground">
               {t('footerSubjects')}
             </Link>
-            <Link href="#" className="inline-flex items-center justify-center rounded-lg px-3 transition-colors hover:bg-accent/50 hover:text-foreground">
+            <Link href="/community" className="inline-flex items-center justify-center rounded-lg px-3 transition-colors hover:bg-accent/50 hover:text-foreground">
               {t('footerCommunity')}
             </Link>
-            <Link href="#" className="inline-flex items-center justify-center rounded-lg px-3 transition-colors hover:bg-accent/50 hover:text-foreground">
+            <Link href="/privacy" className="inline-flex items-center justify-center rounded-lg px-3 transition-colors hover:bg-accent/50 hover:text-foreground">
               {t('footerPrivacy')}
             </Link>
           </nav>
 
           <div className="flex flex-wrap items-center justify-center gap-3">
             <a
-              href="#"
+              href="https://github.com/Hayk686/skilloasis"
+              target="_blank"
+              rel="noreferrer"
               aria-label="GitHub"
               className="grid h-11 w-11 place-items-center rounded-xl border border-border/60 text-muted-foreground transition-colors hover:border-border hover:text-foreground lg:h-9 lg:w-9 lg:rounded-lg"
             >
@@ -52,7 +57,7 @@ export function Footer() {
         </div>
 
         <div className="mt-6 border-t border-border/40 pt-4 text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} SkillOasis. {t('footerCopyright')}
+          © {new Date().getFullYear()} Info Oasis. {t('footerCopyright')}
         </div>
       </div>
     </footer>

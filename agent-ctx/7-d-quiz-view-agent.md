@@ -2,7 +2,7 @@
 
 **Task ID:** 7-d
 **Agent:** quiz-view-agent
-**Task:** Implement `/home/z/my-project/src/components/views/quiz-view.tsx` — a stunning, gamified adaptive quiz experience for the SkillOasis platform.
+**Task:** Implement `/home/z/my-project/src/components/views/quiz-view.tsx` — a stunning, gamified adaptive quiz experience for the Info Oasis platform.
 
 ## Context reviewed
 - `worklog.md` — design system (dark cosmic theme, violet/fuchsia/pink gradients, NO indigo/blue primary), available stores (`useNav`, `useUser`), API contracts (`POST /api/quiz` generate, `PUT /api/quiz` submit).

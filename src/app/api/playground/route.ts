@@ -47,7 +47,7 @@ const CODE_FENCES = {
 
 type PlaygroundLanguage = keyof typeof LANGUAGE_LABELS
 
-const buildPlaygroundSystem = (language: PlaygroundLanguage, locale: 'ru' | 'en' | 'hy') => `Ты — дружелюбный AI-наставник по программированию в платформе SkillOasis.
+const buildPlaygroundSystem = (language: PlaygroundLanguage, locale: 'ru' | 'en' | 'hy') => `Ты — дружелюбный AI-наставник по программированию в платформе Info Oasis.
 Пользователь пишет код на ${LANGUAGE_LABELS[language]} в песочнице и просит помощи.
 ${RESPONSE_LANGUAGES[locale]}
 

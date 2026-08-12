@@ -98,9 +98,11 @@ export function LessonsView() {
   useEffect(() => {
     if (typeof window === 'undefined') return
     const stored =
+      window.sessionStorage.getItem('info-oasis:lesson-topic') ??
       window.sessionStorage.getItem('skilloasis:lesson-topic') ??
       window.sessionStorage.getItem('lumina:lesson-topic')
     if (stored) {
+      window.sessionStorage.removeItem('info-oasis:lesson-topic')
       window.sessionStorage.removeItem('skilloasis:lesson-topic')
       window.sessionStorage.removeItem('lumina:lesson-topic')
       setTopic(stored)

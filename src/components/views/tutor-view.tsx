@@ -76,12 +76,12 @@ const SUGGESTED_PROMPTS: { emoji: string; text: LocalizedText; subject: string }
   { emoji: '🏛️', text: localized('Почему пал Рим?', 'Why did Rome fall?', 'Ինչո՞ւ անկում ապրեց Հռոմը'), subject: 'history' },
 ]
 
-const SESSION_KEY = 'skilloasis:tutor-session'
-const LEGACY_SESSION_KEY = 'lumina:tutor-session'
+const SESSION_KEY = 'info-oasis:tutor-session'
+const LEGACY_SESSION_KEYS = ['skilloasis:tutor-session', 'lumina:tutor-session'] as const
 
 function clearStoredSession() {
   sessionStorage.removeItem(SESSION_KEY)
-  sessionStorage.removeItem(LEGACY_SESSION_KEY)
+  LEGACY_SESSION_KEYS.forEach((key) => sessionStorage.removeItem(key))
 }
 
 // ---------- main view ----------
@@ -159,10 +159,10 @@ export function TutorView() {
   useEffect(() => {
     const stored =
       sessionStorage.getItem(SESSION_KEY) ??
-      sessionStorage.getItem(LEGACY_SESSION_KEY)
+      LEGACY_SESSION_KEYS.map((key) => sessionStorage.getItem(key)).find(Boolean)
     if (stored) {
       sessionStorage.setItem(SESSION_KEY, stored)
-      sessionStorage.removeItem(LEGACY_SESSION_KEY)
+      LEGACY_SESSION_KEYS.forEach((key) => sessionStorage.removeItem(key))
       void loadThread(stored)
     }
     void loadSessions()
@@ -743,7 +743,7 @@ function Composer({
         </button>
       </div>
       <p className="mt-1.5 hidden px-1 text-[11px] text-muted-foreground sm:block">
-        {tr('Накапливай XP за каждый вопрос — развивайся вместе с SkillOasis', 'Earn XP for every question and grow with SkillOasis', 'Յուրաքանչյուր հարցի համար հավաքիր XP և զարգացիր SkillOasis-ի հետ')}
+        {tr('Накапливай XP за каждый вопрос — развивайся вместе с Info Oasis', 'Earn XP for every question and grow with Info Oasis', 'Յուրաքանչյուր հարցի համար հավաքիր XP և զարգացիր Info Oasis-ի հետ')}
       </p>
     </div>
   )

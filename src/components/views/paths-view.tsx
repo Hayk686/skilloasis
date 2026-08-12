@@ -155,7 +155,7 @@ export function PathsView() {
               setSubject('general')
               // pass topic via store-less mechanism: store in sessionStorage
               if (typeof window !== 'undefined') {
-                sessionStorage.setItem('skilloasis:lesson-topic', title)
+                sessionStorage.setItem('info-oasis:lesson-topic', title)
               }
               setView('lessons')
             }} />

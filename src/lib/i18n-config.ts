@@ -26,12 +26,6 @@ export const LANGUAGE_NAMES: Record<Locale, string> = {
   hy: 'Հայերեն',
 }
 
-export const SITE_TITLES: Record<Locale, string> = {
-  ru: 'SkillOasis',
-  en: 'SkillOasis',
-  hy: 'SkillOasis',
-}
-
 export const LANGUAGE_INSTRUCTIONS: Record<Locale, string> = {
   ru: 'Write every natural-language word in fluent Russian. Do not switch to English or another language unless the user explicitly asks.',
   en: 'Write every natural-language word in fluent English. Do not switch to another language unless the user explicitly asks.',

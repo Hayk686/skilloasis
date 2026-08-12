@@ -82,9 +82,9 @@ export function HomeView() {
               className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground sm:mt-6 sm:text-xl"
             >
               {tr(
-                'SkillOasis — это AI-платформа, которая объясняет сложное простыми словами. Программирование, математика, языки, наука, история — всё в одном месте.',
-                'SkillOasis is an AI learning platform that explains complex ideas in simple words. Programming, mathematics, languages, science, and history—all in one place.',
-                'SkillOasis-ը AI ուսուցման հարթակ է, որը բարդ թեմաները բացատրում է պարզ բառերով։ Ծրագրավորում, մաթեմատիկա, լեզուներ, գիտություն և պատմություն՝ ամեն ինչ մեկ տեղում։'
+                'Info Oasis — это AI-платформа, которая объясняет сложное простыми словами. Программирование, математика, языки, наука, история — всё в одном месте.',
+                'Info Oasis is an AI learning platform that explains complex ideas in simple words. Programming, mathematics, languages, science, and history—all in one place.',
+                'Info Oasis-ը AI ուսուցման հարթակ է, որը բարդ թեմաները բացատրում է պարզ բառերով։ Ծրագրավորում, մաթեմատիկա, լեզուներ, գիտություն և պատմություն՝ ամեն ինչ մեկ տեղում։'
               )}
             </motion.p>
 
@@ -199,7 +199,7 @@ export function HomeView() {
         </StaggerGroup>
       </PageSection>
 
-      {/* Why SkillOasis */}
+      {/* Why Info Oasis */}
       <PageSection className="py-12">
         <div className="relative overflow-hidden rounded-[2rem] border border-border/60 bg-card/55 px-5 py-10 shadow-2xl shadow-primary/5 dark:border-white/10 dark:bg-[#07070a] dark:shadow-black/30 sm:px-8 sm:py-14 lg:px-12">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.1),transparent_42%)] dark:bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.14),transparent_42%)]" />
@@ -208,9 +208,9 @@ export function HomeView() {
           <div className="relative mx-auto mb-9 max-w-2xl text-center sm:mb-11">
             <div className="mx-auto mb-4 flex w-fit items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
               <Sparkles className="h-3.5 w-3.5" />
-              SkillOasis
+              Info Oasis
             </div>
-            <h2 className="text-3xl font-bold tracking-tight text-foreground dark:text-white sm:text-4xl">{tr('Почему SkillOasis', 'Why SkillOasis', 'Ինչու SkillOasis')}</h2>
+            <h2 className="text-3xl font-bold tracking-tight text-foreground dark:text-white sm:text-4xl">{tr('Почему Info Oasis', 'Why Info Oasis', 'Ինչու Info Oasis')}</h2>
             <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground dark:text-white/55 sm:text-base">
               {tr('Учиться должно быть радостно', 'Learning should feel joyful', 'Սովորելը պետք է հաճելի լինի')}
             </p>
@@ -315,7 +315,7 @@ export function HomeView() {
             ))}
           </div>
           <p className="text-sm text-muted-foreground">
-            {tr('Ученики по всему миру уже полюбили SkillOasis', 'Learners around the world already love SkillOasis', 'Ամբողջ աշխարհի սովորողներն արդեն սիրում են SkillOasis-ը')}
+            {tr('Ученики по всему миру уже полюбили Info Oasis', 'Learners around the world already love Info Oasis', 'Ամբողջ աշխարհի սովորողներն արդեն սիրում են Info Oasis-ը')}
           </p>
         </div>
         <div className="relative flex overflow-hidden mask-fade-b">

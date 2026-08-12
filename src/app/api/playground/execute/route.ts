@@ -39,7 +39,7 @@ export async function POST(req: Request) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'SkillOasis-Code-Playground/1.0',
+        'User-Agent': 'Info Oasis-Code-Playground/1.0',
       },
       body: JSON.stringify({
         compiler: COMPILERS[parsed.data.language],

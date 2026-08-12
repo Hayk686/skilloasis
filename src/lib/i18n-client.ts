@@ -6,7 +6,6 @@ import {
   DEFAULT_LOCALE,
   isLocale,
   LANGUAGE_NAMES,
-  SITE_TITLES,
   SUPPORTED_LOCALES,
   type Locale,
 } from '@/lib/i18n-config'
@@ -37,6 +36,7 @@ const translations = {
     retry: 'Попробовать снова',
     footerFree: 'Бесплатно. Навсегда.',
     footerAbout: 'О проекте',
+    footerServices: 'Возможности',
     footerSubjects: 'Предметы',
     footerCommunity: 'Сообщество',
     footerPrivacy: 'Конфиденциальность',
@@ -91,6 +91,7 @@ const translations = {
     retry: 'Try again',
     footerFree: 'Free. Forever.',
     footerAbout: 'About',
+    footerServices: 'Services',
     footerSubjects: 'Subjects',
     footerCommunity: 'Community',
     footerPrivacy: 'Privacy',
@@ -134,6 +135,7 @@ const translations = {
     retry: 'Կրկին փորձել',
     footerFree: 'Անվճար։ Ընդմիշտ։',
     footerAbout: 'Նախագծի մասին',
+    footerServices: 'Ծառայություններ',
     footerSubjects: 'Առարկաներ',
     footerCommunity: 'Համայնք',
     footerPrivacy: 'Գաղտնիություն',
@@ -172,8 +174,7 @@ interface LocaleState {
 function persistLocale(locale: Locale) {
   if (typeof document === 'undefined') return
   document.documentElement.lang = locale
-  document.title = SITE_TITLES[locale]
-  document.cookie = `skilloasis_locale=${locale}; Path=/; Max-Age=31536000; SameSite=Lax`
+  document.cookie = `info_oasis_locale=${locale}; Path=/; Max-Age=31536000; SameSite=Lax`
 }
 
 export const useLocale = create<LocaleState>((set) => ({
@@ -189,6 +190,7 @@ export function useLocaleSync() {
   useEffect(() => {
     const cookies = document.cookie.split('; ')
     const cookieLocale = (
+      cookies.find((item) => item.startsWith('info_oasis_locale=')) ??
       cookies.find((item) => item.startsWith('skilloasis_locale=')) ??
       cookies.find((item) => item.startsWith('lumina_locale='))
     )?.split('=')[1]
