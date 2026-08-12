@@ -1292,13 +1292,13 @@ export function PlaygroundView() {
                 {language === 'java' ? 'Main' : language === 'csharp' ? 'Program' : 'script'}.{languageDetails.extension}
               </span>
             </div>
-            <span className="font-mono text-[11px] text-muted-foreground">{lineCount} {tr('строк', 'lines', 'տող')}</span>
+            <span className="font-mono text-xs text-muted-foreground">{lineCount} {tr('строк', 'lines', 'տող')}</span>
           </div>
           <div className="relative flex h-[360px] sm:h-[460px]">
             {/* Line numbers gutter */}
             <div
               ref={gutterRef}
-              className="select-none overflow-hidden border-r border-border/40 bg-muted/20 px-3 py-3 text-right font-mono text-xs leading-[1.5] text-muted-foreground/60"
+              className="select-none overflow-hidden border-r border-border/40 bg-muted/20 px-3 py-3 text-right font-mono text-sm leading-6 text-muted-foreground/60"
               style={{ minWidth: '3rem' }}
               aria-hidden
             >
@@ -1318,7 +1318,7 @@ export function PlaygroundView() {
               spellCheck={false}
               autoCapitalize="off"
               autoCorrect="off"
-              className="min-w-0 flex-1 resize-none overflow-auto bg-transparent p-3 font-mono text-xs leading-[1.5] text-foreground outline-none"
+              className="min-w-0 flex-1 resize-none overflow-auto bg-transparent p-3 font-mono text-sm leading-6 text-foreground outline-none"
               placeholder={tr('// Пиши код здесь...', '// Write code here...', '// Գրիր կոդն այստեղ...')}
             />
           </div>

@@ -448,8 +448,8 @@ function FullInputPanel({
           </GradientButton>
         </div>
 
-        <p className="mt-3 text-[11px] text-muted-foreground/70">
-          {tr('Подсказка: нажми', 'Tip: press', 'Հուշում․ սեղմիր')} <kbd className="rounded border border-border/60 bg-muted/40 px-1 py-0.5 font-mono text-[10px]">⌘/Ctrl + Enter</kbd> {tr('для быстрого запуска', 'to start quickly', 'արագ սկսելու համար')}
+        <p className="mt-3 text-xs leading-relaxed text-muted-foreground/80">
+          {tr('Подсказка: нажми', 'Tip: press', 'Հուշում․ սեղմիր')} <kbd className="rounded border border-border/60 bg-muted/40 px-1.5 py-0.5 font-mono text-xs">⌘/Ctrl + Enter</kbd> {tr('для быстрого запуска', 'to start quickly', 'արագ սկսելու համար')}
         </p>
       </div>
     </GlassCard>

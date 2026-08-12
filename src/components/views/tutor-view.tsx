@@ -742,7 +742,7 @@ function Composer({
           </span>
         </button>
       </div>
-      <p className="mt-1.5 hidden px-1 text-[11px] text-muted-foreground sm:block">
+      <p className="mt-1.5 hidden px-1 text-xs text-muted-foreground sm:block">
         {tr('Накапливай XP за каждый вопрос — развивайся вместе с Info Oasis', 'Earn XP for every question and grow with Info Oasis', 'Յուրաքանչյուր հարցի համար հավաքիր XP և զարգացիր Info Oasis-ի հետ')}
       </p>
     </div>

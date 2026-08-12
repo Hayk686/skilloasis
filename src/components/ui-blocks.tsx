@@ -13,7 +13,7 @@ export function PageSection({
   className?: string
 }) {
   return (
-    <div className={cn('mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8', className)}>
+    <div className={cn('mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 2xl:px-10', className)}>
       {children}
     </div>
   )
@@ -32,14 +32,14 @@ export function SectionHeader({
   icon?: React.ComponentType<{ className?: string }>
 }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-      <div className="flex items-start gap-3">
+    <div className="mb-6 flex flex-wrap items-start justify-between gap-4 sm:items-end">
+      <div className="flex min-w-0 items-start gap-3">
         {Icon && (
           <div className="mt-0.5 grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 text-primary ring-1 ring-primary/20">
             <Icon className="h-5 w-5" />
           </div>
         )}
-        <div>
+        <div className="min-w-0">
           <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">{title}</h2>
           {subtitle && (
             <p className="mt-1 text-sm text-muted-foreground sm:text-base">{subtitle}</p>

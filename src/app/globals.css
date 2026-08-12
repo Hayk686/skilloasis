@@ -134,6 +134,8 @@
     overflow-x: clip;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    font-size: 1rem;
+    line-height: 1.5;
   }
   main,
   section,
@@ -186,6 +188,37 @@
   textarea,
   select {
     font-size: 16px;
+  }
+}
+
+/* Compact actions are still real controls on desktop, not miniature badges. */
+@media (min-width: 1280px) {
+  button,
+  input,
+  textarea,
+  select,
+  [role='button'],
+  [role='combobox'],
+  [role='menuitem'],
+  [role='menuitemradio'],
+  [role='option'],
+  nav a,
+  footer a {
+    min-height: 36px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }
 

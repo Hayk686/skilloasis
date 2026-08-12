@@ -298,7 +298,7 @@ function XpRing({
         <span className="text-3xl font-extrabold leading-none text-gradient">
           {level}
         </span>
-        <span className="mt-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+        <span className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           {tr('уровень', 'level', 'մակարդակ')}
         </span>
       </div>

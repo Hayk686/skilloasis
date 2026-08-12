@@ -187,7 +187,7 @@ export function HomeView() {
                   <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{subject.description}</p>
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {subject.topics.slice(0, 2).map((t) => (
-                      <span key={t} className="rounded-md bg-muted/60 px-2 py-0.5 text-[11px] text-muted-foreground">
+                      <span key={t} className="rounded-md bg-muted/60 px-2 py-1 text-xs text-muted-foreground">
                         {t}
                       </span>
                     ))}
@@ -333,7 +333,7 @@ export function HomeView() {
                   </div>
                   <div>
                     <p className="text-xs font-semibold">{localize(t.name)}</p>
-                    <p className="text-[11px] text-muted-foreground">{localize(t.role)}</p>
+                    <p className="text-xs text-muted-foreground">{localize(t.role)}</p>
                   </div>
                 </div>
               </div>

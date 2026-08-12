@@ -23,19 +23,19 @@ export function Footer() {
           </div>
 
           <nav className="grid w-full max-w-sm grid-cols-2 gap-2 text-center text-sm text-muted-foreground sm:flex sm:w-auto sm:max-w-none sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-3 lg:gap-x-6">
-            <Link href="/about" className="inline-flex items-center justify-center rounded-lg px-3 transition-colors hover:bg-accent/50 hover:text-foreground">
+            <Link href="/about" className="inline-flex items-center justify-center rounded-lg px-3 py-2 transition-colors hover:bg-accent/50 hover:text-foreground">
               {t('footerAbout')}
             </Link>
-            <Link href="/services" className="inline-flex items-center justify-center rounded-lg px-3 transition-colors hover:bg-accent/50 hover:text-foreground">
+            <Link href="/services" className="inline-flex items-center justify-center rounded-lg px-3 py-2 transition-colors hover:bg-accent/50 hover:text-foreground">
               {t('footerServices')}
             </Link>
-            <Link href="/subjects" className="inline-flex items-center justify-center rounded-lg px-3 transition-colors hover:bg-accent/50 hover:text-foreground">
+            <Link href="/subjects" className="inline-flex items-center justify-center rounded-lg px-3 py-2 transition-colors hover:bg-accent/50 hover:text-foreground">
               {t('footerSubjects')}
             </Link>
-            <Link href="/community" className="inline-flex items-center justify-center rounded-lg px-3 transition-colors hover:bg-accent/50 hover:text-foreground">
+            <Link href="/community" className="inline-flex items-center justify-center rounded-lg px-3 py-2 transition-colors hover:bg-accent/50 hover:text-foreground">
               {t('footerCommunity')}
             </Link>
-            <Link href="/privacy" className="inline-flex items-center justify-center rounded-lg px-3 transition-colors hover:bg-accent/50 hover:text-foreground">
+            <Link href="/privacy" className="inline-flex items-center justify-center rounded-lg px-3 py-2 transition-colors hover:bg-accent/50 hover:text-foreground">
               {t('footerPrivacy')}
             </Link>
           </nav>

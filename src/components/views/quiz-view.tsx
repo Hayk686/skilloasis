@@ -554,19 +554,19 @@ function SetupPhase({
           <h3 className="text-2xl font-bold">{tr('Как это работает?', 'How does it work?', 'Ինչպե՞ս է սա աշխատում')}</h3>
           <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
             <li className="flex items-start gap-2">
-              <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary/15 text-[10px] font-bold text-primary">
+              <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary/15 text-xs font-bold text-primary">
                 1
               </span>
               {tr('Выбери предмет и тему — или введи свою.', 'Choose a subject and topic, or enter your own.', 'Ընտրիր առարկան ու թեման կամ մուտքագրիր քոնը։')}
             </li>
             <li className="flex items-start gap-2">
-              <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary/15 text-[10px] font-bold text-primary">
+              <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary/15 text-xs font-bold text-primary">
                 2
               </span>
               {tr('AI сгенерирует уникальные вопросы с объяснениями.', 'AI will generate unique questions with explanations.', 'AI-ը կստեղծի եզակի հարցեր՝ բացատրություններով։')}
             </li>
             <li className="flex items-start gap-2">
-              <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary/15 text-[10px] font-bold text-primary">
+              <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary/15 text-xs font-bold text-primary">
                 3
               </span>
               {tr('Отвечай, проверяй себя и забирай XP за верные ответы.', 'Answer, check your knowledge, and earn XP for correct answers.', 'Պատասխանիր, ստուգիր գիտելիքներդ և ճիշտ պատասխանների համար վաստակիր XP։')}

@@ -41,12 +41,12 @@ export function SubjectsView() {
                 </div>
                 <div className="flex items-center gap-2">
                   <p className="font-semibold">{subject.name}</p>
-                  <Pill className="text-[10px]">{localizeSubjectLevel(s.level, locale)}</Pill>
+                  <Pill className="text-xs">{localizeSubjectLevel(s.level, locale)}</Pill>
                 </div>
                 <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">{subject.description}</p>
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {subject.topics.map((t) => (
-                    <span key={t} className="rounded-md bg-muted/60 px-2 py-0.5 text-[11px] text-muted-foreground">
+                    <span key={t} className="rounded-md bg-muted/60 px-2 py-1 text-xs text-muted-foreground">
                       {t}
                     </span>
                   ))}
