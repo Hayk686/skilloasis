@@ -170,8 +170,8 @@ export function HomeView() {
         <div aria-hidden className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,6,23,.92)_0%,rgba(2,6,23,.72)_42%,rgba(2,6,23,.23)_73%,rgba(2,6,23,.44)_100%)]" />
         <div aria-hidden className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,.18),transparent_38%,rgba(2,6,23,.86))]" />
 
-        <div className="relative mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-[1400px] flex-col px-5 pb-5 pt-10 sm:px-8 sm:pb-7 sm:pt-14 lg:px-12 lg:pb-8 xl:px-16">
-          <div className="grid flex-1 items-center gap-10 py-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(18rem,.65fr)] lg:gap-16 lg:py-12">
+        <div className="relative mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-[1400px] flex-col px-5 pb-5 pt-10 sm:px-8 sm:pb-7 sm:pt-14 lg:px-12 lg:pb-8 xl:px-10 xl:pr-20 2xl:px-16 2xl:pr-24">
+          <div className="grid flex-1 items-center gap-10 py-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(18rem,.65fr)] xl:gap-8 xl:py-12 2xl:gap-16">
             <motion.div
               key={`${locale}-${activeWorld.id}`}
               initial={{ opacity: 0, y: reduceMotion ? 0 : 18 }}
@@ -236,7 +236,7 @@ export function HomeView() {
             </motion.aside>
           </div>
 
-          <div className="mb-5 grid grid-cols-4 gap-2 lg:hidden" aria-label={tr('Выбрать мир', 'Choose a world', 'Ընտրել աշխարհը')}>
+          <div className="mb-5 grid grid-cols-4 gap-2 xl:hidden" aria-label={tr('Выбрать мир', 'Choose a world', 'Ընտրել աշխարհը')}>
             {HERO_WORLDS.map((world, index) => {
               const WorldIcon = world.icon
               return (
@@ -268,7 +268,7 @@ export function HomeView() {
           </div>
         </div>
 
-        <div className="absolute right-5 top-1/2 hidden -translate-y-1/2 flex-col items-center gap-3 lg:flex xl:right-7" aria-label={tr('Выбрать мир', 'Choose a world', 'Ընտրել աշխարհը')}>
+        <div className="absolute right-5 top-1/2 hidden -translate-y-1/2 flex-col items-center gap-3 xl:flex xl:right-7" aria-label={tr('Выбрать мир', 'Choose a world', 'Ընտրել աշխարհը')}>
           {HERO_WORLDS.map((world, index) => (
             <button
               key={world.id}

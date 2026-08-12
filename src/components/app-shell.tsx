@@ -127,10 +127,10 @@ export function AppShell({
 
       {/* Top bar */}
       <header className="sticky top-0 z-40 border-b border-border/40 bg-background/70 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-[1600px] items-center gap-3 px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 w-full items-center gap-3 px-4 sm:px-6 lg:px-8">
           <button
             onClick={() => setSidebar(!sidebarOpen)}
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-border/60 text-muted-foreground transition-colors hover:border-border hover:text-foreground xl:hidden"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-border/60 text-muted-foreground transition-colors hover:border-border hover:text-foreground 2xl:hidden"
             aria-label={t('menu')}
             aria-expanded={sidebarOpen}
             aria-controls="mobile-navigation"
@@ -208,9 +208,9 @@ export function AppShell({
         </div>
       </header>
 
-      <div className="mx-auto flex w-full max-w-[1600px] flex-1">
+      <div className="flex w-full flex-1">
         {/* Sidebar (desktop) */}
-        <div className="hidden w-64 shrink-0 xl:block">
+        <div className="hidden w-64 shrink-0 2xl:block">
           <aside className="fixed top-16 z-30 h-[calc(100dvh-4rem)] w-64 overflow-hidden border-r border-border/40 bg-background/80 px-3 py-6 backdrop-blur-xl">
             <SidebarContent active={view} onSelect={setView} />
           </aside>
@@ -225,7 +225,7 @@ export function AppShell({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setSidebar(false)}
-                className="fixed inset-0 z-50 bg-black/55 backdrop-blur-sm xl:hidden"
+                className="fixed inset-0 z-50 bg-black/55 backdrop-blur-sm 2xl:hidden"
               />
               <motion.aside
                 initial={{ x: -320 }}
@@ -233,7 +233,7 @@ export function AppShell({
                 exit={{ x: -320 }}
                 transition={{ type: 'spring', damping: 28, stiffness: 260 }}
                 id="mobile-navigation"
-                className="fixed inset-y-0 left-0 z-[60] flex w-[min(88vw,20rem)] flex-col overflow-hidden border-r border-border bg-background/98 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl backdrop-blur-2xl xl:hidden"
+                className="fixed inset-y-0 left-0 z-[60] flex w-[min(88vw,20rem)] flex-col overflow-hidden border-r border-border bg-background/98 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl backdrop-blur-2xl 2xl:hidden"
               >
                 <div className="mb-3 flex shrink-0 items-center justify-between border-b border-border/60 pb-3">
                   <button
