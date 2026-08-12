@@ -25,6 +25,9 @@ import {
   Code2,
   Languages,
   Landmark,
+  Sigma,
+  Palette,
+  TrendingUp,
 } from 'lucide-react'
 import { useNav, useUI, ViewId } from '@/lib/store'
 import { PageSection, GradientButton, StaggerGroup, StaggerItem, GlassCard, Pill } from '@/components/ui-blocks'
@@ -62,6 +65,17 @@ const HERO_WORLDS: {
     ambient: 'from-violet-600/30 via-blue-500/10 to-transparent',
   },
   {
+    id: 'math',
+    subjectId: 'math',
+    label: localized('Математика', 'Mathematics', 'Մաթեմատիկա'),
+    headline: localized('МЫСЛИ\nЗАКОНОМЕРНО', 'THINK IN\nPATTERNS', 'ՄՏԱԾԻՐ\nՕՐԻՆԱՉԱՓ'),
+    description: localized('Освой математическое мышление через наглядные объяснения, закономерности и пошаговые решения.', 'Master mathematical thinking through visual explanations, patterns, and step-by-step solutions.', 'Տիրապետիր մաթեմատիկական մտածողությանը տեսողական բացատրությունների, օրինաչափությունների և քայլ առ քայլ լուծումների միջոցով։'),
+    lesson: localized('Математика без страха', 'Mathematics without fear', 'Մաթեմատիկա՝ առանց վախի'),
+    icon: Sigma,
+    position: '26% center',
+    ambient: 'from-emerald-500/28 via-cyan-500/10 to-transparent',
+  },
+  {
     id: 'science',
     subjectId: 'science',
     label: localized('Наука', 'Science', 'Գիտություն'),
@@ -93,6 +107,39 @@ const HERO_WORLDS: {
     icon: Landmark,
     position: '94% center',
     ambient: 'from-orange-500/30 via-rose-500/10 to-transparent',
+  },
+  {
+    id: 'art',
+    subjectId: 'art',
+    label: localized('Искусство', 'Art', 'Արվեստ'),
+    headline: localized('ТВОРИ\nБЕЗ ГРАНИЦ', 'CREATE\nWITHOUT LIMITS', 'ՍՏԵՂԾԻՐ\nԱՆՍԱՀՄԱՆ'),
+    description: localized('Исследуй живопись, музыку, литературу и кино — развивай вкус, технику и собственный голос.', 'Explore painting, music, literature, and film while developing your taste, technique, and creative voice.', 'Բացահայտիր գեղանկարչությունը, երաժշտությունը, գրականությունն ու կինոն՝ զարգացնելով ճաշակդ, տեխնիկադ և ստեղծագործական ձայնդ։'),
+    lesson: localized('Язык искусства', 'The language of art', 'Արվեստի լեզուն'),
+    icon: Palette,
+    position: '78% center',
+    ambient: 'from-fuchsia-500/28 via-pink-500/10 to-transparent',
+  },
+  {
+    id: 'business',
+    subjectId: 'business',
+    label: localized('Бизнес и финансы', 'Business and finance', 'Բիզնես և ֆինանսներ'),
+    headline: localized('ИДЕИ В\nРЕЗУЛЬТАТ', 'IDEAS INTO\nIMPACT', 'ԳԱՂԱՓԱՐԻՑ\nԱՐԴՅՈՒՆՔ'),
+    description: localized('Изучай менеджмент, маркетинг, экономику и стартапы — от сильной идеи до устойчивого результата.', 'Learn management, marketing, economics, and startups—from a strong idea to sustainable impact.', 'Սովորիր կառավարում, մարքեթինգ, տնտեսագիտություն և ստարտափներ՝ ուժեղ գաղափարից մինչև կայուն արդյունք։'),
+    lesson: localized('От идеи до стартапа', 'From idea to startup', 'Գաղափարից մինչև ստարտափ'),
+    icon: TrendingUp,
+    position: '58% center',
+    ambient: 'from-emerald-500/28 via-amber-500/10 to-transparent',
+  },
+  {
+    id: 'philosophy',
+    subjectId: 'philosophy',
+    label: localized('Философия', 'Philosophy', 'Փիլիսոփայություն'),
+    headline: localized('МЫСЛИ\nГЛУБЖЕ', 'THINK\nDEEPER', 'ՄՏԱԾԻՐ\nԱՎԵԼԻ ԽՈՐԸ'),
+    description: localized('Развивай ясное мышление через этику, логику и великие вопросы, которые формируют наше понимание мира.', 'Develop clear thinking through ethics, logic, and the great questions that shape how we understand the world.', 'Զարգացրու հստակ մտածողությունը էթիկայի, տրամաբանության և աշխարհընկալումը ձևավորող մեծ հարցերի միջոցով։'),
+    lesson: localized('Как мыслить ясно', 'How to think clearly', 'Ինչպես հստակ մտածել'),
+    icon: Brain,
+    position: '90% center',
+    ambient: 'from-purple-600/30 via-indigo-500/10 to-transparent',
   },
 ]
 
