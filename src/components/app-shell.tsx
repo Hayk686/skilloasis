@@ -212,7 +212,7 @@ export function AppShell({
         <motion.div
           aria-hidden
           style={{ scaleX: readingProgress, transformOrigin: '0 50%' }}
-          className="absolute inset-x-0 -bottom-px h-px bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-400 motion-reduce:hidden"
+          className="absolute inset-x-0 -bottom-px h-px bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-400"
         />
       </header>
 

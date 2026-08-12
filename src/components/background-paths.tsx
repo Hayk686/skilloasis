@@ -1,6 +1,6 @@
 'use client'
 
-import { motion, useReducedMotion } from 'framer-motion'
+import { motion } from 'framer-motion'
 
 const PATHS = Array.from({ length: 28 }, (_, index) => {
   const y = 80 + index * 21
@@ -14,8 +14,6 @@ const PATHS = Array.from({ length: 28 }, (_, index) => {
 })
 
 export function BackgroundPaths() {
-  const reduceMotion = useReducedMotion()
-
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(168,85,247,0.14),transparent_34%),radial-gradient(circle_at_84%_66%,rgba(34,211,238,0.10),transparent_30%)]" />
@@ -39,26 +37,18 @@ export function BackgroundPaths() {
               key={path.id}
               d={path.d}
               strokeWidth={0.7 + (path.id % 4) * 0.22}
-              initial={reduceMotion ? { pathLength: 1, opacity: 0.28 } : { pathLength: 0.06, pathOffset: 0, opacity: 0 }}
-              animate={
-                reduceMotion
-                  ? { pathLength: 1, opacity: 0.28 }
-                  : {
-                      pathLength: [0.06, 0.52, 0.08],
-                      pathOffset: [0, 0.48, 0.92],
-                      opacity: [0, 0.72, 0],
-                    }
-              }
-              transition={
-                reduceMotion
-                  ? { duration: 0 }
-                  : {
-                      duration: path.duration,
-                      delay: path.delay,
-                      repeat: Infinity,
-                      ease: 'easeInOut',
-                    }
-              }
+              initial={{ pathLength: 0.06, pathOffset: 0, opacity: 0 }}
+              animate={{
+                pathLength: [0.06, 0.52, 0.08],
+                pathOffset: [0, 0.48, 0.92],
+                opacity: [0, 0.72, 0],
+              }}
+              transition={{
+                duration: path.duration,
+                delay: path.delay,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
             />
           ))}
         </g>

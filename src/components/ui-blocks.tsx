@@ -1,6 +1,6 @@
 'use client'
 
-import { motion, useReducedMotion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { Loader2 } from 'lucide-react'
 
@@ -133,16 +133,14 @@ export function StaggerGroup({
   children: React.ReactNode
   className?: string
 }) {
-  const reduceMotion = useReducedMotion()
-
   return (
     <motion.div
-      initial={reduceMotion ? false : 'hidden'}
+      initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.12, margin: '0px 0px -7% 0px' }}
       variants={{
         hidden: {},
-        visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.075 } },
+        visible: { transition: { staggerChildren: 0.075 } },
       }}
       className={className}
     >

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import {
   Sparkles,
   MessagesSquare,
@@ -118,7 +118,6 @@ export function HomeView() {
   const { setView, openSubject } = useNav()
   const { setCommandOpen } = useUI()
   const { locale, tr, localize } = useTranslations()
-  const reduceMotion = useReducedMotion()
   const [heroWorld, setHeroWorld] = useState(0)
   const [heroPaused, setHeroPaused] = useState(false)
   const touchStartX = useRef<number | null>(null)
@@ -126,12 +125,12 @@ export function HomeView() {
   const ActiveWorldIcon = activeWorld.icon
 
   useEffect(() => {
-    if (reduceMotion || heroPaused) return
+    if (heroPaused) return
     const interval = window.setInterval(() => {
       setHeroWorld((current) => (current + 1) % HERO_WORLDS.length)
     }, 7000)
     return () => window.clearInterval(interval)
-  }, [heroPaused, reduceMotion])
+  }, [heroPaused])
 
   function finishHeroSwipe(clientX: number) {
     if (touchStartX.current === null) return
@@ -162,10 +161,10 @@ export function HomeView() {
           <motion.div
             key={`hero-image-${activeWorld.id}`}
             aria-hidden
-            initial={{ opacity: reduceMotion ? 1 : 0, scale: reduceMotion ? 1 : 1.065 }}
+            initial={{ opacity: 0, scale: 1.065 }}
             animate={{ opacity: 1, scale: 1.015 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: reduceMotion ? 0 : 1.15, ease: 'easeOut' }}
+            transition={{ duration: 1.15, ease: 'easeOut' }}
             className="absolute inset-0 bg-cover bg-center brightness-[0.9] saturate-[1.08] dark:brightness-[0.7]"
             style={{
               backgroundImage: "url('/info-oasis-knowledge-world.webp')",
@@ -181,9 +180,9 @@ export function HomeView() {
           <div className="grid flex-1 items-center gap-10 py-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(18rem,.65fr)] xl:gap-8 xl:py-12 2xl:gap-16">
             <motion.div
               key={`${locale}-${activeWorld.id}`}
-              initial={{ opacity: 0, y: reduceMotion ? 0 : 18 }}
+              initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: reduceMotion ? 0 : 0.5 }}
+              transition={{ duration: 0.5 }}
               className="max-w-3xl"
             >
               <div className="mb-5 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-200/90 sm:text-xs sm:tracking-[0.26em]">
@@ -195,9 +194,9 @@ export function HomeView() {
                   <span key={line} className="block overflow-hidden pb-[0.05em]">
                     <motion.span
                       className="block"
-                      initial={{ y: reduceMotion ? 0 : '105%' }}
+                      initial={{ y: '105%' }}
                       animate={{ y: 0 }}
-                      transition={{ duration: reduceMotion ? 0 : 0.65, delay: reduceMotion ? 0 : index * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                      transition={{ duration: 0.65, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
                     >
                       {line}
                     </motion.span>
@@ -218,7 +217,7 @@ export function HomeView() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => document.getElementById('how-info-oasis-works')?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' })}
+                  onClick={() => document.getElementById('how-info-oasis-works')?.scrollIntoView({ behavior: 'smooth' })}
                   className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-white/30 bg-black/20 px-6 font-semibold text-white backdrop-blur-md transition-colors hover:border-white/55 hover:bg-white/10"
                 >
                   <CirclePlay className="h-5 w-5" />
@@ -229,9 +228,9 @@ export function HomeView() {
 
             <motion.aside
               key={`feature-${locale}-${activeWorld.id}`}
-              initial={{ opacity: 0, x: reduceMotion ? 0 : 20 }}
+              initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: reduceMotion ? 0 : 0.5, delay: reduceMotion ? 0 : 0.08 }}
+              transition={{ duration: 0.5, delay: 0.08 }}
               className="self-end rounded-2xl border border-white/18 bg-slate-950/48 p-5 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-6 lg:self-center"
             >
               <div className="mb-8 flex items-center justify-between text-xs uppercase tracking-[0.2em] text-white/55">
@@ -374,7 +373,7 @@ export function HomeView() {
                   <motion.div
                     aria-hidden
                     initial={{ scale: 1.02 }}
-                    whileInView={reduceMotion ? { scale: 1 } : { scale: [1.02, 1.065, 1.02], x: [0, index % 2 ? -7 : 7, 0] }}
+                    whileInView={{ scale: [1.02, 1.065, 1.02], x: [0, index % 2 ? -7 : 7, 0] }}
                     viewport={{ amount: 0.15 }}
                     transition={{ duration: 15 + index * 1.5, repeat: Infinity, ease: 'easeInOut' }}
                     className="absolute -inset-3 bg-cover will-change-transform transition-[filter] duration-700 group-hover:brightness-110"
