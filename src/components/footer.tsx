@@ -1,55 +1,16 @@
 'use client'
 
-import { useEffect, useRef, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { ArrowUpRight, Github, Heart, Sparkles } from 'lucide-react'
 import { useTranslations } from '@/lib/i18n-client'
 
 export function Footer() {
   const { t, tr } = useTranslations()
-  const footerRef = useRef<HTMLElement>(null)
-  const pointerRef = useRef({ x: 50, y: 60 })
-  const frameRef = useRef<number | null>(null)
-
-  useEffect(() => () => {
-    if (frameRef.current !== null) cancelAnimationFrame(frameRef.current)
-  }, [])
-
-  function moveGlow(event: ReactPointerEvent<HTMLElement>) {
-    if (event.pointerType === 'touch') return
-    const footer = footerRef.current
-    if (!footer) return
-    const bounds = footer.getBoundingClientRect()
-    pointerRef.current = {
-      x: ((event.clientX - bounds.left) / bounds.width) * 100,
-      y: ((event.clientY - bounds.top) / bounds.height) * 100,
-    }
-    if (frameRef.current !== null) return
-    frameRef.current = requestAnimationFrame(() => {
-      footer.style.setProperty('--footer-glow-x', `${pointerRef.current.x}%`)
-      footer.style.setProperty('--footer-glow-y', `${pointerRef.current.y}%`)
-      footer.dataset.glowActive = 'true'
-      frameRef.current = null
-    })
-  }
-
-  function hideGlow() {
-    if (frameRef.current !== null) {
-      cancelAnimationFrame(frameRef.current)
-      frameRef.current = null
-    }
-    footerRef.current?.removeAttribute('data-glow-active')
-  }
 
   return (
-    <footer
-      ref={footerRef}
-      onPointerMove={moveGlow}
-      onPointerLeave={hideGlow}
-      className="interactive-footer relative isolate mt-auto overflow-hidden border-t border-border/70 bg-[#05050b] text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] dark:border-white/10 dark:text-white dark:shadow-none"
-    >
+    <footer className="relative isolate mt-auto overflow-hidden border-t border-border/70 bg-[#05050b] text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] dark:border-white/10 dark:text-white dark:shadow-none">
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-30 bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(250,245,255,0.96)_48%,rgba(236,254,255,0.92))] dark:hidden" />
-      <div aria-hidden className="footer-spotlight pointer-events-none absolute inset-0 -z-10" />
       <div aria-hidden className="absolute inset-0 -z-20 bg-[linear-gradient(rgba(71,85,105,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(71,85,105,0.055)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:linear-gradient(to_bottom,black,transparent_82%)] dark:bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)]" />
 
       <div className="mx-auto max-w-7xl px-4 pt-10 sm:px-6 sm:pt-12 lg:px-8">

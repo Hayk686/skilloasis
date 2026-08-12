@@ -4,7 +4,6 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
-import { CardGlowController } from "@/components/card-glow-controller";
 import { createPageMetadata, SITE_NAME, SITE_URL, VIEW_SEO } from "@/lib/seo";
 
 const geistSans = Geist({
@@ -87,7 +86,6 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
-          <CardGlowController />
           <Toaster />
           <SonnerToaster position="bottom-right" richColors closeButton />
         </ThemeProvider>
