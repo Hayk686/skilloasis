@@ -447,15 +447,6 @@
   opacity: 1;
 }
 
-/* Large static brand mark in the landing hero. */
-.hero-wordmark {
-  font-size: clamp(3.1rem, 12vw, 10rem);
-  background: linear-gradient(100deg, #38bdf8 4%, #818cf8 28%, #d946ef 54%, #fb7185 76%, #22d3ee 98%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-}
-
 @keyframes footer-touch-sweep {
   0%, 100% { transform: translate3d(-10%, 0, 0); }
   50% { transform: translate3d(145%, 0, 0); }

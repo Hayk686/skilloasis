@@ -1,6 +1,7 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { useEffect, useRef, useState } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
 import {
   Sparkles,
   MessagesSquare,
@@ -19,11 +20,15 @@ import {
   Command,
   Star,
   Quote,
+  Atom,
+  CirclePlay,
+  Code2,
+  Languages,
+  Landmark,
 } from 'lucide-react'
 import { useNav, useUI, ViewId } from '@/lib/store'
 import { SUBJECTS, localizeSubject } from '@/lib/subjects'
 import { PageSection, GradientButton, StaggerGroup, StaggerItem, GlassCard, Pill } from '@/components/ui-blocks'
-import { BackgroundPaths } from '@/components/background-paths'
 import { useTranslations, type LocalizedText } from '@/lib/i18n-client'
 
 const localized = (ru: string, en: string, hy: string): LocalizedText => ({ ru, en, hy })
@@ -33,6 +38,63 @@ const QUICK_ACTIONS: { id: ViewId; title: LocalizedText; desc: LocalizedText; ic
   { id: 'lessons', title: localized('Изучить тему', 'Explore a topic', 'Ուսումնասիրել թեման'), desc: localized('Интерактивный урок за 10 минут', 'An interactive lesson in 10 minutes', 'Ինտերակտիվ դաս՝ 10 րոպեում'), icon: BookOpen, gradient: 'from-emerald-500 to-teal-500' },
   { id: 'quiz', title: localized('Проверить себя', 'Test yourself', 'Ստուգել գիտելիքները'), desc: localized('Адаптивный квиз по любой теме', 'An adaptive quiz on any topic', 'Հարմարեցվող հարցաշար ցանկացած թեմայով'), icon: Trophy, gradient: 'from-amber-500 to-orange-500' },
   { id: 'flashcards', title: localized('Запомнить надолго', 'Remember for longer', 'Երկար հիշել'), desc: localized('Флешкарты с интервалами', 'Spaced-repetition flashcards', 'Պարբերական կրկնությամբ քարտեր'), icon: Layers, gradient: 'from-sky-500 to-cyan-500' },
+]
+
+const HERO_WORLDS: {
+  id: string
+  subjectId: string
+  label: LocalizedText
+  headline: LocalizedText
+  description: LocalizedText
+  lesson: LocalizedText
+  icon: typeof Sparkles
+  position: string
+  ambient: string
+}[] = [
+  {
+    id: 'programming',
+    subjectId: 'programming',
+    label: localized('Программирование', 'Programming', 'Ծրագրավորում'),
+    headline: localized('СОЗДАВАЙ\nБУДУЩЕЕ', 'BUILD\nTHE FUTURE', 'ԿԵՐՏԻՐ\nԱՊԱԳԱՆ'),
+    description: localized('От первой строки кода до работающих приложений — с AI-наставником рядом.', 'From your first line of code to working applications—with an AI tutor beside you.', 'Կոդի առաջին տողից մինչև աշխատող հավելվածներ՝ AI ուսուցչի աջակցությամբ։'),
+    lesson: localized('Python с нуля', 'Python from scratch', 'Python՝ զրոյից'),
+    icon: Code2,
+    position: '10% center',
+    ambient: 'from-violet-600/30 via-blue-500/10 to-transparent',
+  },
+  {
+    id: 'science',
+    subjectId: 'science',
+    label: localized('Наука', 'Science', 'Գիտություն'),
+    headline: localized('ИССЛЕДУЙ\nВСЁ', 'QUESTION\nEVERYTHING', 'ԲԱՑԱՀԱՅՏԻՐ\nԱՄԵՆ ԻՆՉ'),
+    description: localized('Исследуй физику, химию и космос через ясные объяснения и наглядные примеры.', 'Explore physics, chemistry, and space through clear explanations and visual examples.', 'Ուսումնասիրիր ֆիզիկան, քիմիան և տիեզերքը՝ պարզ բացատրություններով ու տեսողական օրինակներով։'),
+    lesson: localized('Как устроена Вселенная', 'How the universe works', 'Ինչպես է կառուցված տիեզերքը'),
+    icon: Atom,
+    position: '43% center',
+    ambient: 'from-cyan-500/30 via-blue-500/10 to-transparent',
+  },
+  {
+    id: 'languages',
+    subjectId: 'languages',
+    label: localized('Языки', 'Languages', 'Լեզուներ'),
+    headline: localized('ГОВОРИ\nС МИРОМ', 'SPEAK TO\nTHE WORLD', 'ԽՈՍԻՐ\nԱՇԽԱՐՀԻ ՀԵՏ'),
+    description: localized('Осваивай новые языки через живую практику, понятную грамматику и полезные слова.', 'Learn new languages through real practice, clear grammar, and useful vocabulary.', 'Սովորիր նոր լեզուներ՝ կենդանի փորձով, պարզ քերականությամբ և օգտակար բառապաշարով։'),
+    lesson: localized('Разговорный английский', 'Conversational English', 'Խոսակցական անգլերեն'),
+    icon: Languages,
+    position: '69% center',
+    ambient: 'from-fuchsia-500/25 via-amber-500/10 to-transparent',
+  },
+  {
+    id: 'history',
+    subjectId: 'history',
+    label: localized('История', 'History', 'Պատմություն'),
+    headline: localized('УЧИСЬ У\nВРЕМЕНИ', 'LEARN FROM\nTIME', 'ՍՈՎՈՐԻՐ\nԺԱՄԱՆԱԿԻՑ'),
+    description: localized('Понимай настоящее через цивилизации, открытия и идеи, которые изменили мир.', 'Understand today through the civilizations, discoveries, and ideas that changed the world.', 'Հասկացիր ներկան՝ աշխարհը փոխած քաղաքակրթությունների, հայտնագործությունների և գաղափարների միջոցով։'),
+    lesson: localized('Древние цивилизации', 'Ancient civilizations', 'Հին քաղաքակրթություններ'),
+    icon: Landmark,
+    position: '94% center',
+    ambient: 'from-orange-500/30 via-rose-500/10 to-transparent',
+  },
 ]
 
 const FEATURES = [
@@ -56,80 +118,176 @@ export function HomeView() {
   const { setView, openSubject } = useNav()
   const { setCommandOpen } = useUI()
   const { locale, tr, localize } = useTranslations()
+  const reduceMotion = useReducedMotion()
+  const [heroWorld, setHeroWorld] = useState(0)
+  const [heroPaused, setHeroPaused] = useState(false)
+  const touchStartX = useRef<number | null>(null)
+  const activeWorld = HERO_WORLDS[heroWorld]
+  const ActiveWorldIcon = activeWorld.icon
+
+  useEffect(() => {
+    if (reduceMotion || heroPaused) return
+    const interval = window.setInterval(() => {
+      setHeroWorld((current) => (current + 1) % HERO_WORLDS.length)
+    }, 7000)
+    return () => window.clearInterval(interval)
+  }, [heroPaused, reduceMotion])
+
+  function finishHeroSwipe(clientX: number) {
+    if (touchStartX.current === null) return
+    const distance = clientX - touchStartX.current
+    touchStartX.current = null
+    if (Math.abs(distance) < 44) return
+    setHeroWorld((current) => (
+      distance < 0
+        ? (current + 1) % HERO_WORLDS.length
+        : (current - 1 + HERO_WORLDS.length) % HERO_WORLDS.length
+    ))
+  }
 
   return (
     <div>
       {/* Hero */}
-      <section className="relative isolate overflow-hidden">
-        <BackgroundPaths />
-        <PageSection className="relative py-14 sm:py-24 lg:py-28">
-          <div className="mx-auto max-w-5xl text-center">
-            <motion.h1
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.05 }}
-              className="hero-wordmark mx-auto select-none whitespace-nowrap font-black leading-none tracking-[-0.075em]"
-            >
-              INFO OASIS
-            </motion.h1>
+      <section
+        aria-label={tr('Миры знаний', 'Worlds of knowledge', 'Գիտելիքի աշխարհներ')}
+        className="relative isolate min-h-[calc(100svh-4rem)] overflow-hidden bg-slate-950 text-white"
+        onMouseEnter={() => setHeroPaused(true)}
+        onMouseLeave={() => setHeroPaused(false)}
+        onFocusCapture={() => setHeroPaused(true)}
+        onBlurCapture={() => setHeroPaused(false)}
+        onTouchStart={(event) => { touchStartX.current = event.touches[0]?.clientX ?? null }}
+        onTouchEnd={(event) => finishHeroSwipe(event.changedTouches[0]?.clientX ?? 0)}
+      >
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-cover bg-center transition-[background-position,filter] duration-1000 ease-out brightness-[0.9] saturate-[1.08] dark:brightness-[0.7]"
+          style={{
+            backgroundImage: "url('/info-oasis-knowledge-world.webp')",
+            backgroundPosition: activeWorld.position,
+          }}
+        />
+        <div aria-hidden className={`absolute inset-0 bg-gradient-to-r ${activeWorld.ambient} transition-colors duration-700`} />
+        <div aria-hidden className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,6,23,.92)_0%,rgba(2,6,23,.72)_42%,rgba(2,6,23,.23)_73%,rgba(2,6,23,.44)_100%)]" />
+        <div aria-hidden className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,.18),transparent_38%,rgba(2,6,23,.86))]" />
 
-            <motion.p
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.15 }}
-              className="mx-auto mt-7 max-w-3xl text-pretty text-base font-medium leading-relaxed text-muted-foreground sm:mt-9 sm:text-xl"
-            >
-              {tr(
-                'Учись чему угодно с умным наставником. Info Oasis объясняет сложные идеи простыми словами — программирование, математика, языки, наука и история в одном месте.',
-                'Learn anything with a smart tutor. Info Oasis explains complex ideas in simple words—from programming and mathematics to languages, science, and history—all in one place.',
-                'Սովորիր ամեն ինչ խելացի ուսուցչի հետ։ Info Oasis-ը բարդ գաղափարները բացատրում է պարզ բառերով՝ ծրագրավորումից ու մաթեմատիկայից մինչև լեզուներ, գիտություն և պատմություն՝ ամեն ինչ մեկ տեղում։'
-              )}
-            </motion.p>
-
+        <div className="relative mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-[1400px] flex-col px-5 pb-5 pt-10 sm:px-8 sm:pb-7 sm:pt-14 lg:px-12 lg:pb-8 xl:px-16">
+          <div className="grid flex-1 items-center gap-10 py-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(18rem,.65fr)] lg:gap-16 lg:py-12">
             <motion.div
-              initial={{ opacity: 0, y: 24 }}
+              key={`${locale}-${activeWorld.id}`}
+              initial={{ opacity: 0, y: reduceMotion ? 0 : 18 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.25 }}
-              className="mt-9 flex flex-wrap items-center justify-center gap-3"
+              transition={{ duration: reduceMotion ? 0 : 0.5 }}
+              className="max-w-3xl"
             >
-              <GradientButton onClick={() => setView('tutor')} className="w-full px-7 py-3 text-base sm:w-auto">
-                {tr('Начать учиться', 'Start learning', 'Սկսել սովորել')}
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </GradientButton>
+              <div className="mb-5 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-200/90 sm:text-xs sm:tracking-[0.26em]">
+                <span className="h-px w-10 shrink-0 bg-cyan-300/70" />
+                <span className="min-w-0 [overflow-wrap:anywhere]">Info Oasis · {localize(activeWorld.label)}</span>
+              </div>
+              <h1 className="whitespace-pre-line text-[clamp(2.9rem,7vw,6.4rem)] font-black leading-[0.88] tracking-[-0.06em] text-white drop-shadow-[0_4px_30px_rgba(0,0,0,.35)]">
+                {localize(activeWorld.headline)}
+              </h1>
+              <p className="mt-6 max-w-2xl text-pretty text-base leading-7 text-white/76 [overflow-wrap:anywhere] sm:mt-8 sm:text-lg sm:leading-8">
+                {localize(activeWorld.description)}
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <button
+                  type="button"
+                  onClick={() => setView('tutor')}
+                  className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 px-6 font-semibold text-white shadow-[0_16px_40px_-16px_rgba(217,70,239,.8)] transition-transform hover:-translate-y-0.5"
+                >
+                  {tr('Начать учиться', 'Start learning', 'Սկսել սովորել')}
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => document.getElementById('how-info-oasis-works')?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' })}
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-white/30 bg-black/20 px-6 font-semibold text-white backdrop-blur-md transition-colors hover:border-white/55 hover:bg-white/10"
+                >
+                  <CirclePlay className="h-5 w-5" />
+                  {tr('Как это работает', 'See how it works', 'Ինչպես է աշխատում')}
+                </button>
+              </div>
+            </motion.div>
+
+            <motion.aside
+              key={`feature-${locale}-${activeWorld.id}`}
+              initial={{ opacity: 0, x: reduceMotion ? 0 : 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: reduceMotion ? 0 : 0.5, delay: reduceMotion ? 0 : 0.08 }}
+              className="self-end rounded-2xl border border-white/18 bg-slate-950/48 p-5 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-6 lg:self-center"
+            >
+              <div className="mb-8 flex items-center justify-between text-xs uppercase tracking-[0.2em] text-white/55">
+                <span>{tr('Тема дня', 'Featured lesson', 'Օրվա թեմա')}</span>
+                <span>{String(heroWorld + 1).padStart(2, '0')} / {String(HERO_WORLDS.length).padStart(2, '0')}</span>
+              </div>
+              <div className="grid h-12 w-12 place-items-center rounded-xl border border-white/15 bg-white/10 text-cyan-200">
+                <ActiveWorldIcon className="h-6 w-6" />
+              </div>
+              <h2 className="mt-5 text-2xl font-bold tracking-tight">{localize(activeWorld.lesson)}</h2>
+              <p className="mt-3 text-sm leading-6 text-white/65 [overflow-wrap:anywhere]">{localize(activeWorld.description)}</p>
               <button
-                onClick={() => setView('subjects')}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border/60 bg-card/60 px-6 py-3 text-base font-semibold backdrop-blur-sm transition-colors hover:bg-accent sm:w-auto"
+                type="button"
+                onClick={() => openSubject(activeWorld.subjectId)}
+                className="group mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-cyan-200 transition-colors hover:text-white"
               >
-                <Compass className="h-4 w-4" />
-                {tr('Выбрать предмет', 'Choose a subject', 'Ընտրել առարկա')}
+                {tr('Открыть предмет', 'Explore this subject', 'Բացել առարկան')}
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </button>
-            </motion.div>
-
-            {/* Stats strip */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="mx-auto mt-10 grid max-w-2xl grid-cols-1 gap-3 sm:mt-12 sm:grid-cols-3 sm:gap-4"
-            >
-              {[
-                { v: '8+', l: tr('предметов', 'subjects', 'առարկա') },
-                { v: '∞', l: tr('тем для изучения', 'topics to explore', 'ուսումնասիրվող թեմա') },
-                { v: '0$', l: tr('стоимость', 'cost', 'արժեք') },
-              ].map((s) => (
-                <div key={s.l} className="ambient-card rounded-2xl border border-border/40 bg-card/40 px-4 py-3 backdrop-blur-sm">
-                  <div className="text-2xl font-bold text-gradient sm:text-3xl">{s.v}</div>
-                  <div className="text-xs text-muted-foreground sm:text-sm">{s.l}</div>
-                </div>
-              ))}
-            </motion.div>
+            </motion.aside>
           </div>
-        </PageSection>
+
+          <div className="mb-5 grid grid-cols-4 gap-2 lg:hidden" aria-label={tr('Выбрать мир', 'Choose a world', 'Ընտրել աշխարհը')}>
+            {HERO_WORLDS.map((world, index) => {
+              const WorldIcon = world.icon
+              return (
+                <button
+                  key={world.id}
+                  type="button"
+                  onClick={() => setHeroWorld(index)}
+                  aria-label={localize(world.label)}
+                  aria-pressed={index === heroWorld}
+                  className={`grid h-12 place-items-center rounded-xl border backdrop-blur-md transition-colors ${index === heroWorld ? 'border-cyan-300/65 bg-cyan-300/15 text-cyan-100' : 'border-white/15 bg-black/20 text-white/60'}`}
+                >
+                  <WorldIcon className="h-5 w-5" />
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="grid grid-cols-3 border-t border-white/18 py-5 sm:py-6">
+            {[
+              { v: '8+', l: tr('предметов', 'subjects', 'առարկա') },
+              { v: '∞', l: tr('тем для изучения', 'topics to explore', 'ուսումնասիրվող թեմա') },
+              { v: '0$', l: tr('стоимость', 'cost', 'արժեք') },
+            ].map((stat, index) => (
+              <div key={stat.l} className={`px-3 text-center sm:px-6 ${index > 0 ? 'border-l border-white/18' : ''}`}>
+                <div className="text-2xl font-bold tracking-tight text-white sm:text-3xl">{stat.v}</div>
+                <div className="mt-1 text-[11px] text-white/55 sm:text-sm">{stat.l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="absolute right-5 top-1/2 hidden -translate-y-1/2 flex-col items-center gap-3 lg:flex xl:right-7" aria-label={tr('Выбрать мир', 'Choose a world', 'Ընտրել աշխարհը')}>
+          {HERO_WORLDS.map((world, index) => (
+            <button
+              key={world.id}
+              type="button"
+              onClick={() => setHeroWorld(index)}
+              aria-label={localize(world.label)}
+              aria-pressed={index === heroWorld}
+              className={`flex min-h-11 w-11 items-center justify-center rounded-full border text-xs font-semibold backdrop-blur-md transition-all ${index === heroWorld ? 'border-cyan-300/70 bg-cyan-300/16 text-white shadow-lg shadow-cyan-500/20' : 'border-white/15 bg-black/20 text-white/50 hover:border-white/40 hover:text-white'}`}
+            >
+              {String(index + 1).padStart(2, '0')}
+            </button>
+          ))}
+        </div>
       </section>
 
       {/* Quick actions */}
-      <PageSection className="py-8 sm:py-12">
-        <StaggerGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <section id="how-info-oasis-works" className="scroll-mt-20">
+        <PageSection className="py-8 sm:py-12">
+          <StaggerGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {QUICK_ACTIONS.map((a) => {
             const Icon = a.icon
             return (
@@ -148,8 +306,9 @@ export function HomeView() {
               </StaggerItem>
             )
           })}
-        </StaggerGroup>
-      </PageSection>
+          </StaggerGroup>
+        </PageSection>
+      </section>
 
       {/* Subjects grid */}
       <PageSection className="py-12">
