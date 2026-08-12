@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useRef, type PointerEvent as ReactPointerEvent } from 'react'
 import { motion } from 'framer-motion'
 import {
   Sparkles,
@@ -57,41 +56,11 @@ export function HomeView() {
   const { setView, openSubject } = useNav()
   const { setCommandOpen } = useUI()
   const { locale, tr, localize } = useTranslations()
-  const heroRef = useRef<HTMLElement>(null)
-  const heroFrameRef = useRef<number | null>(null)
-
-  useEffect(() => () => {
-    if (heroFrameRef.current !== null) cancelAnimationFrame(heroFrameRef.current)
-  }, [])
-
-  function moveHeroGlow(event: ReactPointerEvent<HTMLElement>) {
-    if (event.pointerType === 'touch' || heroFrameRef.current !== null) return
-    const hero = heroRef.current
-    if (!hero) return
-    const bounds = hero.getBoundingClientRect()
-    const x = ((event.clientX - bounds.left) / bounds.width) * 100
-    const y = ((event.clientY - bounds.top) / bounds.height) * 100
-    heroFrameRef.current = requestAnimationFrame(() => {
-      hero.style.setProperty('--hero-glow-x', `${x}%`)
-      hero.style.setProperty('--hero-glow-y', `${y}%`)
-      hero.dataset.glowActive = 'true'
-      heroFrameRef.current = null
-    })
-  }
-
-  function hideHeroGlow() {
-    heroRef.current?.removeAttribute('data-glow-active')
-  }
 
   return (
     <div>
       {/* Hero */}
-      <section
-        ref={heroRef}
-        onPointerMove={moveHeroGlow}
-        onPointerLeave={hideHeroGlow}
-        className="interactive-hero relative isolate overflow-hidden"
-      >
+      <section className="relative isolate overflow-hidden">
         <BackgroundPaths />
         <PageSection className="relative py-14 sm:py-24 lg:py-28">
           <div className="mx-auto max-w-5xl text-center">
@@ -99,10 +68,9 @@ export function HomeView() {
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.05 }}
-              className="hero-wordmark relative mx-auto select-none whitespace-nowrap font-black leading-none tracking-[-0.075em]"
+              className="hero-wordmark mx-auto select-none whitespace-nowrap font-black leading-none tracking-[-0.075em]"
             >
-              <span className="hero-wordmark-outline">INFO OASIS</span>
-              <span aria-hidden className="hero-wordmark-color absolute inset-0">INFO OASIS</span>
+              INFO OASIS
             </motion.h1>
 
             <motion.p
