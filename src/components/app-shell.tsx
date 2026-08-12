@@ -1,6 +1,6 @@
 'use client'
 
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion'
 import {
   Home,
   LayoutDashboard,
@@ -102,6 +102,8 @@ export function AppShell({
   const { xp, level, streak, name, authenticated } = useUser()
   const [authOpen, setAuthOpen] = useState(false)
   const displayName = localizeUserName(name, locale)
+  const { scrollYProgress } = useScroll()
+  const readingProgress = useSpring(scrollYProgress, { stiffness: 180, damping: 28, restDelta: 0.001 })
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' })
@@ -156,7 +158,7 @@ export function AppShell({
           </button>
 
           <div className="ml-auto flex min-w-0 items-center gap-1.5 sm:gap-2">
-            <div className="hidden items-center gap-2 xl:flex">
+            <div className="hidden items-center gap-2 2xl:flex">
               <StatPill icon={Flame} value={streak} label={t('days')} />
               <StatPill icon={Zap} value={xp} label="XP" />
               <StatPill icon={Sparkles} value={level} label={t('levelShort')} />
@@ -164,7 +166,7 @@ export function AppShell({
             <button
               onClick={() => setCommandOpen(true)}
               aria-label={t('search')}
-              className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-card/40 text-muted-foreground transition-colors hover:border-border hover:text-foreground md:flex lg:h-9 lg:w-9 lg:rounded-lg"
+              className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-card/40 text-muted-foreground transition-colors hover:border-border hover:text-foreground lg:flex"
             >
               <Search className="h-4 w-4" />
             </button>
@@ -174,11 +176,11 @@ export function AppShell({
                 <button
                   type="button"
                   aria-label={t('language')}
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-card/40 text-xs transition-colors hover:border-border hover:text-foreground md:w-auto md:gap-1.5 md:px-3 lg:h-9 lg:rounded-lg lg:px-2.5"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-card/40 text-xs transition-colors hover:border-border hover:text-foreground lg:h-9 lg:w-auto lg:gap-1.5 lg:rounded-lg lg:px-2.5"
                 >
                   <Languages className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="hidden md:inline">{languageNames[locale]}</span>
-                  <ChevronDown className="hidden h-3.5 w-3.5 text-muted-foreground md:block" />
+                  <span className="hidden lg:inline">{languageNames[locale]}</span>
+                  <ChevronDown className="hidden h-3.5 w-3.5 text-muted-foreground lg:block" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="z-[80] min-w-32">
@@ -203,10 +205,15 @@ export function AppShell({
               <div className="grid h-6 w-6 place-items-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-[10px] font-bold text-white">
                 {displayName.charAt(0).toUpperCase()}
               </div>
-              <span className="hidden max-w-24 truncate text-xs font-medium sm:inline">{displayName}</span>
+              <span className="hidden max-w-24 truncate text-xs font-medium 2xl:inline">{displayName}</span>
             </button>
           </div>
         </div>
+        <motion.div
+          aria-hidden
+          style={{ scaleX: readingProgress, transformOrigin: '0 50%' }}
+          className="absolute inset-x-0 -bottom-px h-px bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-400 motion-reduce:hidden"
+        />
       </header>
 
       <div className="flex w-full flex-1">

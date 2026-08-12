@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
   Sparkles,
   MessagesSquare,
@@ -158,14 +158,21 @@ export function HomeView() {
         onTouchStart={(event) => { touchStartX.current = event.touches[0]?.clientX ?? null }}
         onTouchEnd={(event) => finishHeroSwipe(event.changedTouches[0]?.clientX ?? 0)}
       >
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-cover bg-center transition-[background-position,filter] duration-1000 ease-out brightness-[0.9] saturate-[1.08] dark:brightness-[0.7]"
-          style={{
-            backgroundImage: "url('/info-oasis-knowledge-world.webp')",
-            backgroundPosition: activeWorld.position,
-          }}
-        />
+        <AnimatePresence initial={false}>
+          <motion.div
+            key={`hero-image-${activeWorld.id}`}
+            aria-hidden
+            initial={{ opacity: reduceMotion ? 1 : 0, scale: reduceMotion ? 1 : 1.065 }}
+            animate={{ opacity: 1, scale: 1.015 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: reduceMotion ? 0 : 1.15, ease: 'easeOut' }}
+            className="absolute inset-0 bg-cover bg-center brightness-[0.9] saturate-[1.08] dark:brightness-[0.7]"
+            style={{
+              backgroundImage: "url('/info-oasis-knowledge-world.webp')",
+              backgroundPosition: activeWorld.position,
+            }}
+          />
+        </AnimatePresence>
         <div aria-hidden className={`absolute inset-0 bg-gradient-to-r ${activeWorld.ambient} transition-colors duration-700`} />
         <div aria-hidden className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,6,23,.92)_0%,rgba(2,6,23,.72)_42%,rgba(2,6,23,.23)_73%,rgba(2,6,23,.44)_100%)]" />
         <div aria-hidden className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,.18),transparent_38%,rgba(2,6,23,.86))]" />
@@ -183,8 +190,19 @@ export function HomeView() {
                 <span className="h-px w-10 shrink-0 bg-cyan-300/70" />
                 <span className="min-w-0 [overflow-wrap:anywhere]">Info Oasis · {localize(activeWorld.label)}</span>
               </div>
-              <h1 className="whitespace-pre-line text-[clamp(2.9rem,7vw,6.4rem)] font-black leading-[0.88] tracking-[-0.06em] text-white drop-shadow-[0_4px_30px_rgba(0,0,0,.35)]">
-                {localize(activeWorld.headline)}
+              <h1 className="text-[clamp(2.9rem,7vw,6.4rem)] font-black leading-[0.88] tracking-[-0.06em] text-white drop-shadow-[0_4px_30px_rgba(0,0,0,.35)]">
+                {localize(activeWorld.headline).split('\n').map((line, index) => (
+                  <span key={line} className="block overflow-hidden pb-[0.05em]">
+                    <motion.span
+                      className="block"
+                      initial={{ y: reduceMotion ? 0 : '105%' }}
+                      animate={{ y: 0 }}
+                      transition={{ duration: reduceMotion ? 0 : 0.65, delay: reduceMotion ? 0 : index * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                    >
+                      {line}
+                    </motion.span>
+                  </span>
+                ))}
               </h1>
               <p className="mt-6 max-w-2xl text-pretty text-base leading-7 text-white/76 [overflow-wrap:anywhere] sm:mt-8 sm:text-lg sm:leading-8">
                 {localize(activeWorld.description)}
@@ -310,48 +328,124 @@ export function HomeView() {
         </PageSection>
       </section>
 
-      {/* Subjects grid */}
-      <PageSection className="py-12">
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+      {/* Editorial learning worlds */}
+      <PageSection id="knowledge-worlds" className="scroll-mt-20 py-14 sm:py-20">
+        <div className="mb-8 flex flex-wrap items-end justify-between gap-4 sm:mb-10">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">{tr('Миры знаний', 'Worlds of knowledge', 'Գիտելիքի աշխարհներ')}</h2>
-            <p className="mt-1 text-sm text-muted-foreground sm:text-base">
+            <div className="mb-3 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">
+              <span className="h-px w-10 bg-primary/65" />
+              {tr('Маршруты знаний', 'Curated journeys', 'Ընտրված ուղիներ')}
+            </div>
+            <h2 className="text-3xl font-black tracking-[-0.04em] sm:text-4xl lg:text-5xl">
+              {tr('Миры знаний', 'Worlds of knowledge', 'Գիտելիքի աշխարհներ')}
+            </h2>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
               {tr('Выбери область — и начни погружение', 'Choose an area and start exploring', 'Ընտրիր ոլորտը և սկսիր ուսումնասիրել')}
             </p>
           </div>
           <button
             onClick={() => setView('subjects')}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+            className="group inline-flex min-h-11 items-center gap-2 rounded-full border border-border/70 bg-card/70 px-5 text-sm font-semibold backdrop-blur transition-all hover:border-primary/40 hover:bg-accent"
           >
-            {tr('Все предметы', 'All subjects', 'Բոլոր առարկաները')} <ArrowRight className="h-3.5 w-3.5" />
+            {tr('Все предметы', 'All subjects', 'Բոլոր առարկաները')}
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </button>
         </div>
 
-        <StaggerGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {SUBJECTS.map((s) => {
-            const subject = localizeSubject(s, locale)
-            return <StaggerItem key={s.id}>
-              <button
-                onClick={() => openSubject(s.id)}
-                className="ambient-card group relative h-full w-full overflow-hidden rounded-2xl border border-border/60 bg-card/60 p-5 text-left backdrop-blur-sm transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10"
-              >
-                <div className={`absolute -right-8 -top-8 h-28 w-28 rounded-full bg-gradient-to-br ${s.gradient} opacity-20 blur-2xl transition-opacity group-hover:opacity-40`} />
-                <div className="relative">
-                  <div className={`mb-4 inline-grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br ${s.gradient} text-2xl shadow-lg`}>
-                    {s.emoji}
-                  </div>
-                  <p className="font-semibold">{subject.name}</p>
-                  <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{subject.description}</p>
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {subject.topics.slice(0, 2).map((t) => (
-                      <span key={t} className="rounded-md bg-muted/60 px-2 py-1 text-xs text-muted-foreground">
-                        {t}
+        <StaggerGroup className="grid gap-3 sm:grid-cols-2 lg:grid-cols-12 lg:auto-rows-[17rem]">
+          {HERO_WORLDS.map((world, index) => {
+            const source = SUBJECTS.find((subject) => subject.id === world.subjectId)
+            const subject = source ? localizeSubject(source, locale) : null
+            const WorldIcon = world.icon
+            const layout = [
+              'sm:col-span-2 lg:col-span-7 lg:row-span-2',
+              'lg:col-span-5',
+              'lg:col-span-5',
+              'sm:col-span-2 lg:col-span-12',
+            ][index]
+
+            return (
+              <StaggerItem key={world.id} className={layout}>
+                <button
+                  type="button"
+                  onClick={() => openSubject(world.subjectId)}
+                  className="group relative h-full min-h-[22rem] w-full overflow-hidden rounded-[1.5rem] border border-white/15 bg-slate-950 text-left text-white shadow-[0_28px_80px_-42px_rgba(15,23,42,.9)] sm:min-h-[24rem] lg:min-h-0"
+                >
+                  <motion.div
+                    aria-hidden
+                    initial={{ scale: 1.02 }}
+                    whileInView={reduceMotion ? { scale: 1 } : { scale: [1.02, 1.065, 1.02], x: [0, index % 2 ? -7 : 7, 0] }}
+                    viewport={{ amount: 0.15 }}
+                    transition={{ duration: 15 + index * 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                    className="absolute -inset-3 bg-cover will-change-transform transition-[filter] duration-700 group-hover:brightness-110"
+                    style={{
+                      backgroundImage: "url('/info-oasis-knowledge-world.webp')",
+                      backgroundPosition: world.position,
+                    }}
+                  />
+                  <div aria-hidden className={`absolute inset-0 bg-gradient-to-br ${world.ambient}`} />
+                  <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/48 to-slate-950/5" />
+                  <div aria-hidden className="absolute inset-0 opacity-0 ring-1 ring-inset ring-white/45 transition-opacity duration-500 group-hover:opacity-100" />
+
+                  <div className="relative flex h-full min-h-[22rem] flex-col justify-between p-6 sm:min-h-[24rem] sm:p-8 lg:min-h-0">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="grid h-12 w-12 place-items-center rounded-2xl border border-white/20 bg-black/25 text-cyan-100 backdrop-blur-md">
+                        <WorldIcon className="h-6 w-6" />
+                      </div>
+                      <span className="text-xs font-semibold tracking-[0.24em] text-white/62">
+                        {String(index + 1).padStart(2, '0')} / {String(HERO_WORLDS.length).padStart(2, '0')}
                       </span>
-                    ))}
+                    </div>
+
+                    <div className="max-w-xl">
+                      <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.26em] text-cyan-200 sm:text-xs">
+                        Info Oasis · {localize(world.label)}
+                      </p>
+                      <h3 className="text-3xl font-black tracking-[-0.04em] sm:text-4xl">
+                        {localize(world.lesson)}
+                      </h3>
+                      <p className="mt-3 line-clamp-2 max-w-lg text-sm leading-6 text-white/70 sm:text-base">
+                        {subject?.description ?? localize(world.description)}
+                      </p>
+                      <div className="mt-5 flex items-center justify-between gap-4 border-t border-white/15 pt-4">
+                        <div className="flex min-w-0 gap-2 overflow-hidden">
+                          {subject?.topics.slice(0, 2).map((topic) => (
+                            <span key={topic} className="truncate rounded-full border border-white/15 bg-black/25 px-3 py-1 text-[11px] text-white/70 backdrop-blur">
+                              {topic}
+                            </span>
+                          ))}
+                        </div>
+                        <ArrowRight className="h-5 w-5 shrink-0 transition-transform duration-300 group-hover:translate-x-1" />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </button>
-            </StaggerItem>
+                </button>
+              </StaggerItem>
+            )
+          })}
+        </StaggerGroup>
+
+        <StaggerGroup className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {SUBJECTS.filter((subject) => !HERO_WORLDS.some((world) => world.subjectId === subject.id)).map((subject) => {
+            const copy = localizeSubject(subject, locale)
+            return (
+              <StaggerItem key={subject.id}>
+                <button
+                  type="button"
+                  onClick={() => openSubject(subject.id)}
+                  className="ambient-card group flex min-h-28 w-full items-center gap-4 rounded-2xl border border-border/60 bg-card/70 p-4 text-left backdrop-blur transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-xl"
+                >
+                  <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${subject.gradient} text-2xl shadow-lg`}>
+                    {subject.emoji}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block font-semibold">{copy.name}</span>
+                    <span className="mt-1 block truncate text-xs text-muted-foreground">{copy.topics.slice(0, 2).join(' · ')}</span>
+                  </span>
+                  <ArrowRight className="ml-auto h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
+                </button>
+              </StaggerItem>
+            )
           })}
         </StaggerGroup>
       </PageSection>

@@ -1,6 +1,6 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { Loader2 } from 'lucide-react'
 
@@ -8,12 +8,14 @@ import { Loader2 } from 'lucide-react'
 export function PageSection({
   children,
   className,
+  id,
 }: {
   children: React.ReactNode
   className?: string
+  id?: string
 }) {
   return (
-    <div className={cn('mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 2xl:px-10', className)}>
+    <div id={id} className={cn('mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 2xl:px-10', className)}>
       {children}
     </div>
   )
@@ -131,13 +133,16 @@ export function StaggerGroup({
   children: React.ReactNode
   className?: string
 }) {
+  const reduceMotion = useReducedMotion()
+
   return (
     <motion.div
-      initial="hidden"
-      animate="visible"
+      initial={reduceMotion ? false : 'hidden'}
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.12, margin: '0px 0px -7% 0px' }}
       variants={{
         hidden: {},
-        visible: { transition: { staggerChildren: 0.06 } },
+        visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.075 } },
       }}
       className={className}
     >
