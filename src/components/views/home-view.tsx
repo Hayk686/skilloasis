@@ -147,7 +147,7 @@ export function HomeView() {
     <div>
       {/* Hero */}
       <section
-        aria-label={tr('Миры знаний', 'Worlds of knowledge', 'Գիտելիքի աշխարհներ')}
+        aria-label={tr('Обучение в Info Oasis', 'Learning with Info Oasis', 'Ուսուցում Info Oasis-ում')}
         className="relative isolate min-h-[calc(100svh-4rem)] overflow-hidden bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white"
         onMouseEnter={() => setHeroPaused(true)}
         onMouseLeave={() => setHeroPaused(false)}
