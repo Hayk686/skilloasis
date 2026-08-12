@@ -20,7 +20,6 @@ import { useNav, useUser } from '@/lib/store'
 import { SUBJECTS, getSubject, localizeSubject } from '@/lib/subjects'
 import {
   PageSection,
-  SectionHeader,
   GlassCard,
   LoadingState,
   Pill,
@@ -262,9 +261,10 @@ export function TutorView() {
   // ---------- derived ----------
   const activeSubjectObj =
     subject && subject !== 'general' ? getSubject(subject) : null
+  const hasSessions = sessions.length > 0
 
   return (
-    <PageSection className="relative py-6 sm:py-8">
+    <PageSection className="relative flex h-[calc(100dvh-4rem)] max-w-none flex-col overflow-hidden py-4 sm:py-5 lg:px-5 2xl:px-8">
       {/* ambient cosmic glow */}
       <div
         aria-hidden
@@ -275,86 +275,101 @@ export function TutorView() {
         }}
       />
 
-      <SectionHeader
-        title={tr('AI-наставник', 'AI tutor', 'AI ուսուցիչ')}
-        subtitle={tr('Спроси что угодно — объясню, разберу по шагам, подскажу дальше', 'Ask anything—I will explain it step by step and help you move forward', 'Հարցրու ցանկացած բան․ կբացատրեմ քայլ առ քայլ և կօգնեմ առաջ շարժվել')}
-        icon={Sparkles}
-        action={
-          <div className="hidden items-center gap-2 sm:flex">
-            {activeSubjectObj && (
-              <Pill className="border-primary/30 bg-primary/10 text-primary">
-                <span>{activeSubjectObj.emoji}</span>
-                {localizeSubject(activeSubjectObj, locale).name}
-              </Pill>
-            )}
+      <div className="mb-4 flex shrink-0 flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-primary/20 bg-gradient-to-br from-violet-500/20 via-fuchsia-500/15 to-cyan-500/15 text-primary shadow-lg shadow-primary/10">
+            <Sparkles className="h-5 w-5" />
           </div>
-        }
-      />
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                {tr('AI-наставник', 'AI tutor', 'AI ուսուցիչ')}
+              </h1>
+              {activeSubjectObj && (
+                <Pill className="hidden border-primary/30 bg-primary/10 text-primary sm:inline-flex">
+                  <span>{activeSubjectObj.emoji}</span>
+                  {localizeSubject(activeSubjectObj, locale).name}
+                </Pill>
+              )}
+            </div>
+            <p className="mt-0.5 line-clamp-2 text-sm text-muted-foreground sm:text-base">
+              {tr('Спроси что угодно — объясню, разберу по шагам, подскажу дальше', 'Ask anything—I will explain it step by step and help you move forward', 'Հարցրու ցանկացած բան․ կբացատրեմ քայլ առ քայլ և կօգնեմ առաջ շարժվել')}
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* mobile: open sessions sheet + new chat */}
-      <div className="mb-3 flex flex-wrap items-center gap-2 lg:hidden">
-        <Sheet open={listOpen} onOpenChange={setListOpen}>
-          <SheetTrigger asChild>
-            <button className="inline-flex items-center gap-2 rounded-xl border border-border/60 bg-card/60 px-3 py-2 text-sm font-medium backdrop-blur transition hover:bg-card">
-              <PanelLeft className="h-4 w-4" />
-              {tr('Диалоги', 'Conversations', 'Զրույցներ')}
-              {sessions.length > 0 && (
+      {hasSessions && (
+        <div className="mb-3 flex items-center gap-2 xl:hidden">
+          <Sheet open={listOpen} onOpenChange={setListOpen}>
+            <SheetTrigger asChild>
+              <button className="inline-flex h-11 shrink-0 items-center gap-2 rounded-xl border border-border/60 bg-card/70 px-3 text-sm font-medium backdrop-blur transition hover:border-primary/30 hover:bg-card">
+                <PanelLeft className="h-4 w-4" />
+                {tr('Диалоги', 'Conversations', 'Զրույցներ')}
                 <span className="rounded-full bg-primary/15 px-1.5 text-xs text-primary">
                   {sessions.length}
                 </span>
-              )}
-            </button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-[85%] sm:max-w-sm">
-            <SheetHeader>
-              <SheetTitle className="flex items-center gap-2">
-                <MessagesSquare className="h-4 w-4 text-primary" />
-                {tr('Диалоги', 'Conversations', 'Զրույցներ')}
-              </SheetTitle>
-            </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-4 pb-6">
-              <SidebarContent
-                sessions={sessions}
-                loading={loadingSessions}
-                currentId={sessionId}
-                onSelect={(id) => void loadThread(id)}
-                onDelete={(id, ev) => void deleteSession(id, ev)}
-                onNew={startNewChat}
-              />
-            </div>
-          </SheetContent>
-        </Sheet>
-
-        <NewChatButton onClick={startNewChat} small />
-      </div>
+              </button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[85%] sm:max-w-sm">
+              <SheetHeader>
+                <SheetTitle className="flex items-center gap-2">
+                  <MessagesSquare className="h-4 w-4 text-primary" />
+                  {tr('Диалоги', 'Conversations', 'Զրույցներ')}
+                </SheetTitle>
+              </SheetHeader>
+              <div className="flex-1 overflow-y-auto px-4 pb-6">
+                <SidebarContent
+                  sessions={sessions}
+                  loading={loadingSessions}
+                  currentId={sessionId}
+                  onSelect={(id) => void loadThread(id)}
+                  onDelete={(id, ev) => void deleteSession(id, ev)}
+                  onNew={startNewChat}
+                />
+              </div>
+            </SheetContent>
+          </Sheet>
+          <NewChatButton onClick={startNewChat} small />
+        </div>
+      )}
 
       {/* main grid */}
-      <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
+      <div
+        className={cn(
+          'grid min-h-0 flex-1 gap-3',
+          hasSessions && 'xl:grid-cols-[260px_minmax(0,1fr)] 2xl:grid-cols-[280px_minmax(0,1fr)]'
+        )}
+      >
         {/* left rail — desktop */}
-        <GlassCard
-          hover={false}
-          className="hidden flex-col overflow-hidden p-3 lg:flex lg:h-[calc(100dvh-13rem)] lg:min-h-[500px] lg:max-h-[820px]"
-        >
-          <SidebarContent
-            sessions={sessions}
-            loading={loadingSessions}
-            currentId={sessionId}
-            onSelect={(id) => void loadThread(id)}
-            onDelete={(id, ev) => void deleteSession(id, ev)}
-            onNew={startNewChat}
-          />
-        </GlassCard>
+        {hasSessions && (
+          <GlassCard
+            hover={false}
+            className="hidden min-h-0 flex-col overflow-hidden rounded-3xl bg-card/70 p-3 shadow-xl shadow-black/5 xl:flex"
+          >
+            <SidebarContent
+              sessions={sessions}
+              loading={loadingSessions}
+              currentId={sessionId}
+              onSelect={(id) => void loadThread(id)}
+              onDelete={(id, ev) => void deleteSession(id, ev)}
+              onNew={startNewChat}
+            />
+          </GlassCard>
+        )}
 
         {/* right — chat thread + composer */}
         <GlassCard
           hover={false}
           gradient
-          className="flex h-[calc(100dvh-15rem)] min-h-[420px] max-h-[760px] flex-col overflow-hidden sm:h-[72vh] sm:min-h-[520px] lg:h-[calc(100dvh-13rem)] lg:min-h-[500px] lg:max-h-[820px]"
+          className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border-primary/15 bg-card/75 shadow-[0_28px_90px_-42px_rgba(168,85,247,0.65)]"
         >
+          <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_86%_18%,rgba(34,211,238,0.08),transparent_30%),radial-gradient(circle_at_12%_90%,rgba(236,72,153,0.08),transparent_34%)]" />
           {/* chat header */}
-          <div className="flex items-center justify-between gap-2 border-b border-border/60 bg-gradient-to-r from-violet-500/5 via-fuchsia-500/5 to-pink-500/5 px-3 py-3 sm:gap-3 sm:px-4">
+          <div className="relative flex min-h-16 items-center justify-between gap-2 border-b border-border/60 bg-gradient-to-r from-violet-500/8 via-fuchsia-500/5 to-cyan-500/5 px-3 py-3 sm:gap-3 sm:px-5">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="relative grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 text-white shadow-lg shadow-fuchsia-500/30">
+              <div className="relative grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 text-white shadow-lg shadow-fuchsia-500/30">
                 <Sparkles className="h-4 w-4" />
                 <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-card" />
               </div>
@@ -368,13 +383,23 @@ export function TutorView() {
               </div>
             </div>
 
-            <SubjectPicker value={subject} onChange={setSubject} />
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                onClick={startNewChat}
+                className="hidden h-10 items-center justify-center gap-2 rounded-xl border border-border/60 bg-background/50 px-3 text-sm font-medium text-muted-foreground transition hover:border-primary/30 hover:bg-primary/5 hover:text-foreground sm:inline-flex"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="hidden md:inline">{tr('Новый чат', 'New chat', 'Նոր զրույց')}</span>
+              </button>
+              <SubjectPicker value={subject} onChange={setSubject} />
+            </div>
           </div>
 
           {/* messages area */}
           <div ref={messagesAreaRef} className="relative flex-1 overflow-hidden">
             <ScrollArea className="h-full">
-              <div className="space-y-4 px-4 py-4 sm:px-6">
+              <div className="min-h-full space-y-4 px-4 py-4 sm:px-6">
                 {loadingThread ? (
                   <LoadingState label={tr('Загружаю диалог…', 'Loading conversation…', 'Բեռնում ենք զրույցը…')} />
                 ) : messages.length === 0 ? (
@@ -549,7 +574,7 @@ function SubjectPicker({
       <BookOpen className="hidden h-4 w-4 text-muted-foreground sm:block" />
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger
-          className="h-11 w-[118px] border-border/60 bg-background/60 text-xs sm:w-[180px] sm:text-sm lg:h-9"
+          className="h-11 w-[118px] rounded-xl border-border/60 bg-background/60 text-xs sm:h-10 sm:w-[180px] sm:text-sm"
           size="sm"
         >
           <SelectValue placeholder={tr('Предмет', 'Subject', 'Առարկա')} />
@@ -600,7 +625,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
       {/* bubble */}
       <div
         className={cn(
-          'max-w-[80%] rounded-2xl px-4 py-2.5 text-sm shadow-sm sm:max-w-[75%]',
+          'max-w-[86%] rounded-2xl px-4 py-3 text-[15px] leading-relaxed shadow-sm sm:max-w-[78%]',
           isUser
             ? 'bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 text-white shadow-fuchsia-500/20'
             : 'glass-strong border border-border/60 text-foreground'
@@ -652,7 +677,7 @@ function EmptyChat({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col items-center justify-center px-3 py-6 text-center sm:px-4 sm:py-14"
+      className="flex min-h-full flex-col items-center justify-center px-2 py-8 text-center sm:px-5"
     >
       <motion.div
         animate={{ y: [0, -8, 0] }}
@@ -663,14 +688,14 @@ function EmptyChat({
         <div className="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-violet-500 to-fuchsia-500 opacity-50 blur-xl" />
       </motion.div>
 
-      <h3 className="text-xl font-bold sm:text-2xl">
+      <h3 className="text-2xl font-bold tracking-tight sm:text-3xl">
         {tr('Привет! Я твой', 'Hi! I am your', 'Ողջույն։ Ես քո')} <span className="text-gradient">{tr('AI-наставник', 'AI tutor', 'AI ուսուցիչն եմ')}</span>
       </h3>
-      <p className="mt-2 max-w-md text-sm text-muted-foreground">
+      <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
         {tr('Спроси что угодно — от квантовой физики до основ философии. Выбери идею ниже или напиши свой вопрос.', 'Ask anything—from quantum physics to philosophy. Choose an idea below or write your own question.', 'Հարցրու ցանկացած բան՝ քվանտային ֆիզիկայից մինչև փիլիսոփայություն։ Ընտրիր ներքևի գաղափարներից մեկը կամ գրիր քո հարցը։')}
       </p>
 
-      <div className="mt-5 grid w-full max-w-2xl gap-2 sm:mt-6 sm:grid-cols-2">
+      <div className="mt-6 grid w-full max-w-5xl gap-2.5 sm:grid-cols-2 2xl:grid-cols-3">
         {SUGGESTED_PROMPTS.map((p) => {
           const text = localize(p.text)
           return (
@@ -679,12 +704,12 @@ function EmptyChat({
             whileHover={{ y: -2 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => onPick(text, p.subject)}
-            className="group flex items-center gap-3 rounded-xl border border-border/60 bg-background/40 p-3 text-left transition-all hover:border-primary/40 hover:bg-primary/5"
+            className="group flex min-h-16 items-center gap-3 rounded-2xl border border-border/60 bg-background/55 p-3.5 text-left shadow-sm transition-all hover:border-primary/40 hover:bg-primary/5 hover:shadow-lg hover:shadow-primary/5"
           >
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-muted/60 text-lg">
               {p.emoji}
             </span>
-            <span className="text-sm font-medium">{text}</span>
+            <span className="text-sm font-semibold leading-snug">{text}</span>
             <Zap className="ml-auto h-3.5 w-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-hover:text-primary" />
           </motion.button>
           )
@@ -710,16 +735,16 @@ function Composer({
 }) {
   const { tr } = useTranslations()
   return (
-    <div className="border-t border-border/60 bg-card/40 p-3 backdrop-blur sm:p-4">
+    <div className="relative border-t border-border/60 bg-card/55 p-3 backdrop-blur-xl sm:px-5 sm:py-4">
       <div className="relative flex items-end gap-2">
         <div className="relative flex-1">
           <Textarea
             value={value}
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={onKeyDown}
-            placeholder={tr('Напиши вопрос наставнику… (Enter — отправить, Shift+Enter — перенос)', 'Ask the tutor… (Enter to send, Shift+Enter for a new line)', 'Գրիր հարց ուսուցչին… (Enter՝ ուղարկելու, Shift+Enter՝ նոր տողի համար)')}
+            placeholder={tr('Спроси наставника…', 'Ask the tutor…', 'Հարցրու ուսուցչին…')}
             rows={1}
-            className="max-h-40 min-h-[48px] resize-none rounded-2xl border-border/60 bg-background/60 px-4 py-3 text-sm leading-relaxed ring-primary/20 focus-visible:ring-2"
+            className="field-sizing-fixed h-14 max-h-40 min-h-14 resize-none rounded-2xl border-border/70 bg-background/70 px-4 py-4 text-[15px] leading-relaxed shadow-inner shadow-black/5 ring-primary/20 focus-visible:ring-2"
           />
         </div>
 
@@ -727,7 +752,7 @@ function Composer({
           onClick={onSend}
           disabled={disabled || !value.trim()}
           className={cn(
-            'group relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-2xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 text-white shadow-lg shadow-fuchsia-500/25 transition-all',
+            'group relative grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-2xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 text-white shadow-lg shadow-fuchsia-500/25 transition-all',
             'hover:scale-105 hover:shadow-xl hover:shadow-fuchsia-500/40 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100'
           )}
           aria-label={tr('Отправить сообщение', 'Send message', 'Ուղարկել հաղորդագրությունը')}
