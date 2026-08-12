@@ -155,9 +155,11 @@ export function AuthDialog({
         overlayClassName="bg-slate-950/65 backdrop-blur-md"
         className="max-h-[calc(100dvh-2rem)] overflow-x-hidden overflow-y-auto rounded-[1.75rem] border-primary/20 bg-background/88 p-0 shadow-[0_32px_100px_-28px_rgba(88,28,135,0.75)] backdrop-blur-2xl sm:max-w-[460px]"
       >
-        <div className="pointer-events-none absolute -left-24 -top-24 h-64 w-64 rounded-full bg-violet-500/25 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-28 -right-20 h-72 w-72 rounded-full bg-cyan-400/15 blur-3xl" />
-        <div className="pointer-events-none absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent via-primary/80 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]">
+          <div className="absolute -left-24 -top-24 h-64 w-64 rounded-full bg-violet-500/25 blur-3xl" />
+          <div className="absolute -bottom-28 -right-20 h-72 w-72 rounded-full bg-cyan-400/15 blur-3xl" />
+          <div className="absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent via-primary/80 to-transparent" />
+        </div>
         {authenticated ? (
           <div className="relative p-7">
             <DialogHeader>
